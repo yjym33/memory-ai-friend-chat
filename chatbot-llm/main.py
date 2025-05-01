@@ -52,7 +52,7 @@ if not openai_api_key:
 # ChatOpenAI 모델 초기화
 chat_model = ChatOpenAI(
     openai_api_key=openai_api_key,
-    model_name="gpt-3.5-turbo",
+    model_name="gpt-4o",
     temperature=0.7,
 )
 
