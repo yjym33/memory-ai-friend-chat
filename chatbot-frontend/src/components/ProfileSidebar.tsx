@@ -1,6 +1,8 @@
 import React from "react";
+import { useAuthStore } from "../store/authStore";
 
 export default function ProfileSidebar() {
+  const { logout } = useAuthStore();
   return (
     <aside className="w-full sm:w-64 bg-gradient-to-b from-purple-100 to-pink-50 p-6 flex flex-col items-center border-r border-gray-200 min-h-screen">
       <div className="flex flex-col items-center mb-8">
@@ -14,8 +16,14 @@ export default function ProfileSidebar() {
           <span className="text-xs text-gray-400">친근함</span>
         </div>
       </div>
-      <button className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 text-white font-semibold shadow mb-6 hover:from-purple-500 hover:to-pink-500 transition">
+      <button className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 text-white font-semibold shadow mb-3 hover:from-purple-500 hover:to-pink-500 transition">
         AI 친구 설정
+      </button>
+      <button
+        className="w-full py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold shadow hover:bg-gray-300 transition"
+        onClick={logout}
+      >
+        로그아웃
       </button>
     </aside>
   );
