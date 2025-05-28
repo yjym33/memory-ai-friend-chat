@@ -52,4 +52,12 @@ export class ChatService {
       throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
     }
   }
+
+  async updateConversationPin(id: number, pinned: boolean) {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+    conversation.pinned = pinned;
+    await this.conversationRepository.save(conversation);
+    return conversation;
+  }
 }

@@ -61,6 +61,14 @@ export class ChatController {
     return this.chatService.updateConversationTitle(id, body.title);
   }
 
+  @Put('conversations/:id/pin')
+  async updateConversationPin(
+    @Param('id') id: number,
+    @Body() body: { pinned: boolean },
+  ) {
+    return this.chatService.updateConversationPin(id, body.pinned);
+  }
+
   @Delete('conversations/:id')
   async deleteConversation(@Param('id') id: number) {
     try {

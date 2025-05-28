@@ -28,6 +28,9 @@ export class Conversation {
   @Column()
   userId: string;
 
+  @Column({ default: false })
+  pinned: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
