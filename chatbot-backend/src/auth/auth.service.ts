@@ -17,7 +17,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string, name?: string) {
+  async register(
+    email: string,
+    password: string,
+    name: string,
+    gender: string,
+    birthYear: string,
+    passwordCheck?: string,
+  ) {
+    if (passwordCheck !== undefined && password !== passwordCheck) {
+      throw new ConflictException(
+        '비밀번호와 비밀번호 확인이 일치하지 않습니다.',
+      );
+    }
     const existingUser = await this.userRepository.findOne({
       where: { email },
     });
@@ -32,6 +44,8 @@ export class AuthService {
       email,
       password: hashedPassword,
       name,
+      gender,
+      birthYear,
     });
 
     const token = this.jwtService.sign({ userId: user.id });

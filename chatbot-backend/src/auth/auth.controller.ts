@@ -21,8 +21,8 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    const { email, password, name } = registerDto;
-    return this.authService.register(email, password, name);
+    const { email, password, name, gender, birthYear } = registerDto;
+    return this.authService.register(email, password, name, gender, birthYear);
   }
 
   @Get('validate')

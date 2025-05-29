@@ -11,7 +11,10 @@ interface LoginCredentials {
 interface RegisterCredentials {
   email: string;
   password: string;
+  passwordCheck: string;
   name: string;
+  birthYear: string;
+  gender: string;
 }
 
 export function useLogin() {

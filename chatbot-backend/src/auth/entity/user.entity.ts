@@ -22,6 +22,12 @@ export class User {
   @Column({ nullable: true })
   name: string;
 
+  @Column({ nullable: false, default: 'male' })
+  gender: string;
+
+  @Column({ nullable: false, default: 2000 })
+  birthYear: string;
+
   @OneToMany(() => Conversation, (conversation) => conversation.user)
   conversations: Conversation[];
 
