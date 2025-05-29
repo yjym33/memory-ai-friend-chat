@@ -45,4 +45,17 @@
 - **Backend**: NestJS, Typeorm
 - **LLM**: OpenAI GPT API , Langchain
 - **Vector DB**: 미정
-- **Infra**: Docker, Vercel / Render / AWS  
+- **Infra**: Docker, Vercel / Render / AWS
+
+
+## 현재까지 완성된 홈페이지 화면
+
+![image](https://github.com/user-attachments/assets/c1357076-1676-49ca-897a-11aaa0435163)
+![image](https://github.com/user-attachments/assets/31ce4a17-9e2c-4e42-b7ad-77c6167ffeef)
+![image](https://github.com/user-attachments/assets/1894051c-7e51-4c53-b15a-a92f3e219fab)
+![image](https://github.com/user-attachments/assets/e9261594-ffe8-4fbb-87af-1b3267fe2dbc)
+![image](https://github.com/user-attachments/assets/7d93a0d2-c4f8-4985-8954-e786a975515a)
+
+
+
+
