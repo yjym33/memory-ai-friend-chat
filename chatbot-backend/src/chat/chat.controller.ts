@@ -21,6 +21,7 @@ import * as XLSX from 'xlsx';
 import * as Tesseract from 'tesseract.js';
 import * as textract from 'textract';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AiSettingsService } from '../ai-settings/ai-settings.service';
 
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +29,7 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private configService: ConfigService,
+    private readonly aiSettingsService: AiSettingsService,
   ) {}
 
   @Get('conversations')
@@ -80,10 +82,55 @@ export class ChatController {
   }
 
   @Post('completions')
-  async chatCompletion(@Body() body: any) {
+  async chatCompletion(@Body() body: any, @Request() req) {
     try {
+      console.log('🔍 디버깅 시작');
+      console.log('📧 사용자 ID:', req.user?.userId);
+
       const llmApiUrl = this.configService.get<string>('LLM_API_URL');
       const { conversationId, uploadedFile, ...llmRequestBody } = body;
+
+      // 🔥 사용자 AI 설정 조회 및 로깅
+      let userSettings;
+      try {
+        userSettings = await this.aiSettingsService.findByUserId(
+          req.user.userId,
+        );
+        console.log('✅ 사용자 AI 설정 조회 성공:', {
+          personalityType: userSettings.personalityType,
+          speechStyle: userSettings.speechStyle,
+          emojiUsage: userSettings.emojiUsage,
+          empathyLevel: userSettings.empathyLevel,
+          nickname: userSettings.nickname,
+        });
+      } catch (error) {
+        console.error('❌ AI 설정 조회 실패:', error);
+        // 기본 설정 사용
+        userSettings = {
+          personalityType: '친근함',
+          speechStyle: '반말',
+          emojiUsage: 3,
+          empathyLevel: 3,
+          nickname: '친구',
+          memoryPriorities: { personal: 5, hobby: 4, work: 3, emotion: 5 },
+          userProfile: { interests: [], currentGoals: [], importantDates: [] },
+          avoidTopics: [],
+        };
+      }
+
+      // 🔥 AI 설정을 LLM 요청에 포함
+      llmRequestBody.aiSettings = {
+        personalityType: userSettings.personalityType,
+        speechStyle: userSettings.speechStyle,
+        emojiUsage: userSettings.emojiUsage,
+        empathyLevel: userSettings.empathyLevel,
+        nickname: userSettings.nickname || '친구',
+        memoryPriorities: userSettings.memoryPriorities || {},
+        userProfile: userSettings.userProfile || {},
+        avoidTopics: userSettings.avoidTopics || [],
+      };
+
+      console.log('📤 LLM으로 전달할 AI 설정:', llmRequestBody.aiSettings);
 
       if (uploadedFile?.path) {
         try {
@@ -196,8 +243,18 @@ export class ChatController {
           ];
 
           console.log(
-            '📤 LLM 요청 데이터:',
-            JSON.stringify(llmRequestBody, null, 2),
+            '📤 LLM 요청 데이터 (설정 포함):',
+            JSON.stringify(
+              {
+                ...llmRequestBody,
+                messages: llmRequestBody.messages.map((m) => ({
+                  role: m.role,
+                  content: m.content.substring(0, 100) + '...',
+                })),
+              },
+              null,
+              2,
+            ),
           );
 
           const response = await axios.post(llmApiUrl, llmRequestBody, {
@@ -221,8 +278,18 @@ export class ChatController {
       }
 
       console.log(
-        '📤 LLM 요청 데이터:',
-        JSON.stringify(llmRequestBody, null, 2),
+        '📤 LLM 요청 데이터 (설정 포함):',
+        JSON.stringify(
+          {
+            ...llmRequestBody,
+            messages: llmRequestBody.messages.map((m) => ({
+              role: m.role,
+              content: m.content.substring(0, 100) + '...',
+            })),
+          },
+          null,
+          2,
+        ),
       );
 
       const response = await axios.post(llmApiUrl, llmRequestBody, {
@@ -240,7 +307,7 @@ export class ChatController {
 
       return response.data;
     } catch (error) {
-      console.error('LLM 서버 요청 실패:', error);
+      console.error('❌ LLM 서버 요청 실패:', error);
       throw error;
     }
   }

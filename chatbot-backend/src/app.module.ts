@@ -8,6 +8,8 @@ import { UploadModule } from './upload/upload.module';
 import { AppConfigModule } from './config/config.module';
 import databaseConfig from './config/database.config';
 import { AuthModule } from './auth/auth.module';
+import { AiSettingsModule } from './ai-settings/ai-settings.module';
+import { ConversationAnalyticsModule } from './conversation-analytics/conversation-analytics.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { AuthModule } from './auth/auth.module';
     ChatModule,
     UploadModule,
     AuthModule,
+    AiSettingsModule,
+    ConversationAnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
