@@ -47,8 +47,9 @@
 - **Vector DB**: 미정
 - **Infra**: Docker, Vercel / Render / AWS
 
+---
 
-## 현재까지 완성된 홈페이지 화면
+## 현재까지 완성된 홈페이지 화면 (기능 개선 진행중)
 
 ![image](https://github.com/user-attachments/assets/c1357076-1676-49ca-897a-11aaa0435163)
 ![image](https://github.com/user-attachments/assets/31ce4a17-9e2c-4e42-b7ad-77c6167ffeef)
