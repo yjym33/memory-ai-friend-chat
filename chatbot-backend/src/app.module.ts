@@ -10,6 +10,7 @@ import databaseConfig from './config/database.config';
 import { AuthModule } from './auth/auth.module';
 import { AiSettingsModule } from './ai-settings/ai-settings.module';
 import { ConversationAnalyticsModule } from './conversation-analytics/conversation-analytics.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ConversationAnalyticsModule } from './conversation-analytics/conversati
     AuthModule,
     AiSettingsModule,
     ConversationAnalyticsModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

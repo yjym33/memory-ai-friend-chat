@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { useRouter } from "next/navigation";
 import AiSettingsModal from "./AiSettingsModal";
+import AgentStatusModal from "./AgentStatusModal";
 import axiosInstance from "../utils/axios";
 
 export default function ProfileSidebar() {
   const { logout } = useAuthStore();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAgentStatusOpen, setIsAgentStatusOpen] = useState(false);
   const [currentSettings, setCurrentSettings] = useState({
     personalityType: "친근함",
     speechStyle: "반말",
@@ -62,6 +64,14 @@ export default function ProfileSidebar() {
             AI 친구 설정
           </button>
 
+          {/* 에이전트 상태 버튼 추가 */}
+          <button
+            onClick={() => setIsAgentStatusOpen(true)}
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-green-400 to-blue-400 text-white font-semibold shadow hover:from-green-500 hover:to-blue-500 transition"
+          >
+            🤖 AI 친구 상태
+          </button>
+
           {/* 우리가 나눈 이야기들 버튼 추가 */}
           <button
             onClick={() => router.push("/our-stories")}
@@ -80,6 +90,10 @@ export default function ProfileSidebar() {
       </aside>
 
       <AiSettingsModal isOpen={isSettingsOpen} onClose={handleSettingsClose} />
+      <AgentStatusModal
+        isOpen={isAgentStatusOpen}
+        onClose={() => setIsAgentStatusOpen(false)}
+      />
     </>
   );
 }

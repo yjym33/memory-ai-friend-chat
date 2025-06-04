@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "../utils/axios";
 import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
@@ -25,7 +25,6 @@ export default function Chatbot() {
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
   // 대화 목록 가져오기
   useEffect(() => {
@@ -65,33 +64,33 @@ export default function Chatbot() {
     setInput("");
     try {
       const requestData = {
-        conversationId: activeChatId,
-        messages: [...activeMessages, newMessage],
+        message: input,
       };
       const response = await axiosInstance.post(
-        "/chat/completions",
+        `/chat/completion/${activeChatId}`,
         requestData
       );
-      // LLM 응답 메시지 추가
-      if (response.data.choices && response.data.choices.length > 0) {
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: response.data.choices[0].message.content,
-        };
-        setConversations((prev) =>
-          prev.map((chat) =>
-            chat.id === activeChatId
-              ? {
-                  ...chat,
-                  messages: [...chat.messages, assistantMessage],
-                }
-              : chat
-          )
-        );
-      }
+
+      // 백엔드에서 직접 응답을 받는 구조로 수정
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: response.data.content,
+      };
+      setConversations((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChatId
+            ? {
+                ...chat,
+                messages: [...chat.messages, assistantMessage],
+              }
+            : chat
+        )
+      );
+
       // 대화 목록 갱신
       await fetchConversations();
     } catch (error) {
+      console.error("메시지 전송 실패:", error);
       alert("메시지 전송에 실패했습니다.");
     } finally {
       setLoading(false);
@@ -106,6 +105,7 @@ export default function Chatbot() {
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
     } catch (error) {
+      console.error("새 대화 시작 실패:", error);
       alert("새 대화를 시작할 수 없습니다.");
     }
   };
@@ -120,7 +120,8 @@ export default function Chatbot() {
       if (activeChatId === chatId) {
         setActiveChatId(updated.length > 0 ? updated[0].id : null);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("대화방 삭제 실패:", error);
       alert("대화방을 삭제하는데 실패했습니다.");
     }
   };
@@ -136,7 +137,8 @@ export default function Chatbot() {
           chat.id === chatId ? { ...chat, title: newTitle } : chat
         )
       );
-    } catch (e) {
+    } catch (error) {
+      console.error("대화방 이름 변경 실패:", error);
       alert("대화방 이름 변경에 실패했습니다.");
     }
   };
@@ -153,7 +155,8 @@ export default function Chatbot() {
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? { ...c, pinned: newPinned } : c))
       );
-    } catch (e) {
+    } catch (error) {
+      console.error("대화방 고정/해제 실패:", error);
       alert("대화방 고정/해제에 실패했습니다.");
     }
   };
