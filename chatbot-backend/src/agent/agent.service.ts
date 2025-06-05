@@ -539,7 +539,7 @@ export class AgentService {
             { role: 'user', content: message },
           ],
           temperature: 0.8,
-          max_tokens: 512,
+          max_tokens: 1024,
         },
         {
           headers: {

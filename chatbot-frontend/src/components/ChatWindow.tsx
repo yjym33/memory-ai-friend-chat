@@ -1,4 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 
 interface Message {
   role: "user" | "assistant";
@@ -55,7 +59,28 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
                   )}
                 </div>
                 <div className="text-gray-700 mb-2 whitespace-pre-line break-words">
-                  {msg.content}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight]}
+                    components={{
+                      code({ className, children, ...props }) {
+                        return (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      pre({ className, children, ...props }) {
+                        return (
+                          <pre className={className} {...props}>
+                            {children}
+                          </pre>
+                        );
+                      },
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>
