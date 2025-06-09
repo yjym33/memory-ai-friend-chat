@@ -136,3 +136,23 @@
 - 장기 대화 히스토리 기반 **추천/격려 기능** 추가
 
 ---
+
+### 구현중인 이미지 
+
+![image](https://github.com/user-attachments/assets/e2a96006-f6c8-41b8-b844-adb1eb289e26)
+
+![image](https://github.com/user-attachments/assets/97e2687f-2ba7-4b5f-94ad-e2d3625d3e0b)
+
+![image](https://github.com/user-attachments/assets/51b6600b-2f05-4ffe-afa0-db4dc9645664)
+
+![image](https://github.com/user-attachments/assets/f37964e4-b01a-4628-958d-b68dc37c0d94)
+
+![image](https://github.com/user-attachments/assets/22928d15-0503-4918-9f88-56097d5f4cd8)
+
+![image](https://github.com/user-attachments/assets/5ff4b6b0-0909-4a8f-a284-0bc4e2018b17)
+
+![image](https://github.com/user-attachments/assets/65caa247-8a86-4299-8e94-74e4f7db703e)
+
+![image](https://github.com/user-attachments/assets/290de072-d6f1-4857-9ce0-e7990a24ec93)
+
+
