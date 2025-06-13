@@ -7,6 +7,10 @@ import {
   UpdateAiSettingsDto,
 } from './dto/ai-settings.dto';
 
+/**
+ * AI 설정 관련 비즈니스 로직을 처리하는 서비스
+ * 사용자별 AI 설정의 조회, 생성, 업데이트를 담당합니다.
+ */
 @Injectable()
 export class AiSettingsService {
   constructor(
@@ -14,6 +18,12 @@ export class AiSettingsService {
     private aiSettingsRepository: Repository<AiSettings>,
   ) {}
 
+  /**
+   * 사용자의 AI 설정을 조회합니다.
+   * 설정이 없는 경우 기본값으로 생성합니다.
+   * @param userId - 사용자 ID
+   * @returns AI 설정 객체
+   */
   async findByUserId(userId: string): Promise<AiSettings> {
     let settings = await this.aiSettingsRepository.findOne({
       where: { userId },
@@ -42,6 +52,12 @@ export class AiSettingsService {
     return settings;
   }
 
+  /**
+   * 새로운 AI 설정을 생성합니다.
+   * @param userId - 사용자 ID
+   * @param createDto - 생성할 설정 데이터
+   * @returns 생성된 AI 설정 객체
+   */
   async create(
     userId: string,
     createDto: CreateAiSettingsDto,
@@ -53,11 +69,17 @@ export class AiSettingsService {
     return this.aiSettingsRepository.save(settings);
   }
 
+  /**
+   * 기존 AI 설정을 업데이트합니다.
+   * @param userId - 사용자 ID
+   * @param updateDto - 업데이트할 설정 데이터
+   * @returns 업데이트된 AI 설정 객체
+   */
   async update(
     userId: string,
     updateDto: UpdateAiSettingsDto,
   ): Promise<AiSettings> {
-    console.log(`�� 사용자 ${userId}의 설정 업데이트:`, updateDto);
+    console.log(`🔄 사용자 ${userId}의 설정 업데이트:`, updateDto);
     await this.aiSettingsRepository.update({ userId }, updateDto);
     const updatedSettings = await this.findByUserId(userId);
     console.log(`✅ 업데이트 완료:`, updatedSettings);
