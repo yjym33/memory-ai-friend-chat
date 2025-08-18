@@ -2,6 +2,9 @@ import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { User } from '../auth/entity/user.entity';
+import { Goal } from '../agent/entities/goal.entity';
+import { Emotion } from '../agent/entities/emotion.entity';
+import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 
 export default registerAs(
   'database',
@@ -12,7 +15,7 @@ export default registerAs(
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_NAME || 'chatbot',
-    entities: [User, Conversation],
+    entities: [User, Conversation, Goal, Emotion, AiSettings],
     synchronize: true, // 개발환경에서만 사용
     autoLoadEntities: true,
   }),

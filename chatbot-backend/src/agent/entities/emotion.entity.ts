@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '../../auth/entity/user.entity';
 
 export enum EmotionType {
   HAPPY = 'happy',
@@ -28,7 +28,7 @@ export class Emotion {
   id: number;
 
   @Column({ name: 'user_id' })
-  userId: number;
+  userId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
