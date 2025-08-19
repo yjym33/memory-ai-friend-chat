@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entity/user.entity';
@@ -17,11 +18,17 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     // 데이터베이스 엔티티 등록
     TypeOrmModule.forFeature([User]),
 
-    // JWT 모듈 설정
-    JwtModule.register({
+    // JWT 모듈 설정 (환경변수 검증과 함께)
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '24h' }, // 토큰 만료 시간 24시간
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('security.jwt.secret'),
+        signOptions: {
+          expiresIn: configService.get<string>('security.jwt.expiresIn'),
+        },
+      }),
+      inject: [ConfigService],
     }),
 
     // 사용자 관리 모듈

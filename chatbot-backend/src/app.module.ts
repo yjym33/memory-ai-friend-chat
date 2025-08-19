@@ -7,6 +7,8 @@ import { ChatModule } from './chat/chat.module';
 import { UploadModule } from './upload/upload.module';
 import { AppConfigModule } from './config/config.module';
 import databaseConfig from './config/database.config';
+import securityConfig from './config/security.config';
+import { validate } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { AiSettingsModule } from './ai-settings/ai-settings.module';
 import { ConversationAnalyticsModule } from './conversation-analytics/conversation-analytics.module';
@@ -18,10 +20,11 @@ import { AgentModule } from './agent/agent.module';
  */
 @Module({
   imports: [
-    // 환경 설정 모듈
+    // 환경 설정 모듈 (환경변수 검증 포함)
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig],
+      load: [databaseConfig, securityConfig],
+      validate, // 환경변수 검증 함수 추가
     }),
 
     // 데이터베이스 설정
