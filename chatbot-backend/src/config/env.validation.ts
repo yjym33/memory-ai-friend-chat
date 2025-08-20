@@ -63,6 +63,15 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   FRONTEND_URL: string = 'http://localhost:3000';
+
+  // 데이터베이스 마이그레이션 설정
+  @Transform(({ value }) => value === 'true')
+  @IsOptional()
+  DB_SYNCHRONIZE: boolean = true;
+
+  @Transform(({ value }) => value === 'true')
+  @IsOptional()
+  DB_LOGGING: boolean = false;
 }
 
 /**
