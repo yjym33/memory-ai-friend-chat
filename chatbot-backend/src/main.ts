@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { mkdir } from 'fs/promises';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { logDirectory } from './config/logger.config';
 
 /**
  * 애플리케이션 부트스트랩 함수
@@ -21,13 +23,17 @@ async function bootstrap() {
     require('express').urlencoded({ limit: bodyParserLimit, extended: true }),
   );
 
-  // 업로드 디렉토리 생성
+  // 필요한 디렉토리들 생성
   try {
     await mkdir('./uploads', { recursive: true });
-    console.log('✅ 업로드 디렉토리 생성 완료');
+    await mkdir(`./${logDirectory}`, { recursive: true });
+    console.log('✅ 업로드 및 로그 디렉토리 생성 완료');
   } catch (error) {
-    console.error('❌ 업로드 디렉토리 생성 실패:', error);
+    console.error('❌ 디렉토리 생성 실패:', error);
   }
+
+  // Winston 로거를 기본 로거로 설정
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   // CORS 설정 (보안 설정에서 가져오기)
   const corsConfig = configService.get('security.cors');

@@ -15,7 +15,7 @@ export class AgentService {
     private goalRepository: Repository<Goal>,
   ) {}
 
-  async processMessage(userId: number, message: string): Promise<string> {
+  async processMessage(userId: string, message: string): Promise<string> {
     console.log(`[Agent] Processing message for user ${userId}: "${message}"`);
 
     // 1. 에이전트 상태 초기화
@@ -471,7 +471,7 @@ export class AgentService {
     }
   }
 
-  async getAgentStatus(userId: number): Promise<{
+  async getAgentStatus(userId: string): Promise<{
     recentEmotions: any[];
     activeGoals: any[];
     emotionSummary: any;

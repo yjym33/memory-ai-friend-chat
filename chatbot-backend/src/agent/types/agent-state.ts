@@ -2,7 +2,7 @@ import { EmotionType } from '../entities/emotion.entity';
 import { GoalStatus, GoalCategory } from '../entities/goal.entity';
 
 export interface AgentState {
-  userId: number;
+  userId: string;
   currentMessage: string;
 
   // 감정 분석 결과
