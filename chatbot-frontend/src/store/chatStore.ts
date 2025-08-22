@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { Message, ChatSession } from "../types/chat";
+import { Message, ChatSession } from "../types";
 
 interface ChatState {
   currentSession: ChatSession | null;

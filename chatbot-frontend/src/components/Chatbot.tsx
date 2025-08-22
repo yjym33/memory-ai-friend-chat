@@ -6,19 +6,7 @@ import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
 import ChatWindow from "./ChatWindow";
 import ChatInput from "./ChatInput";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface Conversation {
-  id: number;
-  title: string;
-  messages: Message[];
-  createdAt: string;
-  pinned?: boolean;
-}
+import { Message, Conversation } from "../types";
 
 export default function Chatbot() {
   const [conversations, setConversations] = useState<Conversation[]>([]);

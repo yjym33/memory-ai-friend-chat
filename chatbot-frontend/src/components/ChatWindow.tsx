@@ -3,11 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { Message } from "../types";
 
 interface ChatWindowProps {
   messages: Message[];

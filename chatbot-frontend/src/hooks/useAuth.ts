@@ -2,11 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import axiosInstance from "../utils/axios";
 import { useAuthStore } from "../store/authStore";
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
+import { LoginData } from "../types";
 
 interface RegisterCredentials {
   email: string;
@@ -22,7 +18,7 @@ export function useLogin() {
   const { login } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (credentials: LoginCredentials) => {
+    mutationFn: async (credentials: LoginData) => {
       const response = await axiosInstance.post("/auth/login", credentials);
       return response.data;
     },

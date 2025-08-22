@@ -1,12 +1,7 @@
 import axiosInstance from "@/utils/axios";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
-interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-}
+import { RegisterData } from "../types";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -28,7 +23,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       isAuthenticated: false,
       token: null,
       userId: null,
