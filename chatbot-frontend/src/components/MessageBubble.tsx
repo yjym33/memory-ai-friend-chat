@@ -1,13 +1,10 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Message } from "../types";
 
 interface MessageBubbleProps {
-  message: {
-    role: "user" | "assistant";
-    content: string;
-  };
+  message: Message;
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
@@ -22,17 +19,14 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       >
         <ReactMarkdown
           components={{
-            code({ inline, className, children, ...props }) {
+            code(props) {
+              const { children, className } = props;
               const match = /language-(\w+)/.exec(className || "");
               const language = match ? match[1] : "";
+              const isInline = !className;
 
-              return !inline ? (
-                <SyntaxHighlighter
-                  style={dracula}
-                  language={language}
-                  PreTag="div"
-                  {...props}
-                >
+              return !isInline ? (
+                <SyntaxHighlighter language={language} PreTag="div">
                   {String(children).replace(/\n$/, "")}
                 </SyntaxHighlighter>
               ) : (
@@ -42,7 +36,6 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
                       ? "bg-gray-200 text-gray-800"
                       : "bg-blue-600 text-white"
                   } rounded px-1 py-0.5 font-mono text-sm`}
-                  {...props}
                 >
                   {children}
                 </code>

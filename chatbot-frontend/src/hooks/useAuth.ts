@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import axiosInstance from "../utils/axios";
+import { AuthService } from "../services";
 import { useAuthStore } from "../store/authStore";
 import { LoginData } from "../types";
 
@@ -19,8 +19,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const response = await axiosInstance.post("/auth/login", credentials);
-      return response.data;
+      return await AuthService.login(credentials);
     },
     onSuccess: (data) => {
       login(data.token, data.userId);
@@ -35,8 +34,11 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: async (credentials: RegisterCredentials) => {
-      const response = await axiosInstance.post("/auth/register", credentials);
-      return response.data;
+      // RegisterCredentials를 RegisterData로 변환
+      const { passwordCheck, ...registerData } = credentials;
+      // passwordCheck는 프론트엔드에서만 사용하므로 백엔드에 전송하지 않음
+      void passwordCheck;
+      return await AuthService.register(registerData);
     },
     onSuccess: (data) => {
       login(data.token, data.userId);

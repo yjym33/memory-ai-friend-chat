@@ -1,13 +1,8 @@
 import React, { useState } from "react";
+import { Conversation } from "../types";
 
 interface ChatListSidebarProps {
-  conversations: {
-    id: number;
-    title: string;
-    messages: unknown[];
-    createdAt: string;
-    pinned?: boolean;
-  }[];
+  conversations: Conversation[];
   activeChatId: number | null;
   setActiveChatId: (id: number) => void;
   startNewChat: () => void;
@@ -113,7 +108,9 @@ export default function ChatListSidebar({
                       : "대화를 시작해보세요!"}
                   </div>
                   <div className="text-[10px] text-gray-400 mt-1">
-                    {new Date(chat.createdAt).toLocaleString()}
+                    {typeof chat.createdAt === "string"
+                      ? new Date(chat.createdAt).toLocaleString()
+                      : chat.createdAt.toLocaleString()}
                   </div>
                 </div>
                 <button

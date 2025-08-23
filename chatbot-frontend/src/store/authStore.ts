@@ -1,7 +1,8 @@
-import axiosInstance from "@/utils/axios";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import axiosInstance from "../utils/axios";
 import { RegisterData } from "../types";
+import { AuthService } from "../services";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -55,9 +56,16 @@ export const useAuthStore = create<AuthState>()(
 
       validateToken: async () => {
         try {
-          await axiosInstance.get("/auth/validate");
+          const userData = await AuthService.validateToken();
+          // 사용자 정보 업데이트
+          set((state) => ({
+            ...state,
+            isAuthenticated: true,
+            userEmail: userData.email,
+            userName: userData.name,
+          }));
           return true;
-        } catch (error) {
+        } catch {
           set((state) => ({
             ...state,
             isAuthenticated: false,
@@ -73,8 +81,8 @@ export const useAuthStore = create<AuthState>()(
       // 추가: 회원가입 메서드
       register: async (data: RegisterData) => {
         try {
-          const response = await axiosInstance.post("/auth/register", data);
-          const { token, userId } = response.data;
+          const response = await AuthService.register(data);
+          const { token, userId } = response;
           set((state) => ({
             ...state,
             isAuthenticated: true,
@@ -83,9 +91,8 @@ export const useAuthStore = create<AuthState>()(
             userEmail: data.email,
             userName: data.name,
           }));
-          axiosInstance.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${token}`;
+          localStorage.setItem("token", token);
+          localStorage.setItem("userId", userId);
         } catch (error) {
           console.error("회원가입 실패:", error);
           throw error;

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axiosInstance from "../utils/axios";
+import { ChatService } from "../services";
+import { Message, Conversation } from "../types";
 import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
 import ChatWindow from "./ChatWindow";
 import ChatInput from "./ChatInput";
-import { Message, Conversation } from "../types";
 
 export default function Chatbot() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -17,14 +17,15 @@ export default function Chatbot() {
   // 대화 목록 가져오기
   useEffect(() => {
     fetchConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConversations = async () => {
     try {
-      const response = await axiosInstance.get("/chat/conversations");
-      setConversations(response.data);
-      if (response.data.length > 0 && !activeChatId) {
-        setActiveChatId(response.data[0].id);
+      const data = await ChatService.getConversations();
+      setConversations(data);
+      if (data.length > 0 && !activeChatId) {
+        setActiveChatId(data[0].id);
       }
     } catch (error) {
       console.error("대화 목록 가져오기 실패:", error);
@@ -51,25 +52,27 @@ export default function Chatbot() {
     );
     setInput("");
     try {
-      const requestData = {
-        message: input,
-      };
-      const response = await axiosInstance.post(
-        `/chat/completion/${activeChatId}`,
-        requestData
+      // 새로운 서비스를 사용한 메시지 전송
+      const assistantMessage = await ChatService.sendMessage(
+        activeChatId,
+        input
       );
 
-      // 백엔드에서 직접 응답을 받는 구조로 수정
-      const assistantMessage: Message = {
+      // 타입이 맞지 않을 경우를 대비한 안전한 변환
+      const safeAssistantMessage: Message = {
         role: "assistant",
-        content: response.data.content,
+        content:
+          assistantMessage.content ||
+          (assistantMessage as { response?: string }).response ||
+          (assistantMessage as { data?: { content?: string } }).data?.content ||
+          "응답을 받지 못했습니다.",
       };
       setConversations((prev) =>
         prev.map((chat) =>
           chat.id === activeChatId
             ? {
                 ...chat,
-                messages: [...chat.messages, assistantMessage],
+                messages: [...chat.messages, safeAssistantMessage],
               }
             : chat
         )
@@ -88,8 +91,7 @@ export default function Chatbot() {
   // 새 대화 시작
   const startNewChat = async () => {
     try {
-      const response = await axiosInstance.post("/chat/conversations");
-      const newChat = response.data;
+      const newChat = await ChatService.createConversation();
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
     } catch (error) {
@@ -102,7 +104,7 @@ export default function Chatbot() {
   const handleDeleteChat = async (chatId: number) => {
     if (!window.confirm("이 대화를 삭제하시겠습니까?")) return;
     try {
-      await axiosInstance.delete(`/chat/conversations/${chatId}`);
+      await ChatService.deleteConversation(chatId);
       const updated = conversations.filter((chat) => chat.id !== chatId);
       setConversations(updated);
       if (activeChatId === chatId) {
@@ -117,9 +119,7 @@ export default function Chatbot() {
   // 대화방 이름 변경 기능
   const handleUpdateTitle = async (chatId: number, newTitle: string) => {
     try {
-      await axiosInstance.put(`/chat/conversations/${chatId}/title`, {
-        title: newTitle,
-      });
+      await ChatService.updateConversationTitle(chatId, newTitle);
       setConversations((prev) =>
         prev.map((chat) =>
           chat.id === chatId ? { ...chat, title: newTitle } : chat
@@ -134,14 +134,11 @@ export default function Chatbot() {
   // 대화방 고정/즐겨찾기 기능
   const handleTogglePin = async (chatId: number) => {
     try {
-      const chat = conversations.find((c) => c.id === chatId);
-      if (!chat) return;
-      const newPinned = !chat.pinned;
-      await axiosInstance.put(`/chat/conversations/${chatId}/pin`, {
-        pinned: newPinned,
-      });
+      const updatedConversation = await ChatService.toggleConversationPin(
+        chatId
+      );
       setConversations((prev) =>
-        prev.map((c) => (c.id === chatId ? { ...c, pinned: newPinned } : c))
+        prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
     } catch (error) {
       console.error("대화방 고정/해제 실패:", error);

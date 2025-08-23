@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -21,29 +19,12 @@ import {
   MessageCircle,
   TrendingUp,
   Star,
-  Clock,
   ArrowLeft,
   AlertCircle,
 } from "lucide-react";
 import axiosInstance from "../../utils/axios";
 import { useRouter } from "next/navigation";
-
-interface Milestone {
-  date: string;
-  type: string;
-  title: string;
-  description: string;
-  conversationId: number;
-}
-
-interface AnalyticsData {
-  milestones: Milestone[];
-  emotionTimeline: { date: string; score: number }[];
-  favoriteTopics: { topic: string; count: number }[];
-  totalConversations: number;
-  relationshipDuration: number;
-  emotionalJourney: string;
-}
+import { AnalyticsData } from "../../types";
 
 export default function OurStoriesPage() {
   const router = useRouter();
@@ -58,6 +39,7 @@ export default function OurStoriesPage() {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod]);
 
   const fetchAnalytics = async () => {
@@ -77,10 +59,12 @@ export default function OurStoriesPage() {
       if (response.data.totalConversations === 0) {
         setError("아직 대화 기록이 없어요. 루나와 대화를 시작해보세요! 💬");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Analytics API 오류:", error);
 
-      if (error.response?.status === 401) {
+      if (
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
         setError("로그인이 필요합니다. 다시 로그인해주세요.");
         router.push("/login");
         return;

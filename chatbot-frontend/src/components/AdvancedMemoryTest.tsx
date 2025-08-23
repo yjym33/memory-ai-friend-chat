@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import axiosInstance from "../utils/axios";
 
 export default function AdvancedMemoryTest() {
-  const [testHistory, setTestHistory] = useState<
+  const [testHistory] = useState<
     Array<{
       timestamp: string;
       category: string;
@@ -23,9 +22,10 @@ export default function AdvancedMemoryTest() {
     ];
 
     // 정보 입력
-    for (const data of testData) {
+    for (const item of testData) {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 간격
-      // 정보 입력 로직...
+      // TODO: 정보 입력 로직 구현
+      console.log("Processing:", item);
     }
 
     // 무작위 질문
@@ -36,7 +36,8 @@ export default function AdvancedMemoryTest() {
       "오늘 기분이 어땠지?",
     ];
 
-    // 질문 및 채점 로직...
+    // TODO: 질문 및 채점 로직 구현
+    console.log("Questions:", questions);
   };
 
   return (

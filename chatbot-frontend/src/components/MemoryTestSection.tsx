@@ -132,7 +132,9 @@ export default function MemoryTestSection({
             <button
               key={key}
               onClick={() => {
-                setSelectedCategory(key as any);
+                setSelectedCategory(
+                  key as "personal" | "hobby" | "work" | "emotion"
+                );
                 resetTest();
               }}
               className={`p-2 rounded text-sm transition ${
@@ -174,11 +176,15 @@ export default function MemoryTestSection({
             <div className="font-medium text-gray-700 mb-1">
               📝 입력할 정보:
             </div>
-            <div className="text-gray-600 mb-2">"{currentScenario.setup}"</div>
+            <div className="text-gray-600 mb-2">
+              &quot;{currentScenario.setup}&quot;
+            </div>
             <div className="font-medium text-gray-700 mb-1">
               ❓ 테스트 질문:
             </div>
-            <div className="text-gray-600">"{currentScenario.test}"</div>
+            <div className="text-gray-600">
+              &quot;{currentScenario.test}&quot;
+            </div>
           </div>
         </div>
 

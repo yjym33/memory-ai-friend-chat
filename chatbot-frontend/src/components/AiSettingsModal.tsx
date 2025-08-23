@@ -1,28 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import axiosInstance from "../utils/axios";
+import { AiSettingsService } from "../services";
+import { UpdateAiSettingsDto } from "../types";
 import MemoryTestSection from "./MemoryTestSection";
-
-interface AiSettingsData {
-  personalityType: string;
-  speechStyle: string;
-  emojiUsage: number;
-  nickname: string;
-  empathyLevel: number;
-  memoryRetentionDays: number;
-  memoryPriorities: {
-    personal: number;
-    hobby: number;
-    work: number;
-    emotion: number;
-  };
-  userProfile: {
-    interests: string[];
-    currentGoals: string[];
-    importantDates: { name: string; date: string }[];
-  };
-  avoidTopics: string[];
-}
 
 interface AiSettingsModalProps {
   isOpen: boolean;
@@ -33,7 +14,7 @@ export default function AiSettingsModal({
   isOpen,
   onClose,
 }: AiSettingsModalProps) {
-  const [settings, setSettings] = useState<AiSettingsData>({
+  const [settings, setSettings] = useState<UpdateAiSettingsDto>({
     personalityType: "친근함",
     speechStyle: "반말",
     emojiUsage: 3,
@@ -50,7 +31,6 @@ export default function AiSettingsModal({
     "personality"
   );
 
-  const [testResponse, setTestResponse] = useState("");
   const [selectedTestMessage, setSelectedTestMessage] = useState("");
 
   const [beforeResponse, setBeforeResponse] = useState("");
@@ -64,8 +44,31 @@ export default function AiSettingsModal({
 
   const fetchSettings = async () => {
     try {
-      const response = await axiosInstance.get("/ai-settings");
-      setSettings(response.data);
+      const data = await AiSettingsService.getSettings();
+      // AiSettings에서 필요한 필드만 추출하여 UpdateAiSettingsDto로 변환
+      const {
+        personalityType,
+        speechStyle,
+        emojiUsage,
+        nickname,
+        empathyLevel,
+        memoryRetentionDays,
+        memoryPriorities,
+        userProfile,
+        avoidTopics,
+      } = data;
+
+      setSettings({
+        personalityType,
+        speechStyle,
+        emojiUsage,
+        nickname: nickname || "",
+        empathyLevel,
+        memoryRetentionDays,
+        memoryPriorities,
+        userProfile,
+        avoidTopics,
+      });
     } catch (error) {
       console.error("설정 불러오기 실패:", error);
     }
@@ -74,10 +77,11 @@ export default function AiSettingsModal({
   const handleSave = async () => {
     setLoading(true);
     try {
-      await axiosInstance.put("/ai-settings", settings);
+      await AiSettingsService.updateSettings(settings);
       alert("설정이 저장되었습니다!");
       onClose();
     } catch (error) {
+      console.error("설정 저장 실패:", error);
       alert("설정 저장에 실패했습니다.");
     } finally {
       setLoading(false);
@@ -87,18 +91,17 @@ export default function AiSettingsModal({
   const testSettings = async () => {
     setLoading(true);
     try {
-      // 임시로 설정을 저장
-      await axiosInstance.put("/ai-settings", settings);
-
       // 테스트 메시지 전송
-      const testMessage = "안녕! 기분이 어떤지 궁금해~";
-      const response = await axiosInstance.post("/chat/completions", {
-        messages: [{ role: "user", content: testMessage }],
-      });
+      const testMessage = selectedTestMessage || "안녕! 기분이 어떤지 궁금해~";
+      const response = await AiSettingsService.testSettings(
+        settings,
+        testMessage
+      );
 
-      setTestResponse(response.data.choices[0].message.content);
+      setAfterResponse(response.response);
+      alert("테스트가 완료되었습니다! 결과를 확인해보세요.");
     } catch (error) {
-      setTestResponse("테스트 실패: " + error.message);
+      alert("테스트 실패: " + (error as Error).message);
     } finally {
       setLoading(false);
     }
