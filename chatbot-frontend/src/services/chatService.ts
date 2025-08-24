@@ -6,21 +6,23 @@ export class ChatService extends BaseService {
    * 모든 대화 목록 조회
    */
   static async getConversations(): Promise<Conversation[]> {
-    return this.get<Conversation[]>("/chat/conversations");
+    return BaseService.get<Conversation[]>("/chat/conversations");
   }
 
   /**
    * 특정 대화 조회
    */
   static async getConversation(conversationId: number): Promise<Conversation> {
-    return this.get<Conversation>(`/chat/conversations/${conversationId}`);
+    return BaseService.get<Conversation>(
+      `/chat/conversations/${conversationId}`
+    );
   }
 
   /**
    * 새 대화 생성
    */
   static async createConversation(): Promise<Conversation> {
-    return this.post<Conversation>("/chat/conversations");
+    return BaseService.post<Conversation>("/chat/conversations");
   }
 
   /**
@@ -30,7 +32,7 @@ export class ChatService extends BaseService {
     conversationId: number,
     message: string
   ): Promise<Message> {
-    return this.post<Message>(`/chat/completion/${conversationId}`, {
+    return BaseService.post<Message>(`/chat/completion/${conversationId}`, {
       message,
     });
   }
@@ -42,9 +44,12 @@ export class ChatService extends BaseService {
     conversationId: number,
     title: string
   ): Promise<Conversation> {
-    return this.patch<Conversation>(`/chat/conversations/${conversationId}`, {
-      title,
-    });
+    return BaseService.patch<Conversation>(
+      `/chat/conversations/${conversationId}`,
+      {
+        title,
+      }
+    );
   }
 
   /**
@@ -53,7 +58,7 @@ export class ChatService extends BaseService {
   static async toggleConversationPin(
     conversationId: number
   ): Promise<Conversation> {
-    return this.patch<Conversation>(
+    return BaseService.patch<Conversation>(
       `/chat/conversations/${conversationId}/pin`
     );
   }
@@ -62,6 +67,6 @@ export class ChatService extends BaseService {
    * 대화 삭제
    */
   static async deleteConversation(conversationId: number): Promise<void> {
-    await this.delete<void>(`/chat/conversations/${conversationId}`);
+    await BaseService.delete<void>(`/chat/conversations/${conversationId}`);
   }
 }

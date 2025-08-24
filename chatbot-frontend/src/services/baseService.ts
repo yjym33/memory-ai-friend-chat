@@ -2,10 +2,24 @@ import axiosInstance from "../utils/axios";
 import { error as toastError } from "../lib/toast";
 
 /**
+ * API 에러 타입 정의
+ */
+interface ApiError {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+}
+
+/**
  * 기본 서비스 클래스
  * 모든 API 서비스가 상속받아 사용할 수 있는 공통 기능 제공
  */
-export abstract class BaseService {
+export class BaseService {
   /**
    * API 요청 래퍼 - 공통 에러 처리 포함
    */
@@ -28,12 +42,12 @@ export abstract class BaseService {
       console.error(`API 요청 실패 [${method} ${url}]:`, error);
 
       // 상세한 에러 정보 추출
-      const errorMessage = this.extractErrorMessage(error);
-      const apiError = error as { response?: { status?: number } };
+      const errorMessage = BaseService.extractErrorMessage(error);
+      const apiError = error as ApiError;
       const statusCode = apiError.response?.status;
 
       // 특정 상태 코드에 따른 처리
-      this.handleSpecificErrors(statusCode, errorMessage);
+      BaseService.handleSpecificErrors(statusCode, errorMessage);
 
       // 에러 재던지기 (호출하는 곳에서 추가 처리 가능)
       throw error;
@@ -47,7 +61,7 @@ export abstract class BaseService {
     url: string,
     config?: Record<string, unknown>
   ): Promise<T> {
-    return this.request<T>("GET", url, undefined, config);
+    return BaseService.request<T>("GET", url, undefined, config);
   }
 
   /**
@@ -58,7 +72,7 @@ export abstract class BaseService {
     data?: unknown,
     config?: Record<string, unknown>
   ): Promise<T> {
-    return this.request<T>("POST", url, data, config);
+    return BaseService.request<T>("POST", url, data, config);
   }
 
   /**
@@ -69,7 +83,7 @@ export abstract class BaseService {
     data?: unknown,
     config?: Record<string, unknown>
   ): Promise<T> {
-    return this.request<T>("PUT", url, data, config);
+    return BaseService.request<T>("PUT", url, data, config);
   }
 
   /**
@@ -80,7 +94,7 @@ export abstract class BaseService {
     data?: unknown,
     config?: Record<string, unknown>
   ): Promise<T> {
-    return this.request<T>("PATCH", url, data, config);
+    return BaseService.request<T>("PATCH", url, data, config);
   }
 
   /**
@@ -90,22 +104,14 @@ export abstract class BaseService {
     url: string,
     config?: Record<string, unknown>
   ): Promise<T> {
-    return this.request<T>("DELETE", url, undefined, config);
+    return BaseService.request<T>("DELETE", url, undefined, config);
   }
 
   /**
    * 에러 메시지 추출
    */
   private static extractErrorMessage(error: unknown): string {
-    const apiError = error as {
-      response?: {
-        data?: {
-          message?: string;
-          error?: string;
-        };
-      };
-      message?: string;
-    };
+    const apiError = error as ApiError;
 
     if (apiError.response?.data?.message) {
       return apiError.response.data.message;
