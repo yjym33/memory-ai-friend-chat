@@ -1,35 +1,26 @@
-import axiosInstance from "../utils/axios";
 import { Conversation, Message } from "../types";
+import { BaseService } from "./baseService";
 
-export class ChatService {
+export class ChatService extends BaseService {
   /**
    * 모든 대화 목록 조회
    */
   static async getConversations(): Promise<Conversation[]> {
-    const response = await axiosInstance.get<Conversation[]>(
-      "/chat/conversations"
-    );
-    return response.data;
+    return this.get<Conversation[]>("/chat/conversations");
   }
 
   /**
    * 특정 대화 조회
    */
   static async getConversation(conversationId: number): Promise<Conversation> {
-    const response = await axiosInstance.get<Conversation>(
-      `/chat/conversations/${conversationId}`
-    );
-    return response.data;
+    return this.get<Conversation>(`/chat/conversations/${conversationId}`);
   }
 
   /**
    * 새 대화 생성
    */
   static async createConversation(): Promise<Conversation> {
-    const response = await axiosInstance.post<Conversation>(
-      "/chat/conversations"
-    );
-    return response.data;
+    return this.post<Conversation>("/chat/conversations");
   }
 
   /**
@@ -39,11 +30,9 @@ export class ChatService {
     conversationId: number,
     message: string
   ): Promise<Message> {
-    const response = await axiosInstance.post<Message>(
-      `/chat/completion/${conversationId}`,
-      { message }
-    );
-    return response.data;
+    return this.post<Message>(`/chat/completion/${conversationId}`, {
+      message,
+    });
   }
 
   /**
@@ -53,11 +42,9 @@ export class ChatService {
     conversationId: number,
     title: string
   ): Promise<Conversation> {
-    const response = await axiosInstance.patch<Conversation>(
-      `/chat/conversations/${conversationId}`,
-      { title }
-    );
-    return response.data;
+    return this.patch<Conversation>(`/chat/conversations/${conversationId}`, {
+      title,
+    });
   }
 
   /**
@@ -66,16 +53,15 @@ export class ChatService {
   static async toggleConversationPin(
     conversationId: number
   ): Promise<Conversation> {
-    const response = await axiosInstance.patch<Conversation>(
+    return this.patch<Conversation>(
       `/chat/conversations/${conversationId}/pin`
     );
-    return response.data;
   }
 
   /**
    * 대화 삭제
    */
   static async deleteConversation(conversationId: number): Promise<void> {
-    await axiosInstance.delete(`/chat/conversations/${conversationId}`);
+    await this.delete<void>(`/chat/conversations/${conversationId}`);
   }
 }

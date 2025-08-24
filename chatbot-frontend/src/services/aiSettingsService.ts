@@ -1,13 +1,12 @@
-import axiosInstance from "../utils/axios";
 import { AiSettings, CreateAiSettingsDto, UpdateAiSettingsDto } from "../types";
+import { BaseService } from "./baseService";
 
-export class AiSettingsService {
+export class AiSettingsService extends BaseService {
   /**
    * AI 설정 조회
    */
   static async getSettings(): Promise<AiSettings> {
-    const response = await axiosInstance.get<AiSettings>("/ai-settings");
-    return response.data;
+    return this.get<AiSettings>("/ai-settings");
   }
 
   /**
@@ -16,11 +15,7 @@ export class AiSettingsService {
   static async createSettings(
     settings: CreateAiSettingsDto
   ): Promise<AiSettings> {
-    const response = await axiosInstance.post<AiSettings>(
-      "/ai-settings",
-      settings
-    );
-    return response.data;
+    return this.post<AiSettings>("/ai-settings", settings);
   }
 
   /**
@@ -29,18 +24,14 @@ export class AiSettingsService {
   static async updateSettings(
     settings: UpdateAiSettingsDto
   ): Promise<AiSettings> {
-    const response = await axiosInstance.put<AiSettings>(
-      "/ai-settings",
-      settings
-    );
-    return response.data;
+    return this.put<AiSettings>("/ai-settings", settings);
   }
 
   /**
    * AI 설정 삭제
    */
   static async deleteSettings(): Promise<void> {
-    await axiosInstance.delete("/ai-settings");
+    await this.delete<void>("/ai-settings");
   }
 
   /**
@@ -50,13 +41,9 @@ export class AiSettingsService {
     settings: UpdateAiSettingsDto,
     testMessage: string
   ): Promise<{ response: string }> {
-    const response = await axiosInstance.post<{ response: string }>(
-      "/ai-settings/test",
-      {
-        settings,
-        message: testMessage,
-      }
-    );
-    return response.data;
+    return this.post<{ response: string }>("/ai-settings/test", {
+      settings,
+      message: testMessage,
+    });
   }
 }

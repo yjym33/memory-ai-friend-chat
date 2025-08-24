@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLogin } from "../../hooks/useAuth";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { warning as toastWarning } from "../../lib/toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,7 +20,7 @@ export default function LoginPage() {
   const handleSocialLogin = (provider: "google" | "kakao") => {
     // 소셜 로그인 로직 (추후 구현)
     console.log(`${provider} 로그인 선택됨`);
-    alert(`${provider} 로그인은 준비 중입니다! 🚧`);
+    toastWarning(`${provider} 로그인은 준비 중입니다! 🚧`);
   };
 
   return (
@@ -47,12 +48,6 @@ export default function LoginPage() {
               계정에 로그인하여 루나와의 대화를 이어가세요
             </p>
           </div>
-
-          {login.error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.
-            </div>
-          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             {/* 이메일 입력 */}

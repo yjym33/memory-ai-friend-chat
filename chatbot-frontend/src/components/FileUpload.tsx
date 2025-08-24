@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import axios from "axios";
+import { success as toastSuccess, error as toastError } from "../lib/toast";
 
 interface FileUploadProps {
   onFileUploaded: (fileInfo: { originalName: string; path: string }) => void;
@@ -37,12 +38,12 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
       );
 
       console.log("파일 업로드 성공:", response.data);
-      onFileUploaded(response.data);  // 파일 정보를 부모 컴포넌트로 전달
-      alert("파일 업로드 성공!");
+      onFileUploaded(response.data); // 파일 정보를 부모 컴포넌트로 전달
+      toastSuccess("파일 업로드 성공!");
       setSelectedFile(null);
     } catch (error) {
       console.error("파일 업로드 실패:", error);
-      alert("파일 업로드 실패!");
+      toastError("파일 업로드 실패!");
     } finally {
       setUploading(false);
     }
@@ -55,11 +56,7 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
           <span className="text-xs sm:text-sm text-gray-600 truncate">
             {selectedFile ? selectedFile.name : "파일 선택"}
           </span>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          <input type="file" onChange={handleFileChange} className="hidden" />
         </label>
       </div>
       <button

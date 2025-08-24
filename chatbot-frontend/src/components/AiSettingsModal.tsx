@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import axiosInstance from "../utils/axios";
 import { AiSettingsService } from "../services";
 import { UpdateAiSettingsDto } from "../types";
+import { success as toastSuccess, error as toastError } from "../lib/toast";
 import MemoryTestSection from "./MemoryTestSection";
 
 interface AiSettingsModalProps {
@@ -78,11 +79,11 @@ export default function AiSettingsModal({
     setLoading(true);
     try {
       await AiSettingsService.updateSettings(settings);
-      alert("설정이 저장되었습니다!");
+      toastSuccess("설정이 저장되었습니다!");
       onClose();
     } catch (error) {
       console.error("설정 저장 실패:", error);
-      alert("설정 저장에 실패했습니다.");
+      toastError("설정 저장에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -99,9 +100,9 @@ export default function AiSettingsModal({
       );
 
       setAfterResponse(response.response);
-      alert("테스트가 완료되었습니다! 결과를 확인해보세요.");
+      toastSuccess("테스트가 완료되었습니다! 결과를 확인해보세요.");
     } catch (error) {
-      alert("테스트 실패: " + (error as Error).message);
+      toastError("테스트 실패: " + (error as Error).message);
     } finally {
       setLoading(false);
     }

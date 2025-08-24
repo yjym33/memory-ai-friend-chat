@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { MEMORY_TEST_SCENARIOS } from "../data/memoryTestData";
 import axiosInstance from "../utils/axios";
+import {
+  success as toastSuccess,
+  error as toastError,
+  warning as toastWarning,
+} from "../lib/toast";
 
 interface MemoryTestSectionProps {
   memoryPriorities: {
@@ -59,10 +64,10 @@ export default function MemoryTestSection({
 
       if (response.data.choices && response.data.choices.length > 0) {
         setSetupComplete(true);
-        alert("✅ 정보가 입력되었습니다! 이제 기억 테스트를 해보세요.");
+        toastSuccess("✅ 정보가 입력되었습니다! 이제 기억 테스트를 해보세요.");
       }
     } catch (error) {
-      alert("정보 입력에 실패했습니다.");
+      toastError("정보 입력에 실패했습니다.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -72,7 +77,7 @@ export default function MemoryTestSection({
   // 기억 테스트 실행
   const testMemory = async () => {
     if (!conversationId) {
-      alert("먼저 정보를 입력해주세요.");
+      toastWarning("먼저 정보를 입력해주세요.");
       return;
     }
 
@@ -97,7 +102,7 @@ export default function MemoryTestSection({
         );
       }
     } catch (error) {
-      alert("기억 테스트에 실패했습니다.");
+      toastError("기억 테스트에 실패했습니다.");
       console.error(error);
     } finally {
       setLoading(false);

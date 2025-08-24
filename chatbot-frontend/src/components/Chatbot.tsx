@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ChatService } from "../services";
 import { Message, Conversation } from "../types";
+import { error as toastError } from "../lib/toast";
 import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
 import ChatWindow from "./ChatWindow";
@@ -82,7 +83,7 @@ export default function Chatbot() {
       await fetchConversations();
     } catch (error) {
       console.error("메시지 전송 실패:", error);
-      alert("메시지 전송에 실패했습니다.");
+      toastError("메시지 전송에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export default function Chatbot() {
       setActiveChatId(newChat.id);
     } catch (error) {
       console.error("새 대화 시작 실패:", error);
-      alert("새 대화를 시작할 수 없습니다.");
+      toastError("새 대화를 시작할 수 없습니다.");
     }
   };
 
@@ -112,7 +113,7 @@ export default function Chatbot() {
       }
     } catch (error) {
       console.error("대화방 삭제 실패:", error);
-      alert("대화방을 삭제하는데 실패했습니다.");
+      toastError("대화방을 삭제하는데 실패했습니다.");
     }
   };
 
@@ -127,7 +128,7 @@ export default function Chatbot() {
       );
     } catch (error) {
       console.error("대화방 이름 변경 실패:", error);
-      alert("대화방 이름 변경에 실패했습니다.");
+      toastError("대화방 이름 변경에 실패했습니다.");
     }
   };
 
@@ -142,7 +143,7 @@ export default function Chatbot() {
       );
     } catch (error) {
       console.error("대화방 고정/해제 실패:", error);
-      alert("대화방 고정/해제에 실패했습니다.");
+      toastError("대화방 고정/해제에 실패했습니다.");
     }
   };
 

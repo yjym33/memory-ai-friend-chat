@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRegister } from "../../hooks/useAuth";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { error as toastError, warning as toastWarning } from "../../lib/toast";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -21,11 +22,11 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreeTerms || !agreePrivacy) {
-      alert("약관에 모두 동의해야 가입이 가능합니다.");
+      toastWarning("약관에 모두 동의해야 가입이 가능합니다.");
       return;
     }
     if (password !== passwordCheck) {
-      alert("비밀번호가 일치하지 않습니다.");
+      toastError("비밀번호가 일치하지 않습니다.");
       return;
     }
     register.mutate({
@@ -39,7 +40,7 @@ export default function RegisterPage() {
   };
 
   const handleSocialRegister = (provider: "google" | "kakao") => {
-    alert(`${provider} 회원가입은 준비 중입니다! 🚧`);
+    toastWarning(`${provider} 회원가입은 준비 중입니다! 🚧`);
   };
 
   // 출생년도 옵션 생성
@@ -73,12 +74,6 @@ export default function RegisterPage() {
               루나가 당신을 더 잘 알 수 있도록 정보를 알려주세요
             </p>
           </div>
-
-          {register.error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-              회원가입에 실패했습니다. 다시 시도해주세요.
-            </div>
-          )}
 
           <form onSubmit={handleRegister} className="space-y-4">
             {/* 이름 입력 */}
