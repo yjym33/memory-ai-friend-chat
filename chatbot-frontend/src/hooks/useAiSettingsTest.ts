@@ -2,7 +2,6 @@ import { useState } from "react";
 import { AiSettingsService } from "../services";
 import { UpdateAiSettingsDto } from "../types";
 import { success as toastSuccess, error as toastError } from "../lib/toast";
-import axiosInstance from "../utils/axios";
 
 /**
  * AI 설정 테스트를 위한 커스텀 훅
@@ -39,19 +38,33 @@ export function useAiSettingsTest() {
 
     try {
       // 현재 설정으로 테스트
-      const currentResponse = await axiosInstance.post("/chat/completions", {
-        messages: [{ role: "user", content: testMessage }],
-      });
-      setBeforeResponse(currentResponse.data.choices[0].message.content);
+      const currentSettings = await AiSettingsService.getSettings();
 
-      // 새 설정 적용
-      await axiosInstance.put("/ai-settings", settings);
+      // AiSettings를 UpdateAiSettingsDto로 변환
+      const settingsForTest: UpdateAiSettingsDto = {
+        personalityType: currentSettings.personalityType,
+        speechStyle: currentSettings.speechStyle,
+        emojiUsage: currentSettings.emojiUsage,
+        nickname: currentSettings.nickname || undefined,
+        empathyLevel: currentSettings.empathyLevel,
+        memoryRetentionDays: currentSettings.memoryRetentionDays,
+        memoryPriorities: currentSettings.memoryPriorities,
+        userProfile: currentSettings.userProfile,
+        avoidTopics: currentSettings.avoidTopics,
+      };
+
+      const beforeResponse = await AiSettingsService.testSettings(
+        settingsForTest,
+        testMessage
+      );
+      setBeforeResponse(beforeResponse.response);
 
       // 새 설정으로 테스트
-      const newResponse = await axiosInstance.post("/chat/completions", {
-        messages: [{ role: "user", content: testMessage }],
-      });
-      setAfterResponse(newResponse.data.choices[0].message.content);
+      const afterResponse = await AiSettingsService.testSettings(
+        settings,
+        testMessage
+      );
+      setAfterResponse(afterResponse.response);
 
       toastSuccess("변경 전후 비교가 완료되었습니다!");
     } catch (error) {

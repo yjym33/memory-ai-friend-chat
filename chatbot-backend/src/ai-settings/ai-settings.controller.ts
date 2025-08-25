@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Body, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AiSettingsService } from './ai-settings.service';
 import { UpdateAiSettingsDto } from './dto/ai-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -31,5 +39,23 @@ export class AiSettingsController {
   @Put()
   async updateSettings(@Request() req, @Body() updateDto: UpdateAiSettingsDto) {
     return this.aiSettingsService.update(req.user.userId, updateDto);
+  }
+
+  /**
+   * AI 설정을 테스트합니다.
+   * @param req - 요청 객체 (사용자 ID 포함)
+   * @param body - 테스트할 설정과 메시지
+   * @returns AI 응답
+   */
+  @Post('test')
+  async testSettings(
+    @Request() req,
+    @Body() body: { settings: UpdateAiSettingsDto; message: string },
+  ) {
+    return this.aiSettingsService.testSettings(
+      req.user.userId,
+      body.settings,
+      body.message,
+    );
   }
 }
