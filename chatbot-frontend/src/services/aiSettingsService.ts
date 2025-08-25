@@ -1,12 +1,12 @@
 import { AiSettings, CreateAiSettingsDto, UpdateAiSettingsDto } from "../types";
-import { BaseService } from "./baseService";
+import { apiClient } from "./apiClient";
 
-export class AiSettingsService extends BaseService {
+export class AiSettingsService {
   /**
    * AI 설정 조회
    */
   static async getSettings(): Promise<AiSettings> {
-    return BaseService.get<AiSettings>("/ai-settings");
+    return apiClient.get<AiSettings>("/ai-settings");
   }
 
   /**
@@ -15,7 +15,7 @@ export class AiSettingsService extends BaseService {
   static async createSettings(
     settings: CreateAiSettingsDto
   ): Promise<AiSettings> {
-    return BaseService.post<AiSettings>("/ai-settings", settings);
+    return apiClient.post<AiSettings>("/ai-settings", settings);
   }
 
   /**
@@ -24,14 +24,14 @@ export class AiSettingsService extends BaseService {
   static async updateSettings(
     settings: UpdateAiSettingsDto
   ): Promise<AiSettings> {
-    return BaseService.put<AiSettings>("/ai-settings", settings);
+    return apiClient.put<AiSettings>("/ai-settings", settings);
   }
 
   /**
    * AI 설정 삭제
    */
   static async deleteSettings(): Promise<void> {
-    await BaseService.delete<void>("/ai-settings");
+    await apiClient.delete<void>("/ai-settings");
   }
 
   /**
@@ -41,7 +41,7 @@ export class AiSettingsService extends BaseService {
     settings: UpdateAiSettingsDto,
     testMessage: string
   ): Promise<{ response: string }> {
-    return BaseService.post<{ response: string }>("/ai-settings/test", {
+    return apiClient.post<{ response: string }>("/ai-settings/test", {
       settings,
       message: testMessage,
     });
