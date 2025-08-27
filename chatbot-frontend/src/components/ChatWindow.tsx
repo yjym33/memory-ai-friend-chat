@@ -19,7 +19,7 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
     <section className="flex-1 flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 h-full min-h-0 overflow-y-auto">
       <div className="max-w-2xl mx-auto w-full flex flex-col gap-6 py-8">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-400 mt-20">
+          <div className="text-center text-gray-600 mt-20">
             대화를 시작해보세요!
           </div>
         ) : (
@@ -50,11 +50,11 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
                   ) : (
                     <>
                       AI <span className="text-lg">🤔</span>{" "}
-                      <span className="text-xs text-gray-400 ml-2">루나</span>
+                      <span className="text-xs text-gray-600 ml-2">루나</span>
                     </>
                   )}
                 </div>
-                <div className="text-gray-700 mb-2 whitespace-pre-line break-words">
+                <div className="text-gray-900 mb-2 whitespace-pre-line break-words">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeHighlight]}

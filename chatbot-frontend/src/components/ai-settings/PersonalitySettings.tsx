@@ -29,7 +29,7 @@ export default function PersonalitySettings({
     <div className="space-y-6">
       {/* 성격 유형 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           성격 유형
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -51,7 +51,7 @@ export default function PersonalitySettings({
 
       {/* 말투 스타일 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           말투 스타일
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -73,7 +73,7 @@ export default function PersonalitySettings({
 
       {/* 별명 설정 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           AI가 나를 부르는 별명 (선택사항)
         </label>
         <input
@@ -87,7 +87,7 @@ export default function PersonalitySettings({
 
       {/* 이모티콘 사용량 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           이모티콘 사용량: {emojiUsage}
         </label>
         <input
@@ -98,7 +98,7 @@ export default function PersonalitySettings({
           onChange={(e) => onEmojiUsageChange(parseInt(e.target.value))}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-xs text-gray-700">
           <span>적게</span>
           <span>많이</span>
         </div>
@@ -106,7 +106,7 @@ export default function PersonalitySettings({
 
       {/* 공감 수준 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           공감 표현 수준: {empathyLevel}
         </label>
         <input
@@ -117,7 +117,7 @@ export default function PersonalitySettings({
           onChange={(e) => onEmpathyLevelChange(parseInt(e.target.value))}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-xs text-gray-700">
           <span>차분한 공감</span>
           <span>적극적 공감</span>
         </div>

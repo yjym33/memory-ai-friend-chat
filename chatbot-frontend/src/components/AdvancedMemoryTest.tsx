@@ -79,7 +79,7 @@ export default function AdvancedMemoryTest() {
                     {test.score}%
                   </span>
                 </div>
-                <div className="text-gray-600">{test.timestamp}</div>
+                <div className="text-gray-800">{test.timestamp}</div>
               </div>
             ))}
           </div>

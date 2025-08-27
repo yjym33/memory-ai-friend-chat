@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
               앗, 문제가 발생했어요! 😅
             </h1>
 
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               예상치 못한 오류가 발생했습니다.
               <br />
               잠시 후 다시 시도해주세요.

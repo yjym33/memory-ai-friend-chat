@@ -36,7 +36,7 @@ export default function MemorySettings({
     <div className="space-y-6">
       {/* 기억 보존 기간 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           기억 보존 기간 (일)
         </label>
         <select
@@ -56,7 +56,7 @@ export default function MemorySettings({
 
       {/* 기억 중요도 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
+        <label className="block text-sm font-medium text-gray-900 mb-4">
           기억 중요도 설정
         </label>
         <div className="space-y-4">
@@ -68,7 +68,7 @@ export default function MemorySettings({
           ].map(({ key, label }) => (
             <div key={key}>
               <div className="flex justify-between mb-1">
-                <span className="text-sm text-gray-600">{label}</span>
+                <span className="text-sm text-gray-800">{label}</span>
                 <span className="text-sm font-medium">
                   {memoryPriorities[key as keyof typeof memoryPriorities]}
                 </span>
@@ -91,7 +91,7 @@ export default function MemorySettings({
       {/* 관심사 */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-900">
             관심사
           </label>
           <button

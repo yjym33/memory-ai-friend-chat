@@ -39,7 +39,7 @@ export default function ActiveGoals({ goals }: ActiveGoalsProps) {
                 </div>
                 <span className="text-sm font-medium">{goal.progress}%</span>
               </div>
-              <div className="mt-2 flex justify-between text-sm text-gray-600">
+              <div className="mt-2 flex justify-between text-sm text-gray-800">
                 <span>우선순위: {goal.priority}/10</span>
                 <span>{new Date(goal.createdAt).toLocaleDateString()}</span>
               </div>
@@ -47,7 +47,7 @@ export default function ActiveGoals({ goals }: ActiveGoalsProps) {
           ))}
         </div>
       ) : (
-        <p className="text-gray-600">아직 설정된 목표가 없습니다.</p>
+        <p className="text-gray-800">아직 설정된 목표가 없습니다.</p>
       )}
     </div>
   );

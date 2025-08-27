@@ -22,25 +22,25 @@ export default function GoalProgressSummary({
           <div className="text-2xl font-bold text-blue-600">
             {goalProgress.total}
           </div>
-          <div className="text-sm text-gray-600">전체 목표</div>
+          <div className="text-sm text-gray-800">전체 목표</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-green-600">
             {goalProgress.completed}
           </div>
-          <div className="text-sm text-gray-600">완료</div>
+          <div className="text-sm text-gray-800">완료</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-yellow-600">
             {goalProgress.inProgress}
           </div>
-          <div className="text-sm text-gray-600">진행 중</div>
+          <div className="text-sm text-gray-800">진행 중</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-gray-600">
+          <div className="text-2xl font-bold text-gray-700">
             {goalProgress.notStarted}
           </div>
-          <div className="text-sm text-gray-600">시작 전</div>
+          <div className="text-sm text-gray-800">시작 전</div>
         </div>
       </div>
     </div>

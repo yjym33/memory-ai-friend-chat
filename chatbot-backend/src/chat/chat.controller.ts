@@ -119,6 +119,31 @@ export class ChatController {
   }
 
   /**
+   * 단순 채팅 메시지 처리 (테스트용)
+   * @param body - 사용자 메시지
+   * @param req - 요청 객체 (사용자 ID 포함)
+   */
+  @Post()
+  async simpleChat(@Body() body: { message: string }, @Request() req) {
+    try {
+      // 에이전트를 통한 메시지 처리 (감정 분석 및 목표 추출)
+      const agentResponse = await this.agentService.processMessage(
+        req.user.userId,
+        body.message,
+      );
+
+      return {
+        response: agentResponse,
+      };
+    } catch (error) {
+      console.error('Simple chat error:', error);
+      return {
+        response: '죄송해요, 처리 중 오류가 발생했습니다. 다시 말씀해 주세요.',
+      };
+    }
+  }
+
+  /**
    * AI와의 대화를 처리하고 응답을 생성합니다.
    * @param conversationId - 대화 ID
    * @param body - 사용자 메시지와 파일(선택)

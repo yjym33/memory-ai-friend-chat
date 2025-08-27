@@ -27,7 +27,7 @@ export default function SettingsTestSection({
 
       {/* 테스트 메시지 드롭다운 */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           테스트 메시지 선택
         </label>
         <select
@@ -49,16 +49,16 @@ export default function SettingsTestSection({
       {beforeResponse && afterResponse && (
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="p-3 bg-gray-50 rounded-lg">
-            <div className="text-sm font-medium text-gray-600 mb-1">
+            <div className="text-sm font-medium text-gray-800 mb-1">
               변경 전:
             </div>
-            <div className="text-sm">{beforeResponse}</div>
+            <div className="text-sm text-gray-800">{beforeResponse}</div>
           </div>
           <div className="p-3 bg-green-50 rounded-lg">
             <div className="text-sm font-medium text-green-600 mb-1">
               변경 후:
             </div>
-            <div className="text-sm">{afterResponse}</div>
+            <div className="text-sm text-gray-800">{afterResponse}</div>
           </div>
         </div>
       )}

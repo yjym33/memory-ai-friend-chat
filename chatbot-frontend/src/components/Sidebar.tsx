@@ -4,7 +4,12 @@ import { FaSearch } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 
 interface SidebarProps {
-  conversations: { id: number; title: string; messages: unknown[]; createdAt: string }[];
+  conversations: {
+    id: number;
+    title: string;
+    messages: unknown[];
+    createdAt: string;
+  }[];
   activeChatId: number | null;
   setActiveChatId: (id: number) => void;
   startNewChat: () => void;
@@ -12,22 +17,22 @@ interface SidebarProps {
   onUpdateTitle: (id: number, title: string) => void;
 }
 
-export default function Sidebar({ 
-  conversations, 
-  activeChatId, 
-  setActiveChatId, 
+export default function Sidebar({
+  conversations,
+  activeChatId,
+  setActiveChatId,
   startNewChat,
   onDeleteChat,
-  onUpdateTitle
+  onUpdateTitle,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const sortedConversations = [...conversations].sort((a, b) => a.id - b.id); // 채팅방 목록 정렬
-  
-  const filteredConversations = sortedConversations.filter(chat => 
+
+  const filteredConversations = sortedConversations.filter((chat) =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -51,12 +56,12 @@ export default function Sidebar({
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">채팅방 검색</h3>
-              <button 
+              <button
                 onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery("");
                 }}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-300 hover:text-white"
               >
                 ✕
               </button>
@@ -70,13 +75,13 @@ export default function Sidebar({
                 className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <FaSearch />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300">
+                <FaSearch />
               </div>
             </div>
             <div className="flex-1 overflow-y-auto">
               {searchQuery && (
-                <div className="text-sm text-gray-400 mb-2">
+                <div className="text-sm text-gray-300 mb-2">
                   검색 결과: {filteredConversations.length}개
                 </div>
               )}
@@ -101,15 +106,15 @@ export default function Sidebar({
       {/* 기존 사이드바 내용 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base sm:text-lg font-bold">대화 목록</h2>
-        <button 
+        <button
           onClick={() => setIsSearchOpen(true)}
           className="p-2 hover:bg-gray-700 rounded-full"
         >
-       <FaSearch />
+          <FaSearch />
         </button>
       </div>
-      <button 
-        onClick={startNewChat} 
+      <button
+        onClick={startNewChat}
         className="w-full bg-blue-500 py-2 rounded-lg mb-2 sm:mb-4 hover:bg-blue-600 text-sm sm:text-base"
       >
         ➕ 새 대화 시작
@@ -128,12 +133,14 @@ export default function Sidebar({
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
                 onBlur={() => handleTitleSave(chat.id)}
-                onKeyPress={(e) => e.key === 'Enter' && handleTitleSave(chat.id)}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handleTitleSave(chat.id)
+                }
                 className="flex-1 bg-gray-600 text-white px-2 py-1 rounded"
                 autoFocus
               />
             ) : (
-              <div 
+              <div
                 onClick={() => setActiveChatId(chat.id)}
                 onDoubleClick={() => handleTitleEdit(chat)}
                 className="flex-1"
@@ -149,12 +156,12 @@ export default function Sidebar({
                 }}
                 className="ml-2 px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 text-sm"
               >
-              <FaPencil />
+                <FaPencil />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm('이 대화를 삭제하시겠습니까?')) {
+                  if (window.confirm("이 대화를 삭제하시겠습니까?")) {
                     onDeleteChat(chat.id);
                   }
                 }}

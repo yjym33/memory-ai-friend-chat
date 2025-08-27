@@ -53,7 +53,7 @@ export default function FileUpload({ onFileUploaded }: FileUploadProps) {
     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full">
       <div className="w-full sm:flex-1">
         <label className="flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-          <span className="text-xs sm:text-sm text-gray-600 truncate">
+          <span className="text-xs sm:text-sm text-gray-800 truncate">
             {selectedFile ? selectedFile.name : "파일 선택"}
           </span>
           <input type="file" onChange={handleFileChange} className="hidden" />

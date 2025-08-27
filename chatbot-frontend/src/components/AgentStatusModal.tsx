@@ -23,10 +23,10 @@ export default function AgentStatusModal({
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">🤖 AI 친구 상태</h2>
+          <h2 className="text-2xl font-bold text-gray-800">AI 친구 상태</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-700 hover:text-gray-900 text-2xl"
           >
             ×
           </button>
@@ -36,11 +36,11 @@ export default function AgentStatusModal({
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">상태를 불러오는 중...</p>
+            <p className="mt-4 text-gray-800">상태를 불러오는 중...</p>
           </div>
         ) : error ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">{error}</p>
+            <p className="text-gray-800">{error}</p>
           </div>
         ) : agentStatus ? (
           <div className="space-y-6">
@@ -51,7 +51,7 @@ export default function AgentStatusModal({
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-600">상태 정보를 불러올 수 없습니다.</p>
+            <p className="text-gray-800">상태 정보를 불러올 수 없습니다.</p>
           </div>
         )}
       </div>

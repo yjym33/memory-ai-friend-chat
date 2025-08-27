@@ -44,7 +44,7 @@ export default function ChatListSidebar({
         + 새 대화 시작
       </button>
       <div className="flex-1 overflow-y-auto">
-        <div className="mb-2 text-xs text-gray-400 font-semibold">
+        <div className="mb-2 text-xs text-gray-600 font-semibold">
           대화 목록
         </div>
         <ul className="space-y-2">
@@ -94,7 +94,7 @@ export default function ChatListSidebar({
                         className={`ml-1 text-xs px-1 rounded ${
                           chat.pinned
                             ? "bg-yellow-200 text-yellow-700"
-                            : "bg-gray-100 text-gray-400"
+                            : "bg-gray-100 text-gray-600"
                         } hover:bg-yellow-300`}
                         title={chat.pinned ? "고정 해제" : "고정"}
                       >
@@ -102,12 +102,12 @@ export default function ChatListSidebar({
                       </button>
                     </div>
                   )}
-                  <div className="text-xs text-gray-500 truncate max-w-[160px]">
+                  <div className="text-xs text-gray-700 truncate max-w-[160px]">
                     {chat.messages && chat.messages.length > 0
                       ? chat.messages[chat.messages.length - 1].content
                       : "대화를 시작해보세요!"}
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-1">
+                  <div className="text-[10px] text-gray-600 mt-1">
                     {typeof chat.createdAt === "string"
                       ? new Date(chat.createdAt).toLocaleString()
                       : chat.createdAt.toLocaleString()}

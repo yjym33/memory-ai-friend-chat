@@ -363,6 +363,11 @@ export class AgentService {
         '학교',
         '과제',
         '연구',
+        '독서',
+        '읽기',
+        '배우',
+        '언어',
+        '프로그래밍',
       ],
       [GoalCategory.RELATIONSHIP]: [
         '연애',
@@ -384,6 +389,9 @@ export class AgentService {
         '용돈',
         '월급',
         '수입',
+        '여행',
+        '자금',
+        '모으',
       ],
       [GoalCategory.HOBBY]: [
         '취미',
@@ -408,6 +416,17 @@ export class AgentService {
       /(.+)시작할\s*거야/g,
       /(.+)도전해볼게/g,
       /(.+)계획이야/g,
+      /(.+)하고\s*싶어/g,
+      /(.+)목표예요/g,
+      /(.+)목표야/g,
+      /(.+)목표입니다/g,
+      /(.+)하는\s*것이\s*목표/g,
+      /(.+)을\s*목표로/g,
+      /(.+)를\s*목표로/g,
+      /(.+)하자/g,
+      /(.+)해보자/g,
+      /(.+)만들고\s*싶어/g,
+      /(.+)배우고\s*싶어/g,
     ];
 
     for (const pattern of goalPatterns) {

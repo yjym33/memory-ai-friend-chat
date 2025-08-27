@@ -25,19 +25,19 @@ export default function RecentEmotions({ emotions }: RecentEmotionsProps) {
                 </span>
                 <div>
                   <div className="font-medium">{emotion.type}</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-800">
                     강도: {emotion.intensity}/10
                   </div>
                 </div>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-700">
                 {new Date(emotion.createdAt).toLocaleDateString()}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-600">아직 감정 데이터가 없습니다.</p>
+        <p className="text-gray-800">아직 감정 데이터가 없습니다.</p>
       )}
     </div>
   );
