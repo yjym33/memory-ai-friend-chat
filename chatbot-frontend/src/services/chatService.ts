@@ -54,10 +54,12 @@ export class ChatService {
    * 대화 고정/해제
    */
   static async toggleConversationPin(
-    conversationId: number
+    conversationId: number,
+    pinned: boolean
   ): Promise<Conversation> {
-    return apiClient.patch<Conversation>(
-      `/chat/conversations/${conversationId}/pin`
+    return apiClient.put<Conversation>(
+      `/chat/conversations/${conversationId}/pin`,
+      { pinned }
     );
   }
 

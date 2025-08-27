@@ -122,9 +122,20 @@ export function useChat() {
   // 대화방 고정/해제
   const toggleChatPin = async (chatId: number) => {
     try {
+      // 현재 대화의 pinned 상태를 찾기
+      const currentConversation = conversations.find((c) => c.id === chatId);
+      if (!currentConversation) {
+        throw new Error("대화를 찾을 수 없습니다.");
+      }
+
+      // 현재 상태의 반대값으로 토글
+      const newPinnedState = !currentConversation.pinned;
+
       const updatedConversation = await ChatService.toggleConversationPin(
-        chatId
+        chatId,
+        newPinnedState
       );
+
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
