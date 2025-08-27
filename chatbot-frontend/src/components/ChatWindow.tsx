@@ -4,19 +4,53 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import { Message } from "../types";
+import ThemeSelector from "./theme/ThemeSelector";
+import { ChatTheme } from "../types/theme";
 
 interface ChatWindowProps {
   messages: Message[];
+  currentTheme?: ChatTheme | null;
+  onThemeChange?: (theme: ChatTheme) => void;
+  conversationId?: number | null;
 }
 
-export default function ChatWindow({ messages }: ChatWindowProps) {
+export default function ChatWindow({
+  messages,
+  currentTheme,
+  onThemeChange,
+  conversationId,
+}: ChatWindowProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
-    <section className="flex-1 flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 h-full min-h-0 overflow-y-auto">
+    <section className="flex-1 flex flex-col chat-container h-full min-h-0 overflow-y-auto">
+      {/* 테마 선택기 헤더 */}
+      {currentTheme && onThemeChange && conversationId && (
+        <div
+          className="sticky top-0 z-10 backdrop-blur-sm border-b p-4"
+          style={{
+            backgroundColor: `${currentTheme.colors.surface}CC`,
+            borderColor: currentTheme.colors.text.secondary,
+          }}
+        >
+          <div className="max-w-2xl mx-auto flex justify-between items-center">
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: currentTheme.colors.text.primary }}
+            >
+              채팅
+            </h2>
+            <ThemeSelector
+              currentTheme={currentTheme}
+              onThemeChange={onThemeChange}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="max-w-2xl mx-auto w-full flex flex-col gap-6 py-8">
         {messages.length === 0 ? (
           <div className="text-center text-gray-600 mt-20">
@@ -31,10 +65,8 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
               }`}
             >
               <div
-                className={`rounded-2xl shadow p-5 mb-2 max-w-full break-words whitespace-pre-line ${
-                  msg.role === "user"
-                    ? "bg-gradient-to-r from-pink-100 to-purple-100 text-right"
-                    : "bg-white/90"
+                className={`rounded-2xl shadow p-5 mb-2 max-w-full break-words whitespace-pre-line message-appear ${
+                  msg.role === "user" ? "user-message text-right" : "ai-message"
                 }`}
                 style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
               >

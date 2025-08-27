@@ -109,4 +109,44 @@ export class ChatService {
     await this.conversationRepository.save(conversation);
     return conversation;
   }
+
+  /**
+   * 대화의 테마를 업데이트합니다.
+   * @param id - 대화 ID
+   * @param theme - 테마 설정
+   * @param themeName - 테마 이름
+   * @returns 업데이트된 대화 객체
+   * @throws NotFoundException - 대화를 찾을 수 없는 경우
+   */
+  async updateConversationTheme(
+    id: number,
+    theme: any,
+    themeName: string,
+  ): Promise<Conversation> {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    if (!conversation) {
+      throw new NotFoundException('대화를 찾을 수 없습니다.');
+    }
+    conversation.theme = theme;
+    conversation.themeName = themeName;
+    await this.conversationRepository.save(conversation);
+    return conversation;
+  }
+
+  /**
+   * 대화의 테마를 조회합니다.
+   * @param id - 대화 ID
+   * @returns 테마 설정
+   * @throws NotFoundException - 대화를 찾을 수 없는 경우
+   */
+  async getConversationTheme(id: number): Promise<any> {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    if (!conversation) {
+      throw new NotFoundException('대화를 찾을 수 없습니다.');
+    }
+    return {
+      theme: conversation.theme,
+      themeName: conversation.themeName,
+    };
+  }
 }

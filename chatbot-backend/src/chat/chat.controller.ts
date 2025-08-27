@@ -105,6 +105,32 @@ export class ChatController {
   }
 
   /**
+   * 대화의 테마를 업데이트합니다.
+   * @param id - 대화 ID
+   * @param body - 테마 설정
+   */
+  @Put('conversations/:id/theme')
+  async updateConversationTheme(
+    @Param('id') id: number,
+    @Body() body: { theme: any; themeName: string },
+  ) {
+    return this.chatService.updateConversationTheme(
+      id,
+      body.theme,
+      body.themeName,
+    );
+  }
+
+  /**
+   * 대화의 테마를 조회합니다.
+   * @param id - 대화 ID
+   */
+  @Get('conversations/:id/theme')
+  async getConversationTheme(@Param('id') id: number) {
+    return this.chatService.getConversationTheme(id);
+  }
+
+  /**
    * 대화를 삭제합니다.
    * @param id - 대화 ID
    */

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useChat } from "../hooks/useChat";
+import { useTheme } from "../hooks/useTheme";
 import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
 import ChatWindow from "./ChatWindow";
@@ -22,6 +23,9 @@ export default function Chatbot() {
     updateChatTitle,
     toggleChatPin,
   } = useChat();
+
+  // 테마 관리
+  const { currentTheme, saveTheme } = useTheme(activeChatId || 0);
 
   // 메시지 전송 처리
   const handleSendMessage = async () => {
@@ -52,7 +56,12 @@ export default function Chatbot() {
       {/* 메인 채팅 영역 */}
       <div className="flex-1 flex flex-col bg-gray-50">
         {/* 채팅 윈도우 */}
-        <ChatWindow messages={activeConversation?.messages || []} />
+        <ChatWindow
+          messages={activeConversation?.messages || []}
+          currentTheme={currentTheme}
+          onThemeChange={saveTheme}
+          conversationId={activeChatId}
+        />
 
         {/* 채팅 입력 */}
         <ChatInput

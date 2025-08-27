@@ -69,4 +69,34 @@ export class ChatService {
   static async deleteConversation(conversationId: number): Promise<void> {
     await apiClient.delete<void>(`/chat/conversations/${conversationId}`);
   }
+
+  /**
+   * 대화 테마 조회
+   */
+  static async getConversationTheme(conversationId: number): Promise<{
+    theme: Record<string, unknown>;
+    themeName: string;
+  }> {
+    return apiClient.get<{
+      theme: Record<string, unknown>;
+      themeName: string;
+    }>(`/chat/conversations/${conversationId}/theme`);
+  }
+
+  /**
+   * 대화 테마 업데이트
+   */
+  static async updateConversationTheme(
+    conversationId: number,
+    theme: Record<string, unknown>,
+    themeName: string
+  ): Promise<Conversation> {
+    return apiClient.put<Conversation>(
+      `/chat/conversations/${conversationId}/theme`,
+      {
+        theme,
+        themeName,
+      }
+    );
+  }
 }

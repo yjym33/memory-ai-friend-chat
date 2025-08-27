@@ -1,3 +1,6 @@
+/* 테마 CSS 변수 import */
+@import "../styles/theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

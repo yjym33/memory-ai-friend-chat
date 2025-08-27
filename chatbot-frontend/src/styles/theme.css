@@ -1,0 +1,135 @@
+:root {
+  /* 기본값 설정 */
+  --color-primary: #8b5cf6;
+  --color-secondary: #ec4899;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-accent: #8b5cf6;
+
+  --user-bubble-bg: linear-gradient(135deg, #8b5cf6, #ec4899);
+  --user-bubble-text: #ffffff;
+  --user-bubble-border: none;
+
+  --ai-bubble-bg: #ffffff;
+  --ai-bubble-text: #1f2937;
+  --ai-bubble-border: 1px solid #e5e7eb;
+
+  --font-family: "Inter", sans-serif;
+  --font-size-small: 0.875rem;
+  --font-size-medium: 1rem;
+  --font-size-large: 1.125rem;
+
+  --border-radius: 12px;
+  --spacing: 16px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  --background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+}
+
+/* 테마 적용된 컴포넌트들 */
+.chat-container {
+  background: var(--background);
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  transition: all 0.3s ease;
+}
+
+.user-message {
+  background: var(--user-bubble-bg);
+  color: var(--user-bubble-text);
+  border: var(--user-bubble-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.ai-message {
+  background: var(--ai-bubble-bg);
+  color: var(--ai-bubble-text);
+  border: var(--ai-bubble-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.chat-input {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  transition: all 0.3s ease;
+}
+
+.chat-input:focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.send-button {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.send-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* 애니메이션 효과 */
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-appear {
+  animation: messageAppear 0.3s ease-out;
+}
+
+/* 호버 효과 */
+.user-message:hover,
+.ai-message:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 테마 전환 애니메이션 */
+.theme-transition {
+  transition: all 0.3s ease;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  :root {
+    --border-radius: 8px;
+    --spacing: 12px;
+    --font-size-small: 0.8rem;
+    --font-size-medium: 0.9rem;
+    --font-size-large: 1rem;
+  }
+}
+
+/* 다크 모드 대응 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #111827;
+    --color-surface: #1f2937;
+    --color-text-primary: #f9fafb;
+    --color-text-secondary: #d1d5db;
+    --ai-bubble-bg: #374151;
+    --ai-bubble-text: #f9fafb;
+    --ai-bubble-border: 1px solid #4b5563;
+  }
+}
