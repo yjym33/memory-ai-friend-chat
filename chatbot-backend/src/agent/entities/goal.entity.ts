@@ -3,11 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../auth/entity/user.entity';
+import { Milestone } from './milestone.entity';
 
 export enum GoalStatus {
   ACTIVE = 'active',
@@ -70,10 +72,16 @@ export class Goal {
   priority: number;
 
   @Column({ type: 'json', nullable: true })
-  milestones: string[]; // 중간 목표들
+  milestoneData: string[]; // 중간 목표들 (레거시 데이터)
 
   @Column({ type: 'date', nullable: true })
   lastCheckedAt: Date; // 마지막 점검 날짜
+
+  @Column({ type: 'date', nullable: true })
+  completedAt: Date; // 목표 완료 날짜
+
+  @OneToMany(() => Milestone, (milestone) => milestone.goal, { cascade: true })
+  milestones: Milestone[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

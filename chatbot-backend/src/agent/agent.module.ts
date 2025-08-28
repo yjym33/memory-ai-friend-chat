@@ -4,12 +4,19 @@ import { AgentService } from './agent.service';
 import { AgentController } from './agent.controller';
 import { Emotion } from './entities/emotion.entity';
 import { Goal } from './entities/goal.entity';
+import { Milestone } from './entities/milestone.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Emotion, Goal, AiSettings, Conversation]),
+    TypeOrmModule.forFeature([
+      Emotion,
+      Goal,
+      Milestone,
+      AiSettings,
+      Conversation,
+    ]),
   ],
   providers: [AgentService],
   controllers: [AgentController],

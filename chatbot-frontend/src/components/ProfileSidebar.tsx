@@ -3,6 +3,7 @@ import { useAuthStore } from "../store/authStore";
 import { useRouter } from "next/navigation";
 import AiSettingsModal from "./AiSettingsModal";
 import AgentStatusModal from "./AgentStatusModal";
+import GoalManagerModal from "./goal-management/GoalManagerModal";
 import axiosInstance from "../utils/axios";
 
 export default function ProfileSidebar() {
@@ -10,6 +11,7 @@ export default function ProfileSidebar() {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAgentStatusOpen, setIsAgentStatusOpen] = useState(false);
+  const [isGoalManagerOpen, setIsGoalManagerOpen] = useState(false);
   const [currentSettings, setCurrentSettings] = useState({
     personalityType: "친근함",
     speechStyle: "반말",
@@ -72,6 +74,14 @@ export default function ProfileSidebar() {
             AI 친구 상태
           </button>
 
+          {/* 목표 관리 버튼 추가 */}
+          <button
+            onClick={() => setIsGoalManagerOpen(true)}
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-400 text-white font-semibold shadow hover:from-orange-500 hover:to-red-500 transition"
+          >
+            목표 관리
+          </button>
+
           {/* 우리가 나눈 이야기들 버튼 추가 */}
           <button
             onClick={() => router.push("/our-stories")}
@@ -93,6 +103,10 @@ export default function ProfileSidebar() {
       <AgentStatusModal
         isOpen={isAgentStatusOpen}
         onClose={() => setIsAgentStatusOpen(false)}
+      />
+      <GoalManagerModal
+        isOpen={isGoalManagerOpen}
+        onClose={() => setIsGoalManagerOpen(false)}
       />
     </>
   );
