@@ -4,3 +4,4 @@ langchain==0.1.12
 langchain-openai==0.0.8
 python-dotenv==1.0.1
 pydantic==2.6.3
+pydantic-settings==2.2.1
