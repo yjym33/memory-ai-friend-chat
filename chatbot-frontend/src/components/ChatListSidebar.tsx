@@ -28,9 +28,9 @@ export default function ChatListSidebar({
     setEditingTitle(chat.title);
   };
 
-  const handleTitleSave = (id: number) => {
+  const handleTitleSave = async (id: number) => {
     if (editingTitle.trim()) {
-      onUpdateTitle(id, editingTitle.trim());
+      await onUpdateTitle(id, editingTitle.trim());
     }
     setEditingId(null);
   };

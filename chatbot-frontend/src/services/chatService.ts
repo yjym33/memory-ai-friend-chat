@@ -42,8 +42,8 @@ export class ChatService {
     conversationId: number,
     title: string
   ): Promise<Conversation> {
-    return apiClient.patch<Conversation>(
-      `/chat/conversations/${conversationId}`,
+    return apiClient.put<Conversation>(
+      `/chat/conversations/${conversationId}/title`,
       {
         title,
       }
