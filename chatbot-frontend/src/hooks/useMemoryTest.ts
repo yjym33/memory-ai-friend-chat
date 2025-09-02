@@ -43,12 +43,11 @@ export function useMemoryTest() {
       const chatId = conversationId || (await createTestConversation());
       if (!chatId) return;
 
-      const response = await axiosInstance.post("/chat/completions", {
-        conversationId: chatId,
-        messages: [{ role: "user", content: currentScenario.setup }],
+      const response = await axiosInstance.post(`/chat/completion/${chatId}`, {
+        message: currentScenario.setup,
       });
 
-      if (response.data.choices && response.data.choices.length > 0) {
+      if (response.data.content) {
         setSetupComplete(true);
         toastSuccess("✅ 정보가 입력되었습니다! 이제 기억 테스트를 해보세요.");
       }
@@ -69,13 +68,15 @@ export function useMemoryTest() {
 
     setLoading(true);
     try {
-      const response = await axiosInstance.post("/chat/completions", {
-        conversationId: conversationId,
-        messages: [{ role: "user", content: currentScenario.test }],
-      });
+      const response = await axiosInstance.post(
+        `/chat/completion/${conversationId}`,
+        {
+          message: currentScenario.test,
+        }
+      );
 
-      if (response.data.choices && response.data.choices.length > 0) {
-        const aiResponse = response.data.choices[0].message.content;
+      if (response.data.content) {
+        const aiResponse = response.data.content;
         setTestResult(aiResponse);
 
         // 키워드 매칭 확인
