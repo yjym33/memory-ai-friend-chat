@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { MEMORY_TEST_SCENARIOS } from "../data/memoryTestData";
+import {
+  MEMORY_TEST_SCENARIOS,
+  CUSTOM_SCENARIO_TEMPLATE,
+  MemoryTestScenario,
+} from "../data/memoryTestData";
 import axiosInstance from "../utils/axios";
 import {
   success as toastSuccess,
@@ -8,6 +12,7 @@ import {
 } from "../lib/toast";
 
 export type MemoryCategory = "personal" | "hobby" | "work" | "emotion";
+export type ScenarioType = "predefined" | "custom";
 
 /**
  * 메모리 테스트를 위한 커스텀 훅
@@ -16,13 +21,19 @@ export function useMemoryTest() {
   const [selectedCategory, setSelectedCategory] =
     useState<MemoryCategory>("personal");
   const [selectedScenario, setSelectedScenario] = useState(0);
+  const [scenarioType, setScenarioType] = useState<ScenarioType>("predefined");
+  const [customScenario, setCustomScenario] = useState<MemoryTestScenario>(
+    CUSTOM_SCENARIO_TEMPLATE
+  );
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [setupComplete, setSetupComplete] = useState(false);
   const [testResult, setTestResult] = useState("");
   const [loading, setLoading] = useState(false);
 
   const currentScenario =
-    MEMORY_TEST_SCENARIOS[selectedCategory][selectedScenario];
+    scenarioType === "custom"
+      ? customScenario
+      : MEMORY_TEST_SCENARIOS[selectedCategory][selectedScenario];
 
   // 새 대화방 생성
   const createTestConversation = async (): Promise<number | null> => {
@@ -110,9 +121,19 @@ export function useMemoryTest() {
     setTestResult("");
   };
 
+  // 시나리오 타입 변경 처리
+  const handleScenarioTypeChange = (type: ScenarioType) => {
+    setScenarioType(type);
+    if (type === "custom") {
+      setCustomScenario({ ...CUSTOM_SCENARIO_TEMPLATE });
+    }
+    resetTest();
+  };
+
   // 카테고리 변경 처리
   const handleCategoryChange = (category: MemoryCategory) => {
     setSelectedCategory(category);
+    setSelectedScenario(0);
     resetTest();
   };
 
@@ -122,9 +143,44 @@ export function useMemoryTest() {
     resetTest();
   };
 
+  // 커스텀 시나리오 업데이트
+  const updateCustomScenario = (
+    field: keyof MemoryTestScenario,
+    value: any
+  ) => {
+    setCustomScenario((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    resetTest();
+  };
+
+  // 커스텀 키워드 추가
+  const addCustomKeyword = (keyword: string) => {
+    if (
+      keyword.trim() &&
+      !customScenario.expectedKeywords.includes(keyword.trim())
+    ) {
+      setCustomScenario((prev) => ({
+        ...prev,
+        expectedKeywords: [...prev.expectedKeywords, keyword.trim()],
+      }));
+    }
+  };
+
+  // 커스텀 키워드 제거
+  const removeCustomKeyword = (index: number) => {
+    setCustomScenario((prev) => ({
+      ...prev,
+      expectedKeywords: prev.expectedKeywords.filter((_, i) => i !== index),
+    }));
+  };
+
   return {
     selectedCategory,
     selectedScenario,
+    scenarioType,
+    customScenario,
     currentScenario,
     setupComplete,
     testResult,
@@ -134,5 +190,9 @@ export function useMemoryTest() {
     resetTest,
     handleCategoryChange,
     handleScenarioChange,
+    handleScenarioTypeChange,
+    updateCustomScenario,
+    addCustomKeyword,
+    removeCustomKeyword,
   };
 }

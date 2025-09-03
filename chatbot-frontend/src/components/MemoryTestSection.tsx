@@ -2,6 +2,7 @@ import React from "react";
 import { useMemoryTest } from "../hooks/useMemoryTest";
 import CategorySelector from "./memory-test/CategorySelector";
 import ScenarioSelector from "./memory-test/ScenarioSelector";
+import CustomScenarioEditor from "./memory-test/CustomScenarioEditor";
 import ScenarioDisplay from "./memory-test/ScenarioDisplay";
 import TestControls from "./memory-test/TestControls";
 import TestResult from "./memory-test/TestResult";
@@ -21,6 +22,8 @@ export default function MemoryTestSection({
   const {
     selectedCategory,
     selectedScenario,
+    scenarioType,
+    customScenario,
     currentScenario,
     setupComplete,
     testResult,
@@ -30,6 +33,10 @@ export default function MemoryTestSection({
     resetTest,
     handleCategoryChange,
     handleScenarioChange,
+    handleScenarioTypeChange,
+    updateCustomScenario,
+    addCustomKeyword,
+    removeCustomKeyword,
   } = useMemoryTest();
 
   return (
@@ -40,23 +47,41 @@ export default function MemoryTestSection({
           AI가 설정한 우선순위에 따라 정보를 제대로 기억하는지 테스트해보세요.
         </p>
 
-        <CategorySelector
-          selectedCategory={selectedCategory}
-          memoryPriorities={memoryPriorities}
-          onCategoryChange={handleCategoryChange}
-        />
+        {/* 카테고리 선택 (사전 정의된 시나리오인 경우만) */}
+        {scenarioType === "predefined" && (
+          <CategorySelector
+            selectedCategory={selectedCategory}
+            memoryPriorities={memoryPriorities}
+            onCategoryChange={handleCategoryChange}
+          />
+        )}
 
+        {/* 시나리오 선택 */}
         <ScenarioSelector
           selectedCategory={selectedCategory}
           selectedScenario={selectedScenario}
+          scenarioType={scenarioType}
           onScenarioChange={handleScenarioChange}
+          onScenarioTypeChange={handleScenarioTypeChange}
         />
 
+        {/* 커스텀 시나리오 편집기 */}
+        {scenarioType === "custom" && (
+          <CustomScenarioEditor
+            customScenario={customScenario}
+            onUpdate={updateCustomScenario}
+            onAddKeyword={addCustomKeyword}
+            onRemoveKeyword={removeCustomKeyword}
+          />
+        )}
+
+        {/* 시나리오 미리보기 */}
         <ScenarioDisplay scenario={currentScenario} />
 
         <TestControls
           loading={loading}
           setupComplete={setupComplete}
+          currentScenario={currentScenario}
           onSetupMemory={setupMemory}
           onTestMemory={testMemory}
           onReset={resetTest}
