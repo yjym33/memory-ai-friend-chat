@@ -32,14 +32,20 @@ export function useChat() {
   };
 
   // 메시지 전송
-  const sendMessage = async (message: string) => {
-    if (!activeChatId || !message.trim()) return;
+  const sendMessage = async (message: string, file?: any) => {
+    if (!activeChatId || (!message.trim() && !file)) return;
 
     setLoading(true);
     try {
+      // 파일이 첨부된 경우 메시지 내용 구성
+      let messageContent = message;
+      if (file) {
+        messageContent = `${message}\n\n📎 첨부파일: ${file.originalName}`;
+      }
+
       const userMessage: Message = {
         role: "user",
-        content: message,
+        content: messageContent,
         timestamp: new Date().toISOString(),
       };
 
@@ -52,8 +58,12 @@ export function useChat() {
         )
       );
 
-      // AI 응답 받기
-      const aiResponse = await ChatService.sendMessage(activeChatId, message);
+      // AI 응답 받기 (파일 정보 포함)
+      const aiResponse = await ChatService.sendMessage(
+        activeChatId,
+        message,
+        file
+      );
 
       // AI 응답을 UI에 추가
       setConversations((prev) =>

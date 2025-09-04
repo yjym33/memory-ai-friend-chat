@@ -28,13 +28,14 @@ export default function Chatbot() {
   const { currentTheme, saveTheme } = useTheme(activeChatId || 0);
 
   // 메시지 전송 처리
-  const handleSendMessage = async () => {
-    if (!input.trim() || loading) return;
+  const handleSendMessage = async (message?: string, file?: any) => {
+    const messageToSend = message || input;
 
-    const messageToSend = input;
+    if ((!messageToSend.trim() && !file) || loading) return;
+
     setInput(""); // 입력 필드 즉시 클리어
 
-    await sendMessage(messageToSend);
+    await sendMessage(messageToSend, file);
   };
 
   return (

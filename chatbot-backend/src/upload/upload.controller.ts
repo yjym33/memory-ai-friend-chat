@@ -4,13 +4,16 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('upload')
+@UseGuards(JwtAuthGuard)
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
@@ -20,9 +23,15 @@ export class UploadController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, callback) => {
+          // 한글 파일명 인코딩 문제 해결
+          const originalName = Buffer.from(
+            file.originalname,
+            'latin1',
+          ).toString('utf8');
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
+          const extension = extname(originalName);
+          callback(null, `${uniqueSuffix}${extension}`);
         },
       }),
       fileFilter: (req, file, callback) => {
@@ -49,13 +58,22 @@ export class UploadController {
       throw new BadRequestException('파일이 업로드되지 않았습니다.');
     }
 
+    // 파일명 인코딩 수정
+    const originalName = Buffer.from(file.originalname, 'latin1').toString(
+      'utf8',
+    );
+
     console.log('✅ 파일 업로드 완료:', {
-      originalName: file.originalname,
+      originalName: originalName, // 수정된 파일명
       savedAs: file.filename,
       path: file.path,
       size: file.size,
     });
 
-    return this.uploadService.saveFile(file);
+    // 수정된 파일명으로 서비스 호출
+    return this.uploadService.saveFile({
+      ...file,
+      originalname: originalName,
+    });
   }
 }

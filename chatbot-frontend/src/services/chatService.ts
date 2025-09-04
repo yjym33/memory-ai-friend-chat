@@ -28,10 +28,12 @@ export class ChatService {
    */
   static async sendMessage(
     conversationId: number,
-    message: string
+    message: string,
+    file?: any
   ): Promise<Message> {
     return apiClient.post<Message>(`/chat/completion/${conversationId}`, {
       message,
+      file,
     });
   }
 
