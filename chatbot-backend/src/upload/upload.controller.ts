@@ -1,21 +1,35 @@
 import {
   Controller,
   Post,
+  Get,
+  Delete,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
   UseGuards,
+  Logger,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { FileSecurityService } from './services/file-security.service';
+import { FileCleanupService } from './services/file-cleanup.service';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import * as fs from 'fs/promises';
 
 @Controller('upload')
 @UseGuards(JwtAuthGuard)
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  private readonly logger = new Logger(UploadController.name);
+
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly fileSecurityService: FileSecurityService,
+    private readonly fileCleanupService: FileCleanupService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -75,5 +89,70 @@ export class UploadController {
       ...file,
       originalname: originalName,
     });
+  }
+
+  /**
+   * 파일 시스템 상태 조회 (관리자용)
+   */
+  @Get('stats')
+  async getUploadStats() {
+    try {
+      const [cleanupStats, processMemory] = await Promise.all([
+        this.fileCleanupService.getCleanupStats(),
+        process.memoryUsage(),
+      ]);
+
+      return {
+        fileSystem: {
+          uploadDirSizeMB: Math.round(cleanupStats.uploadDirSize / 1024 / 1024),
+          tempDirSizeMB: Math.round(cleanupStats.tempDirSize / 1024 / 1024),
+          quarantineDirSizeMB: Math.round(
+            cleanupStats.quarantineDirSize / 1024 / 1024,
+          ),
+          totalFiles: cleanupStats.totalFiles,
+        },
+        memory: {
+          rssKB: Math.round(processMemory.rss / 1024),
+          heapUsedKB: Math.round(processMemory.heapUsed / 1024),
+          heapTotalKB: Math.round(processMemory.heapTotal / 1024),
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error('업로드 통계 조회 실패:', error);
+      throw new HttpException(
+        '업로드 통계를 조회할 수 없습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * 강제 파일 정리 실행 (관리자용)
+   */
+  @Delete('cleanup')
+  async forceCleanup() {
+    try {
+      this.logger.log('🔥 관리자에 의한 강제 파일 정리 시작');
+
+      const stats = await this.fileCleanupService.forceCleanup();
+
+      return {
+        message: '파일 정리가 완료되었습니다.',
+        stats: {
+          filesDeleted: stats.filesDeleted,
+          bytesFreedMB: Math.round(stats.bytesFreed / 1024 / 1024),
+          duration: stats.duration,
+          errors: stats.errors,
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error('강제 파일 정리 실패:', error);
+      throw new HttpException(
+        '파일 정리 중 오류가 발생했습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

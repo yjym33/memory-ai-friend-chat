@@ -5,6 +5,10 @@ import {
   UserGoals,
   GoalRecommendation,
 } from "../../services/agentService";
+import {
+  useAsyncOperation,
+  useAsyncAction,
+} from "../../hooks/useAsyncOperation";
 
 interface GoalManagerProps {
   onGoalUpdate?: () => void;
