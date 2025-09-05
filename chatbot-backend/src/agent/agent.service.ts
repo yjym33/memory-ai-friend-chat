@@ -11,6 +11,20 @@ import axios from 'axios';
 
 @Injectable()
 export class AgentService {
+  // 메모리 캐시 (LRU 방식)
+  private memoryCache = new Map<
+    string,
+    { data: string[]; timestamp: number }
+  >();
+  private readonly CACHE_TTL =
+    (parseInt(process.env.MEMORY_CACHE_TTL_MINUTES) || 5) * 60 * 1000;
+  private readonly MAX_CACHE_SIZE =
+    parseInt(process.env.MEMORY_CACHE_MAX_SIZE) || 100;
+  private readonly MAX_MEMORIES_PER_USER =
+    parseInt(process.env.MAX_MEMORIES_PER_USER) || 20;
+  private readonly MAX_CONVERSATIONS_PER_QUERY =
+    parseInt(process.env.MAX_CONVERSATIONS_PER_QUERY) || 10;
+
   constructor(
     @InjectRepository(Emotion)
     private emotionRepository: Repository<Emotion>,
@@ -22,7 +36,10 @@ export class AgentService {
     private aiSettingsRepository: Repository<AiSettings>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
-  ) {}
+  ) {
+    // 캐시 정리 스케줄러 (10분마다 실행)
+    setInterval(() => this.cleanupCache(), 10 * 60 * 1000);
+  }
 
   async processMessage(userId: string, message: string): Promise<string> {
     console.log(`[Agent] Processing message for user ${userId}: "${message}"`);
@@ -1517,7 +1534,7 @@ export class AgentService {
   }
 
   /**
-   * 최근 대화 히스토리를 가져옵니다 (기억 관리).
+   * 최근 대화 히스토리를 가져옵니다 (기억 관리) - 메모리 최적화 + 캐싱
    * @param userId - 사용자 ID
    * @param retentionDays - 기억 보존 일수
    * @returns 최근 대화 내용
@@ -1526,41 +1543,214 @@ export class AgentService {
     userId: string,
     retentionDays: number,
   ): Promise<string[]> {
+    const cacheKey = `${userId}_${retentionDays}`;
+
+    // 캐시 확인
+    const cachedData = this.getFromCache(cacheKey);
+    if (cachedData) {
+      console.log(`🚀 사용자 ${userId}의 기억 정보 캐시에서 로드됨`);
+      return cachedData;
+    }
+
     try {
+      const startTime = Date.now();
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
-      const conversations = await this.conversationRepository.find({
-        where: { userId },
-        order: { createdAt: 'DESC' },
-        take: 10, // 최근 10개 대화만
-      });
+      // 메모리 사용량 측정 시작
+      const initialMemory = process.memoryUsage();
 
-      const memories: string[] = [];
+      // 메모리 효율적인 쿼리 빌더 사용 - 필요한 필드만 선택
+      const conversations = await this.conversationRepository
+        .createQueryBuilder('conversation')
+        .select([
+          'conversation.id',
+          'conversation.createdAt',
+          'conversation.messages',
+        ])
+        .where('conversation.userId = :userId', { userId })
+        .andWhere('conversation.createdAt >= :cutoffDate', { cutoffDate })
+        .orderBy('conversation.createdAt', 'DESC')
+        .limit(this.MAX_CONVERSATIONS_PER_QUERY) // 환경 변수로 설정 가능
+        .getMany();
 
-      for (const conversation of conversations) {
-        if (conversation.createdAt >= cutoffDate && conversation.messages) {
-          // 최근 메시지들에서 중요한 정보 추출
-          const messages = conversation.messages as any[];
-          for (const msg of messages.slice(-5)) {
-            // 각 대화의 마지막 5개 메시지만
-            if (msg.content && msg.content.length > 10) {
-              memories.push(
-                `${msg.role === 'user' ? '사용자' : 'AI'}: ${msg.content}`,
-              );
-            }
-          }
-        }
-      }
+      // 스트림 처리로 메모리 사용량 최적화
+      const memories = await this.extractMemoriesFromConversations(
+        conversations,
+        this.MAX_MEMORIES_PER_USER, // 환경 변수로 설정 가능
+      );
+
+      // 메모리 사용량 측정 종료
+      const finalMemory = process.memoryUsage();
+      const memoryDiff = {
+        rss: finalMemory.rss - initialMemory.rss,
+        heapUsed: finalMemory.heapUsed - initialMemory.heapUsed,
+        heapTotal: finalMemory.heapTotal - initialMemory.heapTotal,
+      };
+
+      const processingTime = Date.now() - startTime;
+
+      // 결과를 캐시에 저장
+      this.setToCache(cacheKey, memories);
 
       console.log(
-        `🧠 사용자 ${userId}의 기억 정보 ${memories.length}개 로드됨`,
+        `🧠 사용자 ${userId}의 기억 정보 ${memories.length}개 로드됨 ` +
+          `(처리시간: ${processingTime}ms, 메모리 사용: ${Math.round(memoryDiff.heapUsed / 1024)}KB)`,
       );
-      return memories.slice(0, 20); // 최대 20개의 기억만 유지
+
+      return memories;
     } catch (error) {
       console.error('대화 히스토리 로드 오류:', error);
       return [];
     }
+  }
+
+  /**
+   * 대화에서 중요한 기억을 추출합니다 (스트림 처리)
+   * @param conversations - 대화 목록
+   * @param maxMemories - 최대 기억 개수
+   * @returns 추출된 기억 목록
+   */
+  private async extractMemoriesFromConversations(
+    conversations: any[],
+    maxMemories: number,
+  ): Promise<string[]> {
+    const memories: string[] = [];
+
+    // 각 대화를 순차적으로 처리하여 메모리 사용량 최소화
+    for (const conversation of conversations) {
+      if (memories.length >= maxMemories) {
+        break; // 조기 종료로 불필요한 처리 방지
+      }
+
+      // null 체크 및 타입 안전성 확보
+      if (!conversation.messages || !Array.isArray(conversation.messages)) {
+        continue;
+      }
+
+      // 메시지를 청크 단위로 처리
+      const messageChunks = this.chunkArray(conversation.messages, 5);
+
+      for (const chunk of messageChunks) {
+        const processedMemories = await this.processMessageChunk(
+          chunk,
+          maxMemories - memories.length,
+        );
+
+        memories.push(...processedMemories);
+
+        if (memories.length >= maxMemories) {
+          break;
+        }
+      }
+    }
+
+    return memories;
+  }
+
+  /**
+   * 메시지 청크를 처리하여 중요한 정보를 추출합니다
+   * @param messageChunk - 메시지 청크
+   * @param remainingSlots - 남은 기억 슬롯 수
+   * @returns 처리된 기억 목록
+   */
+  private async processMessageChunk(
+    messageChunk: any[],
+    remainingSlots: number,
+  ): Promise<string[]> {
+    const chunkMemories: string[] = [];
+
+    // 최근 메시지부터 처리 (역순)
+    const recentMessages = messageChunk.slice(-5).reverse();
+
+    for (const msg of recentMessages) {
+      if (chunkMemories.length >= remainingSlots) {
+        break;
+      }
+
+      // 메시지 유효성 검증
+      if (!this.isValidMessage(msg)) {
+        continue;
+      }
+
+      // 메시지 내용 정제 및 길이 제한
+      const processedContent = this.sanitizeMessageContent(msg.content);
+
+      if (processedContent) {
+        const rolePrefix = msg.role === 'user' ? '사용자' : 'AI';
+        chunkMemories.push(`${rolePrefix}: ${processedContent}`);
+      }
+    }
+
+    return chunkMemories;
+  }
+
+  /**
+   * 메시지가 유효한지 검증합니다
+   * @param msg - 메시지 객체
+   * @returns 유효성 여부
+   */
+  private isValidMessage(msg: any): boolean {
+    return (
+      msg &&
+      typeof msg === 'object' &&
+      typeof msg.content === 'string' &&
+      msg.content.trim().length > 10 &&
+      msg.content.length < 1000 && // 너무 긴 메시지는 제외
+      ['user', 'assistant'].includes(msg.role)
+    );
+  }
+
+  /**
+   * 메시지 내용을 정제합니다
+   * @param content - 원본 메시지 내용
+   * @returns 정제된 메시지 내용
+   */
+  private sanitizeMessageContent(content: string): string {
+    if (!content || typeof content !== 'string') {
+      return '';
+    }
+
+    // 불필요한 공백 제거 및 길이 제한
+    let sanitized = content.trim().replace(/\s+/g, ' ');
+
+    // 최대 200자로 제한 (메모리 절약)
+    if (sanitized.length > 200) {
+      sanitized = sanitized.substring(0, 197) + '...';
+    }
+
+    // 특수 문자나 개인정보가 포함된 것 같은 패턴 필터링
+    const sensitivePatterns = [
+      /password/i,
+      /token/i,
+      /secret/i,
+      /\b\d{4}-\d{4}-\d{4}-\d{4}\b/, // 카드번호 패턴
+      /\b\d{3}-\d{2}-\d{4}\b/, // 주민번호 패턴
+    ];
+
+    for (const pattern of sensitivePatterns) {
+      if (pattern.test(sanitized)) {
+        return ''; // 민감한 정보가 포함된 메시지는 제외
+      }
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * 배열을 지정된 크기의 청크로 분할합니다
+   * @param array - 분할할 배열
+   * @param chunkSize - 청크 크기
+   * @returns 분할된 청크 배열
+   */
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+
+    return chunks;
   }
 
   /**
@@ -1706,6 +1896,113 @@ export class AgentService {
     } catch (error) {
       console.error('목표 생성 실패:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 캐시에서 데이터를 가져옵니다
+   * @param key - 캐시 키
+   * @returns 캐시된 데이터 또는 null
+   */
+  private getFromCache(key: string): string[] | null {
+    const cached = this.memoryCache.get(key);
+
+    if (!cached) {
+      return null;
+    }
+
+    // TTL 체크
+    if (Date.now() - cached.timestamp > this.CACHE_TTL) {
+      this.memoryCache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  /**
+   * 데이터를 캐시에 저장합니다
+   * @param key - 캐시 키
+   * @param data - 저장할 데이터
+   */
+  private setToCache(key: string, data: string[]): void {
+    // 캐시 크기 제한
+    if (this.memoryCache.size >= this.MAX_CACHE_SIZE) {
+      // LRU 방식으로 가장 오래된 항목 제거
+      const oldestKey = this.memoryCache.keys().next().value;
+      this.memoryCache.delete(oldestKey);
+    }
+
+    this.memoryCache.set(key, {
+      data: [...data], // 깊은 복사로 메모리 격리
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * 만료된 캐시 항목을 정리합니다
+   */
+  private cleanupCache(): void {
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const [key, cached] of this.memoryCache.entries()) {
+      if (now - cached.timestamp > this.CACHE_TTL) {
+        this.memoryCache.delete(key);
+        cleanedCount++;
+      }
+    }
+
+    if (cleanedCount > 0) {
+      console.log(`🧹 메모리 캐시 정리 완료: ${cleanedCount}개 항목 제거`);
+    }
+  }
+
+  /**
+   * 캐시 상태를 반환합니다 (모니터링용)
+   * @returns 캐시 통계
+   */
+  public getCacheStats(): {
+    size: number;
+    maxSize: number;
+    ttl: number;
+    memoryUsage: number;
+  } {
+    // 캐시 메모리 사용량 추정
+    let estimatedMemory = 0;
+    for (const [key, cached] of this.memoryCache.entries()) {
+      estimatedMemory += key.length * 2; // UTF-16
+      estimatedMemory += cached.data.join('').length * 2;
+      estimatedMemory += 64; // 객체 오버헤드 추정
+    }
+
+    return {
+      size: this.memoryCache.size,
+      maxSize: this.MAX_CACHE_SIZE,
+      ttl: this.CACHE_TTL,
+      memoryUsage: estimatedMemory,
+    };
+  }
+
+  /**
+   * 특정 사용자의 캐시를 무효화합니다
+   * @param userId - 사용자 ID
+   */
+  public invalidateUserCache(userId: string): void {
+    const keysToDelete: string[] = [];
+
+    for (const key of this.memoryCache.keys()) {
+      if (key.startsWith(`${userId}_`)) {
+        keysToDelete.push(key);
+      }
+    }
+
+    keysToDelete.forEach((key) => this.memoryCache.delete(key));
+
+    if (keysToDelete.length > 0) {
+      console.log(
+        `🔄 사용자 ${userId}의 캐시 ${keysToDelete.length}개 항목 무효화됨`,
+      );
     }
   }
 }

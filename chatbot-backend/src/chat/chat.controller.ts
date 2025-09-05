@@ -240,6 +240,9 @@ export class ChatController {
         updatedMessages,
       );
 
+      // 사용자의 메모리 캐시 무효화 (새로운 대화 내용 반영)
+      this.agentService.invalidateUserCache(req.user.userId);
+
       // 5. AI 응답 반환
       return {
         role: 'assistant',

@@ -72,6 +72,27 @@ export class EnvironmentVariables {
   @Transform(({ value }) => value === 'true')
   @IsOptional()
   DB_LOGGING: boolean = false;
+
+  // 메모리 캐시 설정
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  MEMORY_CACHE_TTL_MINUTES: number = 5;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  MEMORY_CACHE_MAX_SIZE: number = 100;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  MAX_MEMORIES_PER_USER: number = 20;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  MAX_CONVERSATIONS_PER_QUERY: number = 10;
 }
 
 /**
