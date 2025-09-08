@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 type SetValue<T> = T | ((val: T) => T);
 
@@ -21,14 +21,20 @@ export function useLocalStorage<T>(
   options: UseLocalStorageOptions = {}
 ): [T, (value: SetValue<T>) => void, () => void] {
   const {
-    serializer = {
-      read: JSON.parse,
-      write: JSON.stringify,
-    },
     syncAcrossTabs = true,
     onError = (error) =>
       console.error(`useLocalStorage error for key "${key}":`, error),
   } = options;
+
+  // serializer를 메모이제이션하여 불필요한 재생성 방지
+  const serializer = useMemo(
+    () => ({
+      read: JSON.parse,
+      write: JSON.stringify,
+      ...options.serializer,
+    }),
+    [options.serializer]
+  );
 
   // 초기값 읽기
   const readValue = useCallback((): T => {
@@ -48,7 +54,21 @@ export function useLocalStorage<T>(
     }
   }, [key, initialValue, serializer, onError]);
 
-  const [storedValue, setStoredValue] = useState<T>(readValue);
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item === null) {
+        return initialValue;
+      }
+      return serializer.read(item);
+    } catch (error) {
+      onError(error as Error);
+      return initialValue;
+    }
+  });
 
   // 값 설정
   const setValue = useCallback(
@@ -127,10 +147,11 @@ export function useLocalStorage<T>(
     };
   }, [key, initialValue, serializer, syncAcrossTabs, onError]);
 
-  // 마운트 시 최신 값으로 동기화
+  // key가 변경될 때만 값 동기화
   useEffect(() => {
-    setStoredValue(readValue());
-  }, [readValue]);
+    const currentValue = readValue();
+    setStoredValue(currentValue);
+  }, [key, initialValue]); // key나 initialValue가 변경될 때만 실행
 
   return [storedValue, setValue, removeValue];
 }
@@ -144,13 +165,19 @@ export function useSessionStorage<T>(
   options: Omit<UseLocalStorageOptions, "syncAcrossTabs"> = {}
 ): [T, (value: SetValue<T>) => void, () => void] {
   const {
-    serializer = {
-      read: JSON.parse,
-      write: JSON.stringify,
-    },
     onError = (error) =>
       console.error(`useSessionStorage error for key "${key}":`, error),
   } = options;
+
+  // serializer를 메모이제이션하여 불필요한 재생성 방지
+  const serializer = useMemo(
+    () => ({
+      read: JSON.parse,
+      write: JSON.stringify,
+      ...options.serializer,
+    }),
+    [options.serializer]
+  );
 
   const readValue = useCallback((): T => {
     if (typeof window === "undefined") {
@@ -169,7 +196,21 @@ export function useSessionStorage<T>(
     }
   }, [key, initialValue, serializer, onError]);
 
-  const [storedValue, setStoredValue] = useState<T>(readValue);
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
+    try {
+      const item = window.sessionStorage.getItem(key);
+      if (item === null) {
+        return initialValue;
+      }
+      return serializer.read(item);
+    } catch (error) {
+      onError(error as Error);
+      return initialValue;
+    }
+  });
 
   const setValue = useCallback(
     (value: SetValue<T>) => {
