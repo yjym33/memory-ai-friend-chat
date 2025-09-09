@@ -6,7 +6,7 @@ export interface User {
   email: string;
   name: string;
   gender: string;
-  birthYear: string;
+  birthYear: number;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -58,7 +58,7 @@ export interface RegisterData {
   password: string;
   name: string;
   gender: string;
-  birthYear: string;
+  birthYear: number;
 }
 
 // 백엔드 응답 타입

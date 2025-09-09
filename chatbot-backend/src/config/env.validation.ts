@@ -50,10 +50,15 @@ export class EnvironmentVariables {
   @IsOptional()
   DB_NAME: string = 'chatbot';
 
-  // JWT 보안 설정 (필수)
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  DB_SYNCHRONIZE: number = 1;
+
+  // JWT 보안 설정 (개발환경에서는 기본값 제공)
   @IsString()
-  @IsNotEmpty()
-  JWT_SECRET: string;
+  @IsOptional()
+  JWT_SECRET: string = 'dev-secret-key-change-in-production';
 
   // CORS 설정
   @IsString()

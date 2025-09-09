@@ -73,7 +73,10 @@ export class ChatService {
    * @param messages - 새로운 메시지 배열
    * @returns 업데이트된 대화 객체
    */
-  async updateConversation(id: number, messages: any[]): Promise<Conversation> {
+  async updateConversation(
+    id: number,
+    messages: { role: 'user' | 'assistant'; content: string }[],
+  ): Promise<Conversation> {
     await this.conversationRepository.update(id, { messages });
     return this.getConversation(id);
   }
@@ -120,7 +123,7 @@ export class ChatService {
    */
   async updateConversationTheme(
     id: number,
-    theme: any,
+    theme: Conversation['theme'],
     themeName: string,
   ): Promise<Conversation> {
     const conversation = await this.conversationRepository.findOneBy({ id });
@@ -139,7 +142,10 @@ export class ChatService {
    * @returns 테마 설정
    * @throws NotFoundException - 대화를 찾을 수 없는 경우
    */
-  async getConversationTheme(id: number): Promise<any> {
+  async getConversationTheme(id: number): Promise<{
+    theme: Conversation['theme'];
+    themeName: string;
+  }> {
     const conversation = await this.conversationRepository.findOneBy({ id });
     if (!conversation) {
       throw new NotFoundException('대화를 찾을 수 없습니다.');

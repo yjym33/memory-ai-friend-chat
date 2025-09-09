@@ -31,7 +31,10 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       const { logout } = useAuthStore.getState();
       logout();
-      window.location.href = "/login"; // 🚀 `window.location.reload()`를 제거하여 무한 루프 방지
+      // 클라이언트 사이드에서만 리다이렉트
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

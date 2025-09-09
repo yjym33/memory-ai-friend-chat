@@ -26,7 +26,7 @@ export class User {
   gender: string;
 
   @Column({ nullable: false, default: 2000 })
-  birthYear: string;
+  birthYear: number;
 
   @OneToMany(() => Conversation, (conversation) => conversation.user)
   conversations: Conversation[];

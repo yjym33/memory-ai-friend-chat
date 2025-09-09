@@ -22,7 +22,7 @@ export class AuthService {
     password: string,
     name: string,
     gender: string,
-    birthYear: string,
+    birthYear: number,
     passwordCheck?: string,
   ) {
     if (passwordCheck !== undefined && password !== passwordCheck) {

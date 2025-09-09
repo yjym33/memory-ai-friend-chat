@@ -1,69 +1,132 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 type SetValue<T> = T | ((val: T) => T);
 
+/**
+ * LocalStorage 훅의 설정 옵션 인터페이스
+ */
 interface UseLocalStorageOptions {
+  /** 직렬화/역직렬화 함수 */
   serializer?: {
-    read: (value: string) => any;
-    write: (value: any) => string;
+    read: (value: string) => unknown;
+    write: (value: unknown) => string;
   };
+  /** 탭 간 동기화 활성화 여부 */
   syncAcrossTabs?: boolean;
+  /** 에러 핸들링 함수 */
   onError?: (error: Error) => void;
+  /** 디바운싱 지연 시간 (ms) */
+  debounceDelay?: number;
+}
+
+/**
+ * 스토리지 변경 이벤트 상세 정보
+ */
+interface StorageChangeDetail<T> {
+  newValue: T;
+  key: string;
+  timestamp: number;
+}
+
+/**
+ * 내부에서 사용하는 직렬화 유틸
+ */
+function makeSerializer(custom?: UseLocalStorageOptions["serializer"]) {
+  const read = custom?.read ?? JSON.parse;
+  const write = custom?.write ?? JSON.stringify;
+  return { read, write };
+}
+
+/** 직렬화 비교: 내용이 같으면 true */
+function isSerializedEqual(
+  a: unknown,
+  b: unknown,
+  write: (v: unknown) => string
+) {
+  try {
+    return write(a) === write(b);
+  } catch {
+    return a === b;
+  }
 }
 
 /**
  * 로컬 스토리지를 React 상태처럼 사용할 수 있는 훅
- * 타입 안전성, 에러 처리, 탭 간 동기화 지원
+ *
+ * @template T - 저장할 데이터의 타입
+ * @param key - localStorage의 키
+ * @param initialValue - 초기값
+ * @param options - 설정 옵션 (안정화됨)
+ * @returns [현재값, 값설정함수, 값제거함수] 튜플
  */
 export function useLocalStorage<T>(
   key: string,
   initialValue: T,
-  options: UseLocalStorageOptions = {}
+  options?: UseLocalStorageOptions
 ): [T, (value: SetValue<T>) => void, () => void] {
+  // options를 필드 단위로 안정 분해 (객체 참조가 바뀌어도 재생성 폭을 최소화)
   const {
+    serializer: optSerializer,
     syncAcrossTabs = true,
-    onError = (error) =>
+    debounceDelay = 50,
+    onError = (error: Error) =>
       console.error(`useLocalStorage error for key "${key}":`, error),
-  } = options;
+  } = options ?? {};
 
-  // serializer를 메모이제이션하여 불필요한 재생성 방지
+  // 직렬화기(함수)만 메모
   const serializer = useMemo(
-    () => ({
-      read: JSON.parse,
-      write: JSON.stringify,
-      ...options.serializer,
-    }),
-    [options.serializer]
+    () => makeSerializer(optSerializer),
+    [optSerializer]
   );
 
-  // 초기값 읽기
+  // 마지막으로 설정한 값을 추적 (불필요 업데이트 방지)
+  const lastSetValueRef = useRef<T | undefined>(undefined);
+
+  // 디바운싱 타이머
+  const debounceTimerRef = useRef<number | null>(null);
+
+  // 현재 값 읽기 (필요 필드만 의존)
   const readValue = useCallback((): T => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
+    if (typeof window === "undefined") return initialValue;
 
     try {
       const item = window.localStorage.getItem(key);
-      if (item === null) {
-        return initialValue;
-      }
-      return serializer.read(item);
+      if (item === null) return initialValue;
+      return serializer.read(item) as T;
     } catch (error) {
       onError(error as Error);
       return initialValue;
     }
-  }, [key, initialValue, serializer, onError]);
+  }, [key, initialValue, serializer.read, onError]);
 
+  // 안전한 setState (동등값이면 스킵)
+  const safeSetStored = useCallback(
+    (next: T) => {
+      // 마지막 set 기준으로도 빠르게 스킵
+      if (
+        lastSetValueRef.current !== undefined &&
+        isSerializedEqual(lastSetValueRef.current, next, serializer.write)
+      ) {
+        return;
+      }
+
+      setStoredValue((prev) => {
+        if (isSerializedEqual(prev, next, serializer.write)) return prev;
+        return next;
+      });
+
+      lastSetValueRef.current = next;
+    },
+    [serializer.write]
+  );
+
+  // 초기값
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.localStorage.getItem(key);
-      if (item === null) {
-        return initialValue;
-      }
-      return serializer.read(item);
+      if (item === null) return initialValue;
+      return serializer.read(item) as T;
     } catch (error) {
       onError(error as Error);
       return initialValue;
@@ -81,35 +144,68 @@ export function useLocalStorage<T>(
       try {
         const newValue = value instanceof Function ? value(storedValue) : value;
 
-        // 상태 업데이트
-        setStoredValue(newValue);
+        // 동등값이면 모든 작업 스킵
+        if (isSerializedEqual(storedValue, newValue, serializer.write)) {
+          return;
+        }
 
-        // 로컬 스토리지에 저장
+        // 상태 업데이트
+        safeSetStored(newValue);
+
+        // 로컬 스토리지 업데이트
         if (newValue === undefined || newValue === null) {
           window.localStorage.removeItem(key);
         } else {
           window.localStorage.setItem(key, serializer.write(newValue));
         }
 
-        // 커스텀 이벤트 발생 (탭 간 동기화용)
+        // 탭 간 동기화 (디바운스)
         if (syncAcrossTabs) {
-          window.dispatchEvent(
-            new CustomEvent(`localStorage-${key}`, {
-              detail: { newValue, key },
-            })
-          );
+          if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
+          }
+          debounceTimerRef.current = window.setTimeout(() => {
+            window.dispatchEvent(
+              new CustomEvent<StorageChangeDetail<T>>(`localStorage-${key}`, {
+                detail: {
+                  newValue,
+                  key,
+                  timestamp: Date.now(),
+                },
+              })
+            );
+          }, debounceDelay);
         }
+
+        lastSetValueRef.current = newValue;
       } catch (error) {
         onError(error as Error);
       }
     },
-    [key, storedValue, serializer, syncAcrossTabs, onError]
+    [
+      key,
+      storedValue,
+      serializer.write,
+      syncAcrossTabs,
+      debounceDelay,
+      onError,
+      safeSetStored,
+    ]
   );
 
-  // 값 제거
+  // 값 제거 (실제 삭제)
   const removeValue = useCallback(() => {
-    setValue(initialValue);
-  }, [setValue, initialValue]);
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(key);
+      }
+      lastSetValueRef.current = undefined;
+      // 초기값으로만 상태 동기화 (동등성 검사 포함)
+      safeSetStored(initialValue);
+    } catch (error) {
+      onError(error as Error);
+    }
+  }, [key, initialValue, onError, safeSetStored]);
 
   // 스토리지 이벤트 리스너 (다른 탭에서의 변경 감지)
   useEffect(() => {
@@ -117,100 +213,110 @@ export function useLocalStorage<T>(
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key !== key) return;
-
       try {
-        const newValue = e.newValue
-          ? serializer.read(e.newValue)
-          : initialValue;
-        setStoredValue(newValue);
+        const newValue =
+          e.newValue !== null
+            ? (serializer.read(e.newValue) as T)
+            : initialValue;
+        safeSetStored(newValue);
       } catch (error) {
         onError(error as Error);
       }
     };
 
-    const handleCustomEvent = (e: CustomEvent) => {
-      setStoredValue(e.detail.newValue);
+    const handleCustomEvent = (e: Event) => {
+      const ce = e as CustomEvent<StorageChangeDetail<T>>;
+      const { newValue, timestamp } = ce.detail;
+      // 오래된 이벤트 무시
+      if (Date.now() - timestamp > 1000) return;
+      safeSetStored(newValue);
     };
 
     window.addEventListener("storage", handleStorageChange);
-    window.addEventListener(
-      `localStorage-${key}`,
-      handleCustomEvent as EventListener
-    );
+    window.addEventListener(`localStorage-${key}`, handleCustomEvent);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(
-        `localStorage-${key}`,
-        handleCustomEvent as EventListener
-      );
-    };
-  }, [key, initialValue, serializer, syncAcrossTabs, onError]);
+      window.removeEventListener(`localStorage-${key}`, handleCustomEvent);
 
-  // key가 변경될 때만 값 동기화
+      if (debounceTimerRef.current) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [
+    key,
+    initialValue,
+    serializer.read,
+    onError,
+    syncAcrossTabs,
+    safeSetStored,
+  ]);
+
+  // key가 바뀔 때만 스토리지에서 재동기화 (핵심 수정)
   useEffect(() => {
-    const currentValue = readValue();
-    setStoredValue(currentValue);
-  }, [key, initialValue]); // key나 initialValue가 변경될 때만 실행
+    const current = readValue();
+    safeSetStored(current);
+    // 의존성은 의도대로 key만!
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return [storedValue, setValue, removeValue];
 }
 
 /**
  * 세션 스토리지 버전
+ * (동일한 패턴으로 안전 수정)
  */
 export function useSessionStorage<T>(
   key: string,
   initialValue: T,
-  options: Omit<UseLocalStorageOptions, "syncAcrossTabs"> = {}
+  options?: Omit<UseLocalStorageOptions, "syncAcrossTabs">
 ): [T, (value: SetValue<T>) => void, () => void] {
   const {
+    serializer: optSerializer,
     onError = (error) =>
       console.error(`useSessionStorage error for key "${key}":`, error),
-  } = options;
+  } = options ?? {};
 
-  // serializer를 메모이제이션하여 불필요한 재생성 방지
   const serializer = useMemo(
-    () => ({
-      read: JSON.parse,
-      write: JSON.stringify,
-      ...options.serializer,
-    }),
-    [options.serializer]
+    () => makeSerializer(optSerializer),
+    [optSerializer]
   );
 
   const readValue = useCallback((): T => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
-
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.sessionStorage.getItem(key);
-      if (item === null) {
-        return initialValue;
-      }
-      return serializer.read(item);
+      if (item === null) return initialValue;
+      return serializer.read(item) as T;
     } catch (error) {
       onError(error as Error);
       return initialValue;
     }
-  }, [key, initialValue, serializer, onError]);
+  }, [key, initialValue, serializer.read, onError]);
 
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.sessionStorage.getItem(key);
-      if (item === null) {
-        return initialValue;
-      }
-      return serializer.read(item);
+      if (item === null) return initialValue;
+      return serializer.read(item) as T;
     } catch (error) {
       onError(error as Error);
       return initialValue;
     }
   });
+
+  const safeSetStored = useCallback(
+    (next: T) => {
+      setStoredValue((prev) => {
+        if (isSerializedEqual(prev, next, serializer.write)) return prev;
+        return next;
+      });
+    },
+    [serializer.write]
+  );
 
   const setValue = useCallback(
     (value: SetValue<T>) => {
@@ -218,10 +324,12 @@ export function useSessionStorage<T>(
         console.warn(`useSessionStorage: sessionStorage is not available`);
         return;
       }
-
       try {
         const newValue = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(newValue);
+
+        if (isSerializedEqual(storedValue, newValue, serializer.write)) return;
+
+        safeSetStored(newValue);
 
         if (newValue === undefined || newValue === null) {
           window.sessionStorage.removeItem(key);
@@ -232,16 +340,25 @@ export function useSessionStorage<T>(
         onError(error as Error);
       }
     },
-    [key, storedValue, serializer, onError]
+    [key, storedValue, serializer.write, onError, safeSetStored]
   );
 
   const removeValue = useCallback(() => {
-    setValue(initialValue);
-  }, [setValue, initialValue]);
+    try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(key);
+      }
+      safeSetStored(initialValue);
+    } catch (error) {
+      onError(error as Error);
+    }
+  }, [key, initialValue, onError, safeSetStored]);
 
+  // key 변경 시에만 재동기화
   useEffect(() => {
-    setStoredValue(readValue());
-  }, [readValue]);
+    safeSetStored(readValue());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return [storedValue, setValue, removeValue];
 }
@@ -250,7 +367,6 @@ export function useSessionStorage<T>(
  * 특정 용도별 로컬 스토리지 훅들
  */
 
-// 사용자 설정 관리
 export function useUserPreferences() {
   return useLocalStorage("user-preferences", {
     theme: "light" as "light" | "dark",
@@ -261,14 +377,13 @@ export function useUserPreferences() {
   });
 }
 
-// 채팅 기록 임시 저장
 export function useChatDraft(chatId: string) {
   return useLocalStorage(`chat-draft-${chatId}`, "", {
-    syncAcrossTabs: false, // 채팅 초안은 탭별로 독립적
+    // 채팅 초안은 탭별 독립
+    syncAcrossTabs: false,
   });
 }
 
-// 최근 검색어
 export function useRecentSearches(maxItems = 10) {
   const [searches, setSearches] = useLocalStorage<string[]>(
     "recent-searches",
@@ -278,7 +393,6 @@ export function useRecentSearches(maxItems = 10) {
   const addSearch = useCallback(
     (query: string) => {
       if (!query.trim()) return;
-
       setSearches((prev) => {
         const filtered = prev.filter((item) => item !== query);
         return [query, ...filtered].slice(0, maxItems);
@@ -298,15 +412,9 @@ export function useRecentSearches(maxItems = 10) {
     setSearches([]);
   }, [setSearches]);
 
-  return {
-    searches,
-    addSearch,
-    removeSearch,
-    clearSearches,
-  };
+  return { searches, addSearch, removeSearch, clearSearches };
 }
 
-// 앱 상태 캐시
 export function useAppCache<T>(key: string, initialValue: T, ttl?: number) {
   const cacheKey = `app-cache-${key}`;
 
@@ -335,7 +443,6 @@ export function useAppCache<T>(key: string, initialValue: T, ttl?: number) {
       setCacheData(null);
       return initialValue;
     }
-
     return cacheData.value;
   }, [cacheData, initialValue, ttl, setCacheData]);
 
@@ -356,3 +463,78 @@ export function useAppCache<T>(key: string, initialValue: T, ttl?: number) {
     lastUpdated: cacheData?.timestamp,
   };
 }
+
+/**
+ * 테스트용 localStorage 모킹 유틸리티
+ */
+export const createMockStorage = (): Storage => {
+  const storage: Record<string, string> = {};
+
+  return {
+    getItem: (key: string): string | null =>
+      key in storage ? storage[key] : null,
+    setItem: (key: string, value: string): void => {
+      storage[key] = value;
+    },
+    removeItem: (key: string): void => {
+      delete storage[key];
+    },
+    clear: (): void => {
+      Object.keys(storage).forEach((k) => delete storage[k]);
+    },
+    key: (index: number): string | null => Object.keys(storage)[index] ?? null,
+    get length(): number {
+      return Object.keys(storage).length;
+    },
+  };
+};
+
+/**
+ * 테스트 환경에서 localStorage를 모킹하는 함수
+ */
+export const mockLocalStorage = (mockStorage?: Storage): void => {
+  const mock = mockStorage || createMockStorage();
+  Object.defineProperty(window, "localStorage", {
+    value: mock,
+    writable: true,
+  });
+};
+
+/**
+ * 스토리지 유틸리티 함수들
+ */
+export const storageUtils = {
+  /** 스토리지 크기 계산 (바이트) */
+  getStorageSize: (storage: Storage = localStorage): number => {
+    let total = 0;
+    for (const key in storage) {
+      if (Object.prototype.hasOwnProperty.call(storage, key)) {
+        total += (storage[key as any]?.length || 0) + key.length;
+      }
+    }
+    return total;
+  },
+
+  /** 스토리지 사용량을 퍼센트로 반환 */
+  getStorageUsage: (storage: Storage = localStorage): number => {
+    try {
+      const total = storageUtils.getStorageSize(storage);
+      const limit = 5 * 1024 * 1024; // 대략적인 localStorage 제한 (5MB)
+      return (total / limit) * 100;
+    } catch {
+      return 0;
+    }
+  },
+
+  /** 스토리지가 가득 찬 상태인지 확인 */
+  isStorageFull: (storage: Storage = localStorage): boolean => {
+    try {
+      const testKey = "__storage_test__";
+      storage.setItem(testKey, "test");
+      storage.removeItem(testKey);
+      return false;
+    } catch {
+      return true;
+    }
+  },
+} as const;

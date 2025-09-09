@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { mkdir } from 'fs/promises';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { logDirectory } from './config/logger.config';
+import * as express from 'express';
 
 /**
  * 애플리케이션 부트스트랩 함수
@@ -18,10 +19,8 @@ async function bootstrap() {
   const bodyParserLimit = configService.get<string>(
     'security.bodyParser.limit',
   );
-  app.use(require('express').json({ limit: bodyParserLimit }));
-  app.use(
-    require('express').urlencoded({ limit: bodyParserLimit, extended: true }),
-  );
+  app.use(express.json({ limit: bodyParserLimit }));
+  app.use(express.urlencoded({ limit: bodyParserLimit, extended: true }));
 
   // 필요한 디렉토리들 생성
   try {
