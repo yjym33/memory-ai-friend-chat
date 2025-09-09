@@ -505,18 +505,27 @@ export const mockLocalStorage = (mockStorage?: Storage): void => {
  */
 export const storageUtils = {
   /** 스토리지 크기 계산 (바이트) */
-  getStorageSize: (storage: Storage = localStorage): number => {
+  getStorageSize: (
+    storage: Storage = typeof window !== "undefined"
+      ? localStorage
+      : ({} as Storage)
+  ): number => {
     let total = 0;
     for (const key in storage) {
       if (Object.prototype.hasOwnProperty.call(storage, key)) {
-        total += (storage[key as any]?.length || 0) + key.length;
+        const value = storage.getItem(key);
+        total += (value?.length || 0) + key.length;
       }
     }
     return total;
   },
 
   /** 스토리지 사용량을 퍼센트로 반환 */
-  getStorageUsage: (storage: Storage = localStorage): number => {
+  getStorageUsage: (
+    storage: Storage = typeof window !== "undefined"
+      ? localStorage
+      : ({} as Storage)
+  ): number => {
     try {
       const total = storageUtils.getStorageSize(storage);
       const limit = 5 * 1024 * 1024; // 대략적인 localStorage 제한 (5MB)
@@ -527,7 +536,11 @@ export const storageUtils = {
   },
 
   /** 스토리지가 가득 찬 상태인지 확인 */
-  isStorageFull: (storage: Storage = localStorage): boolean => {
+  isStorageFull: (
+    storage: Storage = typeof window !== "undefined"
+      ? localStorage
+      : ({} as Storage)
+  ): boolean => {
     try {
       const testKey = "__storage_test__";
       storage.setItem(testKey, "test");

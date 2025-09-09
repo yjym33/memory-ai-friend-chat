@@ -2,14 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Conversation } from "../types";
 import { useSearchDebounce } from "../hooks/useDebounce";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import {
-  Search,
-  Pin,
-  Archive,
-  Edit2,
-  Trash2,
-  MoreVertical,
-} from "lucide-react";
+import { Search, Pin, Archive, Edit2, Trash2 } from "lucide-react";
 
 interface ChatListSidebarProps {
   conversations: Conversation[];
@@ -240,9 +233,17 @@ export default function ChatListSidebar({
                   chat.isArchived ? "opacity-60" : ""
                 }`}
               >
-                <button
+                <div
                   onClick={() => setActiveChatId(chat.id)}
-                  className="w-full text-left p-3 focus:outline-none"
+                  className="w-full text-left p-3 focus:outline-none cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveChatId(chat.id);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -340,7 +341,7 @@ export default function ChatListSidebar({
                       </div>
                     )}
                   </div>
-                </button>
+                </div>
               </div>
             ))}
           </div>
