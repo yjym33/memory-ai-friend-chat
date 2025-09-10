@@ -53,7 +53,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="p-4 bg-white border-t">
+    <div className="p-2 sm:p-4 bg-white border-t">
       {/* 업로드된 파일 표시 */}
       {uploadedFile && (
         <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -96,7 +96,7 @@ export default function ChatInput({
           onClick={toggleFileUpload}
           disabled={loading}
           className={`
-            p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+            p-2 sm:p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed
             ${
               showFileUpload
                 ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
@@ -106,9 +106,9 @@ export default function ChatInput({
           title={showFileUpload ? "파일 업로드 닫기" : "파일 첨부"}
         >
           {showFileUpload ? (
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
 
@@ -120,10 +120,10 @@ export default function ChatInput({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력하세요..."
-            className="w-full p-3 pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             rows={1}
             style={{
-              minHeight: "48px",
+              minHeight: "40px",
               maxHeight: "120px",
               height: "auto",
             }}
@@ -135,13 +135,13 @@ export default function ChatInput({
         <button
           onClick={handleSendMessage}
           disabled={(!input.trim() && !uploadedFile) || loading}
-          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="p-2 sm:p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           title="메시지 전송"
         >
           {loading ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
       </div>

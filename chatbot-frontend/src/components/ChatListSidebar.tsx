@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Conversation } from "../types";
 import { useSearchDebounce } from "../hooks/useDebounce";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { Search, Pin, Archive, Edit2, Trash2 } from "lucide-react";
+import { Search, Pin, Archive, Edit2, Trash2, X } from "lucide-react";
 
 interface ChatListSidebarProps {
   conversations: Conversation[];
@@ -12,6 +12,7 @@ interface ChatListSidebarProps {
   onDeleteChat: (chatId: number) => void;
   onUpdateTitle: (chatId: number, newTitle: string) => void;
   onTogglePin: (chatId: number) => void;
+  onClose?: () => void;
 }
 
 export default function ChatListSidebar({
@@ -22,6 +23,7 @@ export default function ChatListSidebar({
   onDeleteChat,
   onUpdateTitle,
   onTogglePin,
+  onClose,
 }: ChatListSidebarProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -129,7 +131,20 @@ export default function ChatListSidebar({
   };
 
   return (
-    <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 lg:w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+      {/* 모바일 닫기 버튼 */}
+      {onClose && (
+        <div className="lg:hidden p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-800">대화 목록</h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="p-4 border-b border-gray-200 space-y-3">
         <button

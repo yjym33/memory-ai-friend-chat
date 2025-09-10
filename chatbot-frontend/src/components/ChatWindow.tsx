@@ -30,7 +30,7 @@ export default function ChatWindow({
       {/* 테마 선택기 헤더 */}
       {currentTheme && onThemeChange && conversationId && (
         <div
-          className="sticky top-0 z-10 backdrop-blur-sm border-b p-4"
+          className="sticky top-0 z-10 backdrop-blur-sm border-b p-2 sm:p-4"
           style={{
             backgroundColor: `${currentTheme.colors.surface}CC`,
             borderColor: currentTheme.colors.text.secondary,
@@ -38,7 +38,7 @@ export default function ChatWindow({
         >
           <div className="max-w-2xl mx-auto flex justify-between items-center">
             <h2
-              className="text-lg font-semibold"
+              className="text-base sm:text-lg font-semibold"
               style={{ color: currentTheme.colors.text.primary }}
             >
               채팅
@@ -51,7 +51,7 @@ export default function ChatWindow({
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto w-full flex flex-col gap-6 py-8">
+      <div className="max-w-2xl mx-auto w-full flex flex-col gap-4 sm:gap-6 py-4 sm:py-8 px-2 sm:px-0">
         {messages.length === 0 ? (
           <div className="text-center text-gray-600 mt-20">
             대화를 시작해보세요!

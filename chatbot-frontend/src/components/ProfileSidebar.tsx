@@ -5,8 +5,13 @@ import AiSettingsModal from "./AiSettingsModal";
 import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
 import axiosInstance from "../utils/axios";
+import { X } from "lucide-react";
 
-export default function ProfileSidebar() {
+interface ProfileSidebarProps {
+  onClose?: () => void;
+}
+
+export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
   const { logout } = useAuthStore();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -41,7 +46,16 @@ export default function ProfileSidebar() {
 
   return (
     <>
-      <aside className="w-full sm:w-64 bg-gradient-to-b from-purple-100 to-pink-50 p-6 flex flex-col items-center border-r border-gray-200 min-h-screen">
+      <aside className="w-64 lg:w-64 bg-gradient-to-b from-purple-100 to-pink-50 p-6 flex flex-col items-center border-r border-gray-200 min-h-screen">
+        {/* 모바일 닫기 버튼 */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden absolute top-4 right-4 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-full bg-gray-200 mb-3 border-4 border-purple-200" />
           <div className="text-lg font-bold text-purple-700 mb-1">루나</div>
