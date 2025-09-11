@@ -14,6 +14,9 @@ export default function Chatbot() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(false);
 
+  // 모바일 환경에서만 사이드바 상태 관리
+  // 웹 환경에서는 별도의 컴포넌트로 항상 표시
+
   const {
     conversations,
     activeConversation,
@@ -49,7 +52,7 @@ export default function Chatbot() {
 
   return (
     <div className="flex h-screen w-full relative">
-      {/* 모바일 오버레이 */}
+      {/* 모바일 오버레이 - 모바일에서만 표시 */}
       {(isProfileOpen || isChatListOpen) && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -57,27 +60,45 @@ export default function Chatbot() {
         />
       )}
 
-      {/* 프로필 사이드바 */}
+      {/* 프로필 사이드바 - 웹과 모바일 완전 분리 */}
+      {/* 웹 환경: 항상 표시 */}
+      <div className="hidden lg:block lg:relative">
+        <ProfileSidebar />
+      </div>
+
+      {/* 모바일 환경: 슬라이드 방식 */}
       <div
         className={`
         ${isProfileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0
-        fixed lg:relative z-50 lg:z-auto
+        lg:hidden
+        fixed z-50
         transition-transform duration-300 ease-in-out
-        lg:transition-none
       `}
       >
         <ProfileSidebar onClose={() => setIsProfileOpen(false)} />
       </div>
 
-      {/* 채팅 목록 사이드바 */}
+      {/* 채팅 목록 사이드바 - 웹과 모바일 완전 분리 */}
+      {/* 웹 환경: 항상 표시 */}
+      <div className="hidden lg:block lg:relative">
+        <ChatListSidebar
+          conversations={conversations}
+          activeChatId={activeChatId}
+          setActiveChatId={setActiveChatId}
+          startNewChat={startNewChat}
+          onDeleteChat={deleteChat}
+          onUpdateTitle={updateChatTitle}
+          onTogglePin={toggleChatPin}
+        />
+      </div>
+
+      {/* 모바일 환경: 슬라이드 방식 */}
       <div
         className={`
         ${isChatListOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0
-        fixed lg:relative z-50 lg:z-auto
+        lg:hidden
+        fixed z-50
         transition-transform duration-300 ease-in-out
-        lg:transition-none
       `}
       >
         <ChatListSidebar
