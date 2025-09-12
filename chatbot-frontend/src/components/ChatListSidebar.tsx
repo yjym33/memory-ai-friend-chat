@@ -65,10 +65,10 @@ export default function ChatListSidebar({
       );
     }
 
-    // 보관함 필터
-    if (!sidebarSettings.showArchived) {
-      filtered = filtered.filter((conv) => !conv.isArchived);
-    }
+    // 보관함 필터 (현재 isArchived 속성이 없으므로 주석 처리)
+    // if (!sidebarSettings.showArchived) {
+    //   filtered = filtered.filter((conv) => !conv.isArchived);
+    // }
 
     // 정렬
     const sorted = [...filtered].sort((a, b) => {
@@ -226,7 +226,7 @@ export default function ChatListSidebar({
         {/* 검색 결과 정보 */}
         {debouncedSearchTerm && (
           <div className="p-3 text-sm text-gray-600 bg-blue-50 border-b">
-            "{debouncedSearchTerm}" 검색 결과:{" "}
+            &ldquo;{debouncedSearchTerm}&rdquo; 검색 결과:{" "}
             {filteredAndSortedConversations.length}개
           </div>
         )}
@@ -244,13 +244,11 @@ export default function ChatListSidebar({
                   activeChatId === chat.id
                     ? "bg-blue-100 border-l-4 border-blue-500"
                     : "hover:bg-gray-100"
-                } ${chat.pinned ? "ring-1 ring-yellow-300" : ""} ${
-                  chat.isArchived ? "opacity-60" : ""
-                }`}
+                } ${chat.pinned ? "ring-1 ring-yellow-300" : ""}`}
               >
                 <div
                   onClick={() => setActiveChatId(chat.id)}
-                  className="w-full text-left p-3 focus:outline-none cursor-pointer"
+                  className="w-full text-left p-3 sm:p-3 focus:outline-none cursor-pointer"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -264,9 +262,6 @@ export default function ChatListSidebar({
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {chat.pinned && (
                         <Pin className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      )}
-                      {chat.isArchived && (
-                        <Archive className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5" />
                       )}
 
                       {editingId === chat.id ? (
@@ -314,20 +309,20 @@ export default function ChatListSidebar({
 
                     {/* 액션 버튼들 */}
                     {editingId !== chat.id && (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 sm:gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-white bg-opacity-80 lg:bg-transparent rounded-lg lg:rounded-none p-1 lg:p-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onTogglePin(chat.id);
                           }}
-                          className={`p-1 rounded transition-colors ${
+                          className={`p-1.5 sm:p-1 rounded transition-colors ${
                             chat.pinned
                               ? "text-yellow-500 hover:text-yellow-600"
                               : "text-gray-400 hover:text-yellow-500"
                           }`}
                           title={chat.pinned ? "고정 해제" : "고정"}
                         >
-                          <Pin className="w-3 h-3" />
+                          <Pin className="w-4 h-4 sm:w-3 sm:h-3" />
                         </button>
 
                         <button
@@ -335,10 +330,10 @@ export default function ChatListSidebar({
                             e.stopPropagation();
                             handleTitleEdit(chat);
                           }}
-                          className="p-1 text-gray-400 hover:text-blue-500 rounded transition-colors"
+                          className="p-1.5 sm:p-1 text-gray-400 hover:text-blue-500 rounded transition-colors"
                           title="제목 수정"
                         >
-                          <Edit2 className="w-3 h-3" />
+                          <Edit2 className="w-4 h-4 sm:w-3 sm:h-3" />
                         </button>
 
                         <button
@@ -348,10 +343,10 @@ export default function ChatListSidebar({
                               onDeleteChat(chat.id);
                             }
                           }}
-                          className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
+                          className="p-1.5 sm:p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
                           title="대화 삭제"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
                         </button>
                       </div>
                     )}
