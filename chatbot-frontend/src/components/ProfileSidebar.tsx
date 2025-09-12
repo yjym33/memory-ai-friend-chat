@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { useRouter } from "next/navigation";
-import AiSettingsModal from "./AiSettingsModal";
-import AgentStatusModal from "./AgentStatusModal";
-import GoalManagerModal from "./goal-management/GoalManagerModal";
 import axiosInstance from "../utils/axios";
 import { X } from "lucide-react";
 
 interface ProfileSidebarProps {
   onClose?: () => void;
+  onOpenSettings?: () => void;
+  onOpenAgentStatus?: () => void;
+  onOpenGoalManager?: () => void;
 }
 
-export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
+export default function ProfileSidebar({
+  onClose,
+  onOpenSettings,
+  onOpenAgentStatus,
+  onOpenGoalManager,
+}: ProfileSidebarProps) {
   const { logout } = useAuthStore();
   const router = useRouter();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isAgentStatusOpen, setIsAgentStatusOpen] = useState(false);
-  const [isGoalManagerOpen, setIsGoalManagerOpen] = useState(false);
   const [currentSettings, setCurrentSettings] = useState({
     personalityType: "친근함",
     speechStyle: "반말",
@@ -37,11 +39,6 @@ export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
     } catch (error) {
       console.error("설정 불러오기 실패:", error);
     }
-  };
-
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-    fetchCurrentSettings(); // 설정 변경 후 다시 불러오기
   };
 
   return (
@@ -74,7 +71,7 @@ export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
         {/* 메뉴 버튼들 */}
         <div className="w-full space-y-3">
           <button
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => onOpenSettings?.()}
             className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 text-white font-semibold shadow hover:from-purple-500 hover:to-pink-500 transition"
           >
             AI 친구 설정
@@ -82,7 +79,7 @@ export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
 
           {/* 에이전트 상태 버튼 추가 */}
           <button
-            onClick={() => setIsAgentStatusOpen(true)}
+            onClick={() => onOpenAgentStatus?.()}
             className="w-full py-2 rounded-lg bg-gradient-to-r from-green-400 to-blue-400 text-white font-semibold shadow hover:from-green-500 hover:to-blue-500 transition"
           >
             AI 친구 상태
@@ -90,7 +87,7 @@ export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
 
           {/* 목표 관리 버튼 추가 */}
           <button
-            onClick={() => setIsGoalManagerOpen(true)}
+            onClick={() => onOpenGoalManager?.()}
             className="w-full py-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-400 text-white font-semibold shadow hover:from-orange-500 hover:to-red-500 transition"
           >
             목표 관리
@@ -112,16 +109,6 @@ export default function ProfileSidebar({ onClose }: ProfileSidebarProps) {
           </button>
         </div>
       </aside>
-
-      <AiSettingsModal isOpen={isSettingsOpen} onClose={handleSettingsClose} />
-      <AgentStatusModal
-        isOpen={isAgentStatusOpen}
-        onClose={() => setIsAgentStatusOpen(false)}
-      />
-      <GoalManagerModal
-        isOpen={isGoalManagerOpen}
-        onClose={() => setIsGoalManagerOpen(false)}
-      />
     </>
   );
 }

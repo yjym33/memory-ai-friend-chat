@@ -7,12 +7,21 @@ import ProfileSidebar from "./ProfileSidebar";
 import ChatListSidebar from "./ChatListSidebar";
 import ChatWindow from "./ChatWindow";
 import ChatInput from "./ChatInput";
-import { Menu, X } from "lucide-react";
+import AiSettingsModal from "./AiSettingsModal";
+import AgentStatusModal from "./AgentStatusModal";
+import GoalManagerModal from "./goal-management/GoalManagerModal";
+import { UploadedFile } from "../types";
+import { Menu } from "lucide-react";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(false);
+
+  // 모달 상태 관리
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAgentStatusOpen, setIsAgentStatusOpen] = useState(false);
+  const [isGoalManagerOpen, setIsGoalManagerOpen] = useState(false);
 
   // 모바일 환경에서만 사이드바 상태 관리
   // 웹 환경에서는 별도의 컴포넌트로 항상 표시
@@ -34,7 +43,7 @@ export default function Chatbot() {
   const { currentTheme, saveTheme } = useTheme(activeChatId || 0);
 
   // 메시지 전송 처리
-  const handleSendMessage = async (message?: string, file?: any) => {
+  const handleSendMessage = async (message?: string, file?: UploadedFile) => {
     const messageToSend = message || input;
 
     if ((!messageToSend.trim() && !file) || loading) return;
@@ -63,7 +72,11 @@ export default function Chatbot() {
       {/* 프로필 사이드바 - 웹과 모바일 완전 분리 */}
       {/* 웹 환경: 항상 표시 */}
       <div className="hidden lg:block lg:relative">
-        <ProfileSidebar />
+        <ProfileSidebar
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenAgentStatus={() => setIsAgentStatusOpen(true)}
+          onOpenGoalManager={() => setIsGoalManagerOpen(true)}
+        />
       </div>
 
       {/* 모바일 환경: 슬라이드 방식 */}
@@ -75,7 +88,12 @@ export default function Chatbot() {
         transition-transform duration-300 ease-in-out
       `}
       >
-        <ProfileSidebar onClose={() => setIsProfileOpen(false)} />
+        <ProfileSidebar
+          onClose={() => setIsProfileOpen(false)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenAgentStatus={() => setIsAgentStatusOpen(true)}
+          onOpenGoalManager={() => setIsGoalManagerOpen(true)}
+        />
       </div>
 
       {/* 채팅 목록 사이드바 - 웹과 모바일 완전 분리 */}
@@ -154,6 +172,20 @@ export default function Chatbot() {
           loading={loading}
         />
       </div>
+
+      {/* 모달들 - 독립적으로 렌더링 */}
+      <AiSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+      <AgentStatusModal
+        isOpen={isAgentStatusOpen}
+        onClose={() => setIsAgentStatusOpen(false)}
+      />
+      <GoalManagerModal
+        isOpen={isGoalManagerOpen}
+        onClose={() => setIsGoalManagerOpen(false)}
+      />
     </div>
   );
 }
