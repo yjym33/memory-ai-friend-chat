@@ -5,10 +5,7 @@ import {
   UserGoals,
   GoalRecommendation,
 } from "../../services/agentService";
-import {
-  useAsyncOperation,
-  useAsyncAction,
-} from "../../hooks/useAsyncOperation";
+// 사용하지 않는 훅 임포트 제거 (린트 오류 해결)
 
 interface GoalManagerProps {
   onGoalUpdate?: () => void;

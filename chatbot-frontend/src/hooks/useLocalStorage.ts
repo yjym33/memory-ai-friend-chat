@@ -97,7 +97,7 @@ export function useLocalStorage<T>(
       onError(error as Error);
       return initialValue;
     }
-  }, [key, initialValue, serializer.read, onError]);
+  }, [key, initialValue, serializer, onError]);
 
   // 안전한 setState (동등값이면 스킵)
   const safeSetStored = useCallback(
@@ -185,7 +185,7 @@ export function useLocalStorage<T>(
     [
       key,
       storedValue,
-      serializer.write,
+      serializer,
       syncAcrossTabs,
       debounceDelay,
       onError,
@@ -244,14 +244,7 @@ export function useLocalStorage<T>(
         debounceTimerRef.current = null;
       }
     };
-  }, [
-    key,
-    initialValue,
-    serializer.read,
-    onError,
-    syncAcrossTabs,
-    safeSetStored,
-  ]);
+  }, [key, initialValue, serializer, onError, syncAcrossTabs, safeSetStored]);
 
   // key가 바뀔 때만 스토리지에서 재동기화 (핵심 수정)
   useEffect(() => {
@@ -275,7 +268,7 @@ export function useSessionStorage<T>(
 ): [T, (value: SetValue<T>) => void, () => void] {
   const {
     serializer: optSerializer,
-    onError = (error) =>
+    onError = (error: Error) =>
       console.error(`useSessionStorage error for key "${key}":`, error),
   } = options ?? {};
 
@@ -294,7 +287,7 @@ export function useSessionStorage<T>(
       onError(error as Error);
       return initialValue;
     }
-  }, [key, initialValue, serializer.read, onError]);
+  }, [key, initialValue, serializer, onError]);
 
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === "undefined") return initialValue;
@@ -340,7 +333,7 @@ export function useSessionStorage<T>(
         onError(error as Error);
       }
     },
-    [key, storedValue, serializer.write, onError, safeSetStored]
+    [key, storedValue, serializer, onError, safeSetStored]
   );
 
   const removeValue = useCallback(() => {

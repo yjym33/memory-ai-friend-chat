@@ -22,7 +22,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 /**
  * 함수 호출을 지연시키는 디바운스 콜백 훅
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
   deps: React.DependencyList = []
@@ -72,7 +72,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
 /**
  * 함수 호출 빈도를 제한하는 쓰로틀 훅
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
   deps: React.DependencyList = []
@@ -171,7 +171,7 @@ export function useSearchDebounce(
 /**
  * API 호출에 최적화된 디바운스 훅
  */
-export function useApiDebounce<T, P extends any[]>(
+export function useApiDebounce<T, P extends unknown[]>(
   apiFunction: (...args: P) => Promise<T>,
   delay: number = 500,
   deps: React.DependencyList = []
@@ -183,7 +183,7 @@ export function useApiDebounce<T, P extends any[]>(
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [debouncedApiCall] = useDebouncedCallback(
-    async (...args: P) => {
+    (async (...args: P) => {
       try {
         // 이전 요청 취소
         if (abortControllerRef.current) {
@@ -210,7 +210,7 @@ export function useApiDebounce<T, P extends any[]>(
           setLoading(false);
         }
       }
-    },
+    }) as (...args: unknown[]) => unknown,
     delay,
     deps
   );
