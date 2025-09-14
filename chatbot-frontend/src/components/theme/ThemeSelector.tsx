@@ -30,10 +30,10 @@ export default function ThemeSelector({
 
   return (
     <div className="relative">
-      {/* 테마 선택 버튼 */}
+      {/* 테마 선택 버튼 - 웹에서만 활성화 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
       >
         <div
           className="w-4 h-4 rounded-full"
