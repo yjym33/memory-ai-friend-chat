@@ -211,7 +211,9 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
       {/* 통계 요약 */}
       {statistics && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-3">목표 현황</h3>
+          <h3 className="text-lg font-semibold mb-3 text-gray-900">
+            목표 현황
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -252,7 +254,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
             className={`px-4 py-2 font-medium text-sm ${
               activeTab === "goals"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-900 hover:text-gray-700"
             }`}
           >
             내 목표들 ({goals.length})
@@ -262,7 +264,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
             className={`px-4 py-2 font-medium text-sm ${
               activeTab === "recommendations"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-900 hover:text-gray-700"
             }`}
           >
             추천 목표 ({recommendations.length})
@@ -273,7 +275,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
       {/* 목표 목록 탭 */}
       {activeTab === "goals" && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">내 목표들</h3>
+          <h3 className="text-lg font-semibold text-gray-900">내 목표들</h3>
 
           {goals.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -289,7 +291,9 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-lg">{goal.title}</h4>
+                    <h4 className="font-semibold text-lg text-gray-900">
+                      {goal.title}
+                    </h4>
                     {goal.description && (
                       <p className="text-gray-800 text-sm mt-1">
                         {goal.description}
@@ -388,7 +392,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
       {/* 추천 목표 탭 */}
       {activeTab === "recommendations" && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">추천 목표</h3>
+          <h3 className="text-lg font-semibold text-gray-900">추천 목표</h3>
 
           {recommendations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -404,7 +408,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-lg">
+                    <h4 className="font-semibold text-lg text-gray-900">
                       {recommendation.title}
                     </h4>
                     <p className="text-gray-800 text-sm mt-1">
