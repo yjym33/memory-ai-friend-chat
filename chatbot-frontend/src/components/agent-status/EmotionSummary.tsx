@@ -25,7 +25,7 @@ export default function EmotionSummary({
         {emotionSummary.map((summary, index) => (
           <div key={index} className="bg-white p-3 rounded text-center">
             <div className="text-2xl mb-1">{getEmotionEmoji(summary.type)}</div>
-            <div className="font-medium">{summary.type}</div>
+            <div className="font-medium text-gray-900">{summary.type}</div>
             <div className="text-sm text-gray-800">
               평균: {parseFloat(summary.avgIntensity).toFixed(1)}/10
             </div>

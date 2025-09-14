@@ -24,7 +24,9 @@ export default function RecentEmotions({ emotions }: RecentEmotionsProps) {
                   {getEmotionEmoji(emotion.type)}
                 </span>
                 <div>
-                  <div className="font-medium">{emotion.type}</div>
+                  <div className="font-medium text-gray-900">
+                    {emotion.type}
+                  </div>
                   <div className="text-sm text-gray-800">
                     강도: {emotion.intensity}/10
                   </div>

@@ -33,6 +33,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   // 콜백 업데이트
   useEffect(() => {
     callbackRef.current = callback;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callback, ...deps]);
 
   // 디바운스된 함수
