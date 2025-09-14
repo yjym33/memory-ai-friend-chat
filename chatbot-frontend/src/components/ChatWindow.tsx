@@ -53,7 +53,7 @@ export default function ChatWindow({
 
       <div className="max-w-2xl mx-auto w-full flex flex-col gap-4 sm:gap-6 py-4 sm:py-8 px-2 sm:px-0">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-600 mt-20">
+          <div className="text-center text-gray-800 mt-20">
             대화를 시작해보세요!
           </div>
         ) : (
@@ -82,7 +82,7 @@ export default function ChatWindow({
                   ) : (
                     <>
                       AI <span className="text-lg">🤔</span>{" "}
-                      <span className="text-xs text-gray-600 ml-2">루나</span>
+                      <span className="text-xs text-gray-700 ml-2">루나</span>
                     </>
                   )}
                 </div>

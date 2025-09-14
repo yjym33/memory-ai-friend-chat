@@ -33,7 +33,7 @@ export default function SettingsTestSection({
         <select
           value={selectedTestMessage}
           onChange={(e) => onTestMessageChange(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-lg"
+          className="w-full p-2 border border-gray-300 rounded-lg text-gray-900"
         >
           <option value="">테스트 메시지를 선택하세요</option>
           <option value="오늘 기분이 좀 안 좋아...">감정 테스트: 슬픔</option>

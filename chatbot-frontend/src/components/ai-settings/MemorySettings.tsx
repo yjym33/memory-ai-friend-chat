@@ -44,7 +44,7 @@ export default function MemorySettings({
           onChange={(e) =>
             onMemoryRetentionDaysChange(parseInt(e.target.value))
           }
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-900"
         >
           <option value={7}>1주일</option>
           <option value={30}>1개월</option>

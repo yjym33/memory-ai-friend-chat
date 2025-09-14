@@ -120,7 +120,7 @@ export default function ChatInput({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력하세요..."
-            className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+            className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900"
             rows={1}
             style={{
               minHeight: "40px",

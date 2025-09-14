@@ -40,7 +40,7 @@ export default function PersonalitySettings({
               className={`p-3 rounded-lg border transition ${
                 personalityType === type
                   ? "bg-purple-100 border-purple-500 text-purple-700"
-                  : "border-gray-200 hover:bg-gray-50"
+                  : "border-gray-200 hover:bg-gray-50 text-gray-900"
               }`}
             >
               {type}
@@ -62,7 +62,7 @@ export default function PersonalitySettings({
               className={`p-3 rounded-lg border transition ${
                 speechStyle === style
                   ? "bg-purple-100 border-purple-500 text-purple-700"
-                  : "border-gray-200 hover:bg-gray-50"
+                  : "border-gray-200 hover:bg-gray-50 text-gray-900"
               }`}
             >
               {style}
@@ -81,7 +81,7 @@ export default function PersonalitySettings({
           value={nickname}
           onChange={(e) => onNicknameChange(e.target.value)}
           placeholder="예: 친구, 동료, 이름 등"
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
         />
       </div>
 

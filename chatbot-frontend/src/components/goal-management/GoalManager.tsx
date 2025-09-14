@@ -291,7 +291,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                   <div className="flex-1">
                     <h4 className="font-semibold text-lg">{goal.title}</h4>
                     {goal.description && (
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-gray-800 text-sm mt-1">
                         {goal.description}
                       </p>
                     )}
@@ -324,7 +324,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                 {/* 진행률 */}
                 <div className="mb-3">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-gray-600">진행률</span>
+                    <span className="text-sm text-gray-800">진행률</span>
                     <span className="text-sm font-medium">
                       {goal.progress}%
                     </span>
@@ -340,7 +340,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                 {/* 진행률 조절 (활성 목표만) */}
                 {goal.status === "active" && (
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600">진행률 조절:</span>
+                    <span className="text-sm text-gray-800">진행률 조절:</span>
                     <div className="flex gap-2">
                       {[0, 25, 50, 75, 100].map((progress) => (
                         <button
@@ -360,7 +360,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                 )}
 
                 {/* 목표 정보 */}
-                <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+                <div className="mt-3 pt-3 border-t text-xs text-gray-700">
                   <div className="flex justify-between">
                     <span>우선순위: {goal.priority}</span>
                     <span>
@@ -407,7 +407,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                     <h4 className="font-semibold text-lg">
                       {recommendation.title}
                     </h4>
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-gray-800 text-sm mt-1">
                       {recommendation.description}
                     </p>
                   </div>
@@ -432,7 +432,7 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+                <div className="mt-3 pt-3 border-t text-xs text-gray-700">
                   <div className="flex justify-between">
                     <span>추천 이유: {recommendation.reason}</span>
                   </div>
