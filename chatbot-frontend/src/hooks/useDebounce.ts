@@ -85,6 +85,7 @@ export function useThrottle<T extends (...args: unknown[]) => unknown>(
   // 콜백 업데이트
   useEffect(() => {
     callbackRef.current = callback;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callback, ...deps]);
 
   // 쓰로틀된 함수
