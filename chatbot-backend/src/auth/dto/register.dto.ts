@@ -1,4 +1,5 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class RegisterDto {
   @IsEmail()
@@ -14,6 +15,7 @@ export class RegisterDto {
   @IsString()
   gender: string;
 
-  @IsString()
-  birthYear: string;
+  @IsNumber()
+  @Transform(({ value }: { value: any }) => parseInt(value, 10))
+  birthYear: number;
 }

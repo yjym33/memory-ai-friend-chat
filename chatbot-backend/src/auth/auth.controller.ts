@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 /**
  * 인증 관련 API를 처리하는 컨트롤러
@@ -47,7 +48,7 @@ export class AuthController {
    */
   @Get('validate')
   @UseGuards(JwtAuthGuard)
-  async validateToken(@Request() req) {
+  async validateToken(@Request() req: AuthenticatedRequest) {
     return { userId: req.user.userId };
   }
 }

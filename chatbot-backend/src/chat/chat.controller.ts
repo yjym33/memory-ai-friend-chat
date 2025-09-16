@@ -15,14 +15,15 @@ import { ConfigService } from '@nestjs/config';
 import { ChatService } from './chat.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import * as pdf from 'pdf-parse';
+import pdf from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import * as Tesseract from 'tesseract.js';
-import * as textract from 'textract';
+import textract from 'textract';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 /**
  * 채팅 관련 API를 처리하는 컨트롤러
@@ -43,7 +44,7 @@ export class ChatController {
    * @param req - 요청 객체 (사용자 ID 포함)
    */
   @Get('conversations')
-  async getAllConversations(@Request() req) {
+  async getAllConversations(@Request() req: AuthenticatedRequest) {
     return this.chatService.getAllConversations(req.user.userId);
   }
 
@@ -61,7 +62,7 @@ export class ChatController {
    * @param req - 요청 객체 (사용자 ID 포함)
    */
   @Post('conversations')
-  async createConversation(@Request() req) {
+  async createConversation(@Request() req: AuthenticatedRequest) {
     return this.chatService.createConversation(req.user.userId);
   }
 
@@ -150,7 +151,10 @@ export class ChatController {
    * @param req - 요청 객체 (사용자 ID 포함)
    */
   @Post()
-  async simpleChat(@Body() body: { message: string }, @Request() req) {
+  async simpleChat(
+    @Body() body: { message: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
     try {
       // 에이전트를 통한 메시지 처리 (감정 분석 및 목표 추출)
       const agentResponse = await this.agentService.processMessage(
@@ -179,7 +183,7 @@ export class ChatController {
   async chatCompletion(
     @Param('conversationId') conversationId: number,
     @Body() body: { message: string; file?: any },
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
       // 1. 사용자의 AI 설정 조회
@@ -229,10 +233,13 @@ export class ChatController {
       // 4. 대화 내용 업데이트
       const conversation =
         await this.chatService.getConversation(conversationId);
+      if (!conversation) {
+        throw new NotFoundException('대화를 찾을 수 없습니다.');
+      }
       const updatedMessages = [
         ...conversation.messages,
-        { role: 'user', content: userDisplayMessage }, // 사용자에게 표시할 메시지 사용
-        { role: 'assistant', content: agentResponse },
+        { role: 'user' as const, content: userDisplayMessage }, // 사용자에게 표시할 메시지 사용
+        { role: 'assistant' as const, content: agentResponse },
       ];
 
       await this.chatService.updateConversation(

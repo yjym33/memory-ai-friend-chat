@@ -5,6 +5,7 @@ import {
   AnalyticsResult,
   RelationshipMilestone,
 } from './types/analytics.types';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 @Controller('conversation-analytics')
 @UseGuards(JwtAuthGuard)
@@ -15,14 +16,16 @@ export class ConversationAnalyticsController {
 
   @Get()
   async getAnalytics(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Query('period') period: 'week' | 'month' | 'all' = 'month',
   ): Promise<AnalyticsResult> {
     return this.analyticsService.analyzeUserConversations(req.user.userId);
   }
 
   @Get('milestones')
-  async getMilestones(@Request() req): Promise<RelationshipMilestone[]> {
+  async getMilestones(
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RelationshipMilestone[]> {
     const analytics = await this.analyticsService.analyzeUserConversations(
       req.user.userId,
     );

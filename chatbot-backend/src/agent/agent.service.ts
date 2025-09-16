@@ -7,6 +7,7 @@ import { Milestone, MilestoneStatus } from './entities/milestone.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { AgentState, AgentAction } from './types/agent-state';
+import { safeParseInt } from '../common/utils/env.util';
 import axios from 'axios';
 
 @Injectable()
@@ -17,13 +18,19 @@ export class AgentService {
     { data: string[]; timestamp: number }
   >();
   private readonly CACHE_TTL =
-    (parseInt(process.env.MEMORY_CACHE_TTL_MINUTES) || 5) * 60 * 1000;
-  private readonly MAX_CACHE_SIZE =
-    parseInt(process.env.MEMORY_CACHE_MAX_SIZE) || 100;
-  private readonly MAX_MEMORIES_PER_USER =
-    parseInt(process.env.MAX_MEMORIES_PER_USER) || 20;
-  private readonly MAX_CONVERSATIONS_PER_QUERY =
-    parseInt(process.env.MAX_CONVERSATIONS_PER_QUERY) || 10;
+    safeParseInt(process.env.MEMORY_CACHE_TTL_MINUTES, 5) * 60 * 1000;
+  private readonly MAX_CACHE_SIZE = safeParseInt(
+    process.env.MEMORY_CACHE_MAX_SIZE,
+    100,
+  );
+  private readonly MAX_MEMORIES_PER_USER = safeParseInt(
+    process.env.MAX_MEMORIES_PER_USER,
+    20,
+  );
+  private readonly MAX_CONVERSATIONS_PER_QUERY = safeParseInt(
+    process.env.MAX_CONVERSATIONS_PER_QUERY,
+    10,
+  );
 
   constructor(
     @InjectRepository(Emotion)
@@ -1471,7 +1478,7 @@ export class AgentService {
 
     // 성격 타입
     if (settings.personalityType) {
-      const personalityMap = {
+      const personalityMap: Record<string, string> = {
         친근함: '따뜻하고 친근한 성격으로 대화한다',
         유머러스: '유머러스하고 재미있는 성격으로 대화한다',
         지적: '지적이고 논리적인 성격으로 대화한다',
@@ -1483,7 +1490,7 @@ export class AgentService {
 
     // 말투
     if (settings.speechStyle) {
-      const styleMap = {
+      const styleMap: Record<string, string> = {
         반말: '친근한 반말로 대화한다',
         존댓말: '정중한 존댓말로 대화한다',
         중성: '자연스럽고 중성적인 말투로 대화한다',

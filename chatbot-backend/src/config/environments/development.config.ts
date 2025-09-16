@@ -1,8 +1,10 @@
+import { safeParseInt, safeParseFloat } from '../../common/utils/env.util';
+
 export const developmentConfig = {
   // 데이터베이스 설정
   database: {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 5432,
+    port: safeParseInt(process.env.DB_PORT, 5432),
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'password',
     database: process.env.DB_NAME || 'chatbot_dev',
@@ -14,7 +16,7 @@ export const developmentConfig = {
 
   // 서버 설정
   server: {
-    port: parseInt(process.env.PORT) || 8080,
+    port: safeParseInt(process.env.PORT, 8080),
     host: process.env.HOST || '0.0.0.0',
     cors: {
       origin: [
@@ -69,7 +71,7 @@ export const developmentConfig = {
     enableRedis: false, // 개발 환경에서는 메모리 캐시 사용
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT) || 6379,
+      port: safeParseInt(process.env.REDIS_PORT, 6379),
       password: process.env.REDIS_PASSWORD,
       db: 0,
     },
@@ -135,7 +137,7 @@ export const developmentConfig = {
   // WebSocket 설정
   websocket: {
     enabled: true,
-    port: parseInt(process.env.WS_PORT) || 8081,
+    port: safeParseInt(process.env.WS_PORT, 8081),
     cors: {
       origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
       credentials: true,

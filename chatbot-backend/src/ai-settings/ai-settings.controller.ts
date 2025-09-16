@@ -10,6 +10,7 @@ import {
 import { AiSettingsService } from './ai-settings.service';
 import { UpdateAiSettingsDto } from './dto/ai-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 /**
  * AI 설정 관련 API를 처리하는 컨트롤러
@@ -26,7 +27,7 @@ export class AiSettingsController {
    * @returns AI 설정 객체
    */
   @Get()
-  async getSettings(@Request() req) {
+  async getSettings(@Request() req: AuthenticatedRequest) {
     return this.aiSettingsService.findByUserId(req.user.userId);
   }
 
@@ -37,7 +38,10 @@ export class AiSettingsController {
    * @returns 업데이트된 AI 설정 객체
    */
   @Put()
-  async updateSettings(@Request() req, @Body() updateDto: UpdateAiSettingsDto) {
+  async updateSettings(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateDto: UpdateAiSettingsDto,
+  ) {
     return this.aiSettingsService.update(req.user.userId, updateDto);
   }
 
@@ -49,7 +53,7 @@ export class AiSettingsController {
    */
   @Post('test')
   async testSettings(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Body() body: { settings: UpdateAiSettingsDto; message: string },
   ) {
     return this.aiSettingsService.testSettings(

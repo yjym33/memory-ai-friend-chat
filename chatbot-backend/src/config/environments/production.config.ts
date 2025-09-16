@@ -1,8 +1,10 @@
+import { safeParseInt, safeParseFloat } from '../../common/utils/env.util';
+
 export const productionConfig = {
   // 데이터베이스 설정
   database: {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 5432,
+    port: safeParseInt(process.env.DB_PORT, 5432),
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
@@ -17,7 +19,7 @@ export const productionConfig = {
 
   // 서버 설정
   server: {
-    port: parseInt(process.env.PORT) || 8080,
+    port: safeParseInt(process.env.PORT, 8080),
     host: process.env.HOST || '0.0.0.0',
     cors: {
       origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
@@ -74,9 +76,9 @@ export const productionConfig = {
     enableRedis: true, // 프로덕션에서는 Redis 사용
     redis: {
       host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT) || 6379,
+      port: safeParseInt(process.env.REDIS_PORT, 6379),
       password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB) || 0,
+      db: safeParseInt(process.env.REDIS_DB, 0),
       retryDelayOnFailover: 100,
       enableReadyCheck: true,
       maxRetriesPerRequest: 3,
@@ -108,8 +110,8 @@ export const productionConfig = {
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL || 'gpt-4',
-      maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 4000,
-      temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
+      maxTokens: safeParseInt(process.env.OPENAI_MAX_TOKENS, 4000),
+      temperature: safeParseFloat(process.env.OPENAI_TEMPERATURE, 0.7),
       timeout: 60000, // 1분
       organization: process.env.OPENAI_ORG_ID,
     },
@@ -165,7 +167,7 @@ export const productionConfig = {
     provider: 'smtp',
     smtp: {
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
+      port: safeParseInt(process.env.SMTP_PORT, 587),
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
@@ -184,13 +186,13 @@ export const productionConfig = {
   // WebSocket 설정
   websocket: {
     enabled: true,
-    port: parseInt(process.env.WS_PORT) || 8081,
+    port: safeParseInt(process.env.WS_PORT, 8081),
     cors: {
       origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
       credentials: true,
     },
     heartbeatInterval: 25000,
-    maxConnections: parseInt(process.env.MAX_WS_CONNECTIONS) || 10000,
+    maxConnections: safeParseInt(process.env.MAX_WS_CONNECTIONS, 10000),
     enableCompression: true,
     perMessageDeflate: {
       threshold: 1024,
@@ -211,8 +213,10 @@ export const productionConfig = {
     gracefulShutdownTimeout: 30000,
     cluster: {
       enabled: process.env.CLUSTER_ENABLED === 'true',
-      workers:
-        parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length,
+      workers: safeParseInt(
+        process.env.CLUSTER_WORKERS,
+        require('os').cpus().length,
+      ),
     },
   },
 

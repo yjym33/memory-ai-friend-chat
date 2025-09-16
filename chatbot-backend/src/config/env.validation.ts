@@ -50,11 +50,6 @@ export class EnvironmentVariables {
   @IsOptional()
   DB_NAME: string = 'chatbot';
 
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  DB_SYNCHRONIZE: number = 1;
-
   // JWT 보안 설정 (개발환경에서는 기본값 제공)
   @IsString()
   @IsOptional()

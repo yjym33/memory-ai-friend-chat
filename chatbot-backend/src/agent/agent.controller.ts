@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { AgentService } from './agent.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../common/types/request.types';
 
 @Controller('agent')
 @UseGuards(JwtAuthGuard)
@@ -20,7 +21,7 @@ export class AgentController {
   constructor(private readonly agentService: AgentService) {}
 
   @Get('status')
-  async getAgentStatus(@Request() req) {
+  async getAgentStatus(@Request() req: AuthenticatedRequest) {
     try {
       const agentStatus = await this.agentService.getAgentStatus(
         req.user.userId,
@@ -51,7 +52,7 @@ export class AgentController {
   }
 
   @Get('goals')
-  async getUserGoals(@Request() req) {
+  async getUserGoals(@Request() req: AuthenticatedRequest) {
     return this.agentService.getUserGoals(req.user.userId);
   }
 
@@ -62,7 +63,7 @@ export class AgentController {
 
   @Post('goals')
   async createGoal(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Body()
     body: {
       title: string;
@@ -109,7 +110,7 @@ export class AgentController {
    * @param req - 요청 객체 (사용자 ID 포함)
    */
   @Delete('cache/invalidate')
-  async invalidateUserCache(@Request() req) {
+  async invalidateUserCache(@Request() req: AuthenticatedRequest) {
     try {
       this.agentService.invalidateUserCache(req.user.userId);
       return {

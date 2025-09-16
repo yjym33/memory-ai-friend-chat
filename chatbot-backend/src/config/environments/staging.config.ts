@@ -1,8 +1,10 @@
+import { safeParseInt, safeParseFloat } from '../../common/utils/env.util';
+
 export const stagingConfig = {
   // 데이터베이스 설정
   database: {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 5432,
+    port: safeParseInt(process.env.DB_PORT, 5432),
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'chatbot_staging',
@@ -20,7 +22,7 @@ export const stagingConfig = {
 
   // 서버 설정
   server: {
-    port: parseInt(process.env.PORT) || 8080,
+    port: safeParseInt(process.env.PORT, 8080),
     host: process.env.HOST || '0.0.0.0',
     cors: {
       origin: [
@@ -79,9 +81,9 @@ export const stagingConfig = {
     enableRedis: process.env.REDIS_ENABLED === 'true',
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT) || 6379,
+      port: safeParseInt(process.env.REDIS_PORT, 6379),
       password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB) || 1, // 스테이징용 DB
+      db: safeParseInt(process.env.REDIS_DB, 1), // 스테이징용 DB
       retryDelayOnFailover: 100,
       enableReadyCheck: true,
       maxRetriesPerRequest: 3,
@@ -110,8 +112,8 @@ export const stagingConfig = {
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-      maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 3000,
-      temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
+      maxTokens: safeParseInt(process.env.OPENAI_MAX_TOKENS, 3000),
+      temperature: safeParseFloat(process.env.OPENAI_TEMPERATURE, 0.7),
       timeout: 45000,
       organization: process.env.OPENAI_ORG_ID,
     },
@@ -159,7 +161,7 @@ export const stagingConfig = {
     provider: process.env.EMAIL_PROVIDER || 'smtp',
     smtp: {
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
+      port: safeParseInt(process.env.SMTP_PORT, 587),
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
@@ -176,7 +178,7 @@ export const stagingConfig = {
   // WebSocket 설정
   websocket: {
     enabled: true,
-    port: parseInt(process.env.WS_PORT) || 8081,
+    port: safeParseInt(process.env.WS_PORT, 8081),
     cors: {
       origin: [
         process.env.FRONTEND_URL || 'https://staging.chatbot.com',
@@ -185,7 +187,7 @@ export const stagingConfig = {
       credentials: true,
     },
     heartbeatInterval: 30000,
-    maxConnections: parseInt(process.env.MAX_WS_CONNECTIONS) || 1000,
+    maxConnections: safeParseInt(process.env.MAX_WS_CONNECTIONS, 1000),
     enableCompression: true,
   },
 

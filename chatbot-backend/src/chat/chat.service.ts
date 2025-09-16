@@ -30,7 +30,11 @@ export class ChatService {
       throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
     }
     await this.conversationRepository.update(id, { title });
-    return this.getConversation(id);
+    const updatedConversation = await this.getConversation(id);
+    if (!updatedConversation) {
+      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
+    }
+    return updatedConversation;
   }
 
   /**
@@ -51,7 +55,7 @@ export class ChatService {
    * @param id - 대화 ID
    * @returns 대화 객체
    */
-  async getConversation(id: number): Promise<Conversation> {
+  async getConversation(id: number): Promise<Conversation | null> {
     return this.conversationRepository.findOne({ where: { id } });
   }
 
@@ -78,7 +82,11 @@ export class ChatService {
     messages: { role: 'user' | 'assistant'; content: string }[],
   ): Promise<Conversation> {
     await this.conversationRepository.update(id, { messages });
-    return this.getConversation(id);
+    const updatedConversation = await this.getConversation(id);
+    if (!updatedConversation) {
+      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
+    }
+    return updatedConversation;
   }
 
   /**

@@ -5,6 +5,7 @@ import { Conversation } from '../chat/entity/conversation.entity';
 import { Goal } from '../agent/entities/goal.entity';
 import { Emotion } from '../agent/entities/emotion.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
+import { safeParseInt } from '../common/utils/env.util';
 
 // 환경변수 로드
 config();
@@ -16,7 +17,7 @@ config();
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 5432,
+  port: safeParseInt(process.env.DB_PORT, 5432),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'chatbot',

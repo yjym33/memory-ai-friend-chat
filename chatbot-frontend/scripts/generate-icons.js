@@ -51,4 +51,3 @@ console.log("Icon generation completed!");
 console.log(
   "Note: SVG files were created. For PNG conversion, you may need additional tools."
 );
-

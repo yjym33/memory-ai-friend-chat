@@ -150,7 +150,7 @@ export class AiSettingsService {
 
     // 성격 타입
     if (settings.personalityType) {
-      const personalityMap = {
+      const personalityMap: Record<string, string> = {
         친근함: '따뜻하고 친근한 성격으로 대화한다',
         유머러스: '유머러스하고 재미있는 성격으로 대화한다',
         지적: '지적이고 논리적인 성격으로 대화한다',
@@ -162,7 +162,7 @@ export class AiSettingsService {
 
     // 말투
     if (settings.speechStyle) {
-      const styleMap = {
+      const styleMap: Record<string, string> = {
         반말: '친근한 반말로 대화한다',
         존댓말: '정중한 존댓말로 대화한다',
         중성: '자연스럽고 중성적인 말투로 대화한다',
