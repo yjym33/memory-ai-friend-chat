@@ -3,9 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { Conversation } from './entity/conversation.entity';
+import { User } from '../auth/entity/user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { AiSettingsModule } from '../ai-settings/ai-settings.module';
 import { AgentModule } from '../agent/agent.module';
+import { DocumentModule } from '../document/document.module';
 
 /**
  * 채팅 기능을 위한 모듈
@@ -14,12 +16,13 @@ import { AgentModule } from '../agent/agent.module';
 @Module({
   imports: [
     // 데이터베이스 엔티티 등록
-    TypeOrmModule.forFeature([Conversation]),
+    TypeOrmModule.forFeature([Conversation, User]),
 
     // 의존성 모듈
     AuthModule,
     AiSettingsModule, // AI 설정 관리
     AgentModule, // AI 에이전트 처리
+    DocumentModule, // 문서 관리
   ],
   controllers: [ChatController],
   providers: [ChatService],

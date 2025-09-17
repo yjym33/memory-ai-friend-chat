@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { useRouter } from "next/navigation";
 import axiosInstance from "../utils/axios";
-import { X } from "lucide-react";
+import { X, FileText, BarChart3 } from "lucide-react";
 
 interface ProfileSidebarProps {
   onClose?: () => void;
@@ -91,6 +91,24 @@ export default function ProfileSidebar({
             className="w-full py-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-400 text-white font-semibold shadow hover:from-orange-500 hover:to-red-500 transition"
           >
             목표 관리
+          </button>
+
+          {/* 문서 관리 버튼 추가 */}
+          <button
+            onClick={() => window.open("/admin?tab=documents", "_blank")}
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold shadow hover:from-indigo-500 hover:to-purple-500 transition flex items-center justify-center space-x-2"
+          >
+            <FileText className="w-4 h-4" />
+            <span>문서 관리</span>
+          </button>
+
+          {/* 사용량 대시보드 버튼 추가 */}
+          <button
+            onClick={() => window.open("/admin?tab=usage", "_blank")}
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-teal-400 to-cyan-400 text-white font-semibold shadow hover:from-teal-500 hover:to-cyan-500 transition flex items-center justify-center space-x-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span>사용량</span>
           </button>
 
           {/* 우리가 나눈 이야기들 버튼 추가 */}

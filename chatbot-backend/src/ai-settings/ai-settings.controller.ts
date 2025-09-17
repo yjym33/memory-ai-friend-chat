@@ -11,6 +11,7 @@ import { AiSettingsService } from './ai-settings.service';
 import { UpdateAiSettingsDto } from './dto/ai-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../common/types/request.types';
+import { AiSettings, ChatMode } from './entity/ai-settings.entity';
 
 /**
  * AI 설정 관련 API를 처리하는 컨트롤러
@@ -60,6 +61,42 @@ export class AiSettingsController {
       req.user.userId,
       body.settings,
       body.message,
+    );
+  }
+
+  /**
+   * 채팅 모드를 변경합니다.
+   */
+  @Post('switch-mode')
+  async switchChatMode(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { mode: ChatMode },
+  ) {
+    return this.aiSettingsService.switchChatMode(req.user.userId, body.mode);
+  }
+
+  /**
+   * 사용 가능한 채팅 모드를 조회합니다.
+   */
+  @Get('available-modes')
+  async getAvailableModes(@Request() req: AuthenticatedRequest) {
+    const availableModes = await this.aiSettingsService.getAvailableChatModes(
+      req.user.userId,
+    );
+    return { availableModes };
+  }
+
+  /**
+   * 기업 설정을 업데이트합니다.
+   */
+  @Put('business-settings')
+  async updateBusinessSettings(
+    @Request() req: AuthenticatedRequest,
+    @Body() businessSettings: AiSettings['businessSettings'],
+  ) {
+    return this.aiSettingsService.updateBusinessSettings(
+      req.user.userId,
+      businessSettings,
     );
   }
 }

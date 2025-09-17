@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { UploadedFile } from "../services/uploadService";
 import EnhancedFileUpload from "./upload/EnhancedFileUpload";
+import { ChatMode } from "./ChatModeSwitch";
 import { Send, Plus, X, FileText } from "lucide-react";
 
 interface ChatInputProps {
@@ -8,6 +9,7 @@ interface ChatInputProps {
   setInput: (v: string) => void;
   sendMessage: (message?: string, file?: UploadedFile) => void;
   loading: boolean;
+  chatMode?: ChatMode;
 }
 
 export default function ChatInput({
@@ -15,6 +17,7 @@ export default function ChatInput({
   setInput,
   sendMessage,
   loading,
+  chatMode = ChatMode.PERSONAL,
 }: ChatInputProps) {
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -54,6 +57,14 @@ export default function ChatInput({
 
   return (
     <div className="p-2 sm:p-4 bg-white border-t">
+      {/* 모드별 힌트 메시지 */}
+      {chatMode === ChatMode.BUSINESS && (
+        <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/20 rounded text-xs text-blue-700 dark:text-blue-300">
+          💡 회사 문서에 대해 질문해보세요! (예: "휴가 정책", "보안 규정", "업무
+          절차")
+        </div>
+      )}
+
       {/* 업로드된 파일 표시 */}
       {uploadedFile && (
         <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -119,7 +130,11 @@ export default function ChatInput({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="메시지를 입력하세요..."
+            placeholder={
+              chatMode === ChatMode.PERSONAL
+                ? "무엇이든 편하게 말해보세요..."
+                : "회사 문서에 대해 질문해보세요..."
+            }
             className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900"
             rows={1}
             style={{

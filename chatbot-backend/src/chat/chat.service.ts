@@ -2,6 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from './entity/conversation.entity';
 import { Repository } from 'typeorm';
+import { User } from '../auth/entity/user.entity';
+import { AiSettings, ChatMode } from '../ai-settings/entity/ai-settings.entity';
+import { DocumentService } from '../document/document.service';
+import { AiSettingsService } from '../ai-settings/ai-settings.service';
+import { AgentService } from '../agent/agent.service';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 /**
  * 채팅 관련 비즈니스 로직을 처리하는 서비스
@@ -12,6 +19,12 @@ export class ChatService {
   constructor(
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private documentService: DocumentService,
+    private aiSettingsService: AiSettingsService,
+    private agentService: AgentService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -162,5 +175,230 @@ export class ChatService {
       theme: conversation.theme,
       themeName: conversation.themeName,
     };
+  }
+
+  /**
+   * 모드에 따라 메시지를 처리합니다.
+   */
+  async processMessage(
+    userId: string,
+    conversationId: number,
+    message: string,
+  ): Promise<string> {
+    const user = await this.getUserWithSettings(userId);
+    const aiSettings = await this.aiSettingsService.findByUserId(userId);
+
+    if (aiSettings.chatMode === ChatMode.PERSONAL) {
+      return this.processPersonalMessage(user, conversationId, message);
+    } else {
+      return this.processBusinessMessage(
+        user,
+        conversationId,
+        message,
+        aiSettings,
+      );
+    }
+  }
+
+  /**
+   * 개인 AI 친구 모드로 메시지를 처리합니다.
+   */
+  private async processPersonalMessage(
+    user: User,
+    conversationId: number,
+    message: string,
+  ): Promise<string> {
+    // 기존 개인 AI 친구 로직 사용
+    return this.agentService.processMessage(user.id, message);
+  }
+
+  /**
+   * 기업 쿼리 시스템 모드로 메시지를 처리합니다.
+   */
+  private async processBusinessMessage(
+    user: User,
+    conversationId: number,
+    message: string,
+    aiSettings: AiSettings,
+  ): Promise<string> {
+    if (!user.organizationId) {
+      return '기업 모드를 사용하려면 조직에 속해야 합니다.';
+    }
+
+    try {
+      // 1. 관련 문서 검색
+      const searchResults = await this.documentService.searchDocuments(
+        user.organizationId,
+        message,
+        {
+          documentTypes: aiSettings.businessSettings?.enabledDocumentTypes,
+          limit: aiSettings.businessSettings?.maxSearchResults || 5,
+          threshold: aiSettings.businessSettings?.confidenceThreshold || 0.7,
+        },
+      );
+
+      // 2. 검색 결과가 없는 경우
+      if (searchResults.length === 0) {
+        return this.generateNoResultsResponse(message, aiSettings);
+      }
+
+      // 3. 검색 결과를 컨텍스트로 활용하여 LLM 응답 생성
+      const context = this.buildContextFromSearchResults(searchResults);
+      const prompt = this.buildBusinessPrompt(message, context, aiSettings);
+
+      const response = await this.generateLLMResponse(prompt);
+
+      // 4. 출처 정보 추가 (설정에 따라)
+      if (aiSettings.businessSettings?.includeSourceCitations !== false) {
+        return this.addSourceCitations(response, searchResults);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('기업 모드 메시지 처리 실패:', error);
+      return '죄송합니다. 문서 검색 중 오류가 발생했습니다. 다시 시도해주세요.';
+    }
+  }
+
+  /**
+   * 사용자 정보와 AI 설정을 함께 조회합니다.
+   */
+  private async getUserWithSettings(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
+
+  /**
+   * 검색 결과에서 컨텍스트를 구성합니다.
+   */
+  private buildContextFromSearchResults(
+    searchResults: Array<{ document: any; chunk: any; score: number }>,
+  ): string {
+    return searchResults
+      .map((result, index) => {
+        const { document, chunk, score } = result;
+        return `[문서 ${index + 1}] ${document.title}\n${chunk.content}\n(관련도: ${(score * 100).toFixed(1)}%)`;
+      })
+      .join('\n\n---\n\n');
+  }
+
+  /**
+   * 기업 모드용 프롬프트를 구성합니다.
+   */
+  private buildBusinessPrompt(
+    query: string,
+    context: string,
+    settings: AiSettings,
+  ): string {
+    const { businessSettings } = settings;
+
+    let prompt = `당신은 회사의 문서를 기반으로 질문에 답하는 AI 어시스턴트입니다.
+
+다음 문서 내용을 참고하여 질문에 정확하고 도움이 되는 답변을 제공해주세요:
+
+===== 관련 문서 내용 =====
+${context}
+===========================
+
+사용자 질문: ${query}
+
+답변 지침:
+- 제공된 문서 내용을 기반으로만 답변하세요
+- 확실하지 않은 정보는 추측하지 마세요
+- 구체적이고 실용적인 답변을 제공하세요`;
+
+    // 응답 스타일 설정
+    switch (businessSettings?.responseStyle) {
+      case 'formal':
+        prompt += '\n- 정중하고 공식적인 톤으로 답변하세요';
+        break;
+      case 'technical':
+        prompt += '\n- 기술적이고 상세한 설명을 포함하세요';
+        break;
+      case 'casual':
+        prompt += '\n- 친근하고 이해하기 쉬운 톤으로 답변하세요';
+        break;
+    }
+
+    return prompt;
+  }
+
+  /**
+   * LLM API를 호출하여 응답을 생성합니다.
+   */
+  private async generateLLMResponse(prompt: string): Promise<string> {
+    try {
+      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: prompt,
+            },
+          ],
+          max_tokens: 1000,
+          temperature: 0.3, // 기업 모드에서는 일관성 있는 답변을 위해 낮은 temperature
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      return response.data.choices[0].message.content;
+    } catch (error) {
+      console.error('LLM API 호출 실패:', error);
+      throw new Error('AI 응답 생성에 실패했습니다.');
+    }
+  }
+
+  /**
+   * 검색 결과가 없을 때의 응답을 생성합니다.
+   */
+  private generateNoResultsResponse(
+    query: string,
+    settings: AiSettings,
+  ): string {
+    const baseResponse = '죄송합니다. 질문과 관련된 문서를 찾을 수 없습니다.';
+
+    switch (settings.businessSettings?.responseStyle) {
+      case 'formal':
+        return `${baseResponse} 다른 키워드로 검색하시거나, 관리자에게 문의해주시기 바랍니다.`;
+      case 'casual':
+        return `${baseResponse} 다른 방식으로 질문해보시거나, 키워드를 바꿔서 다시 시도해보세요!`;
+      default:
+        return `${baseResponse} 키워드를 바꾸거나 더 구체적으로 질문해주세요.`;
+    }
+  }
+
+  /**
+   * 응답에 출처 정보를 추가합니다.
+   */
+  private addSourceCitations(
+    response: string,
+    searchResults: Array<{ document: any; chunk: any; score: number }>,
+  ): string {
+    const citations = searchResults
+      .map((result, index) => {
+        const { document } = result;
+        return `[${index + 1}] ${document.title} (${document.type})`;
+      })
+      .join('\n');
+
+    return `${response}\n\n📚 **참고 문서:**\n${citations}`;
   }
 }

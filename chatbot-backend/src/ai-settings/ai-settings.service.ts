@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AiSettings } from './entity/ai-settings.entity';
+import { AiSettings, ChatMode } from './entity/ai-settings.entity';
 import {
   CreateAiSettingsDto,
   UpdateAiSettingsDto,
@@ -205,5 +205,44 @@ export class AiSettingsService {
     prompt += `\n응답은 자연스럽고 일관성 있게 작성해야 한다.`;
 
     return prompt;
+  }
+
+  /**
+   * 채팅 모드를 변경합니다.
+   */
+  async switchChatMode(userId: string, mode: ChatMode): Promise<AiSettings> {
+    const settings = await this.findByUserId(userId);
+    settings.chatMode = mode;
+    return this.aiSettingsRepository.save(settings);
+  }
+
+  /**
+   * 기업 설정을 업데이트합니다.
+   */
+  async updateBusinessSettings(
+    userId: string,
+    businessSettings: AiSettings['businessSettings'],
+  ): Promise<AiSettings> {
+    const settings = await this.findByUserId(userId);
+    settings.businessSettings = {
+      ...settings.businessSettings,
+      ...businessSettings,
+    };
+    return this.aiSettingsRepository.save(settings);
+  }
+
+  /**
+   * 사용자가 사용 가능한 채팅 모드를 조회합니다.
+   */
+  async getAvailableChatModes(userId: string): Promise<ChatMode[]> {
+    // 기본적으로 개인 모드는 모든 사용자가 사용 가능
+    const modes = [ChatMode.PERSONAL];
+
+    // 사용자 정보를 조회하여 기업 모드 사용 가능 여부 확인
+    // 실제 구현에서는 User 엔티티를 조회해야 함
+    // 현재는 임시로 기업 모드도 추가
+    modes.push(ChatMode.BUSINESS);
+
+    return modes;
   }
 }

@@ -10,13 +10,17 @@ import ChatInput from "./ChatInput";
 import AiSettingsModal from "./AiSettingsModal";
 import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
+import { ChatModeSwitch, ChatMode } from "./ChatModeSwitch";
 import { UploadedFile } from "../types";
-import { Menu } from "lucide-react";
+import { Menu, Settings, FileText } from "lucide-react";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(false);
+  const [currentChatMode, setCurrentChatMode] = useState<ChatMode>(
+    ChatMode.PERSONAL
+  );
 
   // 모달 상태 관리
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -50,7 +54,7 @@ export default function Chatbot() {
 
     setInput(""); // 입력 필드 즉시 클리어
 
-    await sendMessage(messageToSend, file);
+    await sendMessage(messageToSend, file, currentChatMode);
   };
 
   // 모바일에서 사이드바 닫기
@@ -148,12 +152,32 @@ export default function Chatbot() {
             <Menu className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-semibold text-gray-800">루나</h1>
-          <button
-            onClick={() => setIsChatListOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* 기업 모드일 때 문서 관리 버튼 표시 */}
+            {currentChatMode === ChatMode.BUSINESS && (
+              <button
+                onClick={() => window.open("/admin?tab=documents", "_blank")}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                title="문서 관리"
+              >
+                <FileText className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={() => setIsChatListOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 모드 스위치 추가 (데스크톱에서만 표시) */}
+        <div className="hidden lg:block bg-white border-b border-gray-200 p-4">
+          <ChatModeSwitch
+            onModeChange={setCurrentChatMode}
+            disabled={loading}
+          />
         </div>
 
         {/* 채팅 윈도우 */}
@@ -162,6 +186,7 @@ export default function Chatbot() {
           currentTheme={currentTheme}
           onThemeChange={saveTheme}
           conversationId={activeChatId}
+          chatMode={currentChatMode}
         />
 
         {/* 채팅 입력 */}
@@ -170,6 +195,7 @@ export default function Chatbot() {
           setInput={setInput}
           sendMessage={handleSendMessage}
           loading={loading}
+          chatMode={currentChatMode}
         />
       </div>
 

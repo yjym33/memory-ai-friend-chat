@@ -101,4 +101,62 @@ export class ChatService {
       }
     );
   }
+
+  /**
+   * 기업 모드 메시지 전송 (문서 검색 기반)
+   */
+  static async sendBusinessQuery(
+    conversationId: number,
+    query: string
+  ): Promise<Message> {
+    const response = await apiClient.post<{
+      response: string;
+      sources?: Array<{
+        title: string;
+        type: string;
+        relevance: number;
+      }>;
+    }>(`/chat/completion/${conversationId}`, {
+      message: query,
+      mode: "business",
+    });
+
+    return {
+      role: "assistant",
+      content: response.response,
+      timestamp: new Date().toISOString(),
+      sources: response.sources, // 출처 정보 추가
+    };
+  }
+
+  /**
+   * 문서 검색
+   */
+  static async searchDocuments(
+    query: string,
+    options?: {
+      types?: string[];
+      limit?: number;
+      threshold?: number;
+    }
+  ): Promise<any[]> {
+    return apiClient.post<any[]>("/documents/search", {
+      query,
+      ...options,
+    });
+  }
+
+  /**
+   * AI 설정 모드 전환
+   */
+  static async switchChatMode(mode: "personal" | "business"): Promise<any> {
+    return apiClient.post("/ai-settings/switch-mode", { mode });
+  }
+
+  /**
+   * 사용 가능한 채팅 모드 조회
+   */
+  static async getAvailableModes(): Promise<{ availableModes: string[] }> {
+    return apiClient.get("/ai-settings/available-modes");
+  }
 }

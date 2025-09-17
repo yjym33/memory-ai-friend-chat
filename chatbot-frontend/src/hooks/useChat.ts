@@ -31,8 +31,12 @@ export function useChat() {
     }
   };
 
-  // 메시지 전송
-  const sendMessage = async (message: string, file?: any) => {
+  // 메시지 전송 (모드별 처리 기능 추가)
+  const sendMessage = async (
+    message: string,
+    file?: any,
+    chatMode: ChatMode = ChatMode.PERSONAL
+  ) => {
     if (!activeChatId || (!message.trim() && !file)) return;
 
     setLoading(true);
@@ -58,12 +62,16 @@ export function useChat() {
         )
       );
 
-      // AI 응답 받기 (파일 정보 포함)
-      const aiResponse = await ChatService.sendMessage(
-        activeChatId,
-        message,
-        file
-      );
+      // 모드별 AI 응답 받기
+      let aiResponse: Message;
+
+      if (chatMode === ChatMode.BUSINESS) {
+        // 기업 모드: 문서 검색 기반 응답
+        aiResponse = await ChatService.sendBusinessQuery(activeChatId, message);
+      } else {
+        // 개인 모드: 기존 AI 친구 로직
+        aiResponse = await ChatService.sendMessage(activeChatId, message, file);
+      }
 
       // AI 응답을 UI에 추가
       setConversations((prev) =>

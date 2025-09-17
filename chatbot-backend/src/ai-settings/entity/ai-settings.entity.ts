@@ -8,6 +8,12 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../auth/entity/user.entity';
+import { DocumentType } from '../../document/entity/document.entity';
+
+export enum ChatMode {
+  PERSONAL = 'personal', // 개인 AI 친구 모드
+  BUSINESS = 'business', // 기업 쿼리 시스템 모드
+}
 
 @Entity()
 export class AiSettings {
@@ -58,6 +64,25 @@ export class AiSettings {
 
   @Column({ type: 'json', default: '[]' })
   avoidTopics: string[]; // 피해야 할 주제들
+
+  // 채팅 모드 설정
+  @Column({
+    type: 'enum',
+    enum: ChatMode,
+    default: ChatMode.PERSONAL,
+  })
+  chatMode: ChatMode;
+
+  // 기업 모드 전용 설정
+  @Column({ type: 'json', default: '{}' })
+  businessSettings: {
+    enabledDocumentTypes?: DocumentType[];
+    searchScope?: 'organization' | 'department' | 'personal';
+    responseStyle?: 'formal' | 'casual' | 'technical';
+    includeSourceCitations?: boolean;
+    maxSearchResults?: number;
+    confidenceThreshold?: number;
+  };
 
   @CreateDateColumn()
   createdAt: Date;

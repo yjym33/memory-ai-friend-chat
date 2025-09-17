@@ -6,12 +6,15 @@ import "highlight.js/styles/github.css";
 import { Message } from "../types";
 import ThemeSelector from "./theme/ThemeSelector";
 import { ChatTheme } from "../types/theme";
+import { ChatMode } from "./ChatModeSwitch";
+import { FileText, ExternalLink } from "lucide-react";
 
 interface ChatWindowProps {
   messages: Message[];
   currentTheme?: ChatTheme | null;
   onThemeChange?: (theme: ChatTheme) => void;
   conversationId?: number | null;
+  chatMode?: ChatMode;
 }
 
 export default function ChatWindow({
@@ -19,6 +22,7 @@ export default function ChatWindow({
   currentTheme,
   onThemeChange,
   conversationId,
+  chatMode = ChatMode.PERSONAL,
 }: ChatWindowProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -109,6 +113,39 @@ export default function ChatWindow({
                   >
                     {msg.content}
                   </ReactMarkdown>
+
+                  {/* 기업 모드 출처 정보 표시 */}
+                  {chatMode === ChatMode.BUSINESS &&
+                    msg.role === "assistant" &&
+                    (msg as any).sources &&
+                    (msg as any).sources.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs font-medium mb-2 flex items-center space-x-1 text-gray-600">
+                          <FileText className="w-3 h-3" />
+                          <span>참고 문서:</span>
+                        </p>
+                        <div className="space-y-1">
+                          {(msg as any).sources.map(
+                            (source: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded"
+                              >
+                                <span className="flex items-center space-x-1">
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span className="text-gray-700">
+                                    {source.title}
+                                  </span>
+                                </span>
+                                <span className="text-blue-600 font-medium">
+                                  {(source.relevance * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
