@@ -99,4 +99,39 @@ export class AiSettingsController {
       businessSettings,
     );
   }
+
+  /**
+   * 사용자의 기업 모드 사용을 승인합니다. (관리자만 가능)
+   */
+  @Post('approve-business-mode')
+  async approveBusinessMode(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { targetUserId: string; reason?: string },
+  ) {
+    await this.aiSettingsService.approveBusinessMode(
+      req.user.userId,
+      body.targetUserId,
+      body.reason,
+    );
+
+    return {
+      message: '기업 모드 사용이 승인되었습니다.',
+      success: true,
+    };
+  }
+
+  /**
+   * 사용자가 기업 모드를 사용할 수 있는지 확인합니다.
+   */
+  @Get('can-use-business-mode')
+  async canUseBusinessMode(@Request() req: AuthenticatedRequest) {
+    const availableModes = await this.aiSettingsService.getAvailableChatModes(
+      req.user.userId,
+    );
+
+    return {
+      canUseBusinessMode: availableModes.includes('business' as any),
+      availableModes,
+    };
+  }
 }

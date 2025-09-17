@@ -19,8 +19,40 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #f8fafc !important; /* 강제로 밝은 배경 설정 */
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden; /* 전체 페이지 스크롤 방지 */
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* 전체 페이지 배경 통일 */
+html {
+  background: #f8fafc !important;
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#__next {
+  background: #f8fafc !important;
+  height: 100vh;
+  overflow: hidden;
+  width: 100vw;
+}
+
+/* 다크 모드 비활성화 */
+@media (prefers-color-scheme: dark) {
+  html,
+  body,
+  #__next {
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+    overflow: hidden !important;
+    height: 100vh !important;
+  }
 }
 
 /* 마크다운 스타일링 */

@@ -6,6 +6,7 @@ import {
   CreateAiSettingsDto,
   UpdateAiSettingsDto,
 } from './dto/ai-settings.dto';
+import { User, UserType, UserRole } from '../auth/entity/user.entity';
 import axios from 'axios';
 
 /**
@@ -17,6 +18,8 @@ export class AiSettingsService {
   constructor(
     @InjectRepository(AiSettings)
     private aiSettingsRepository: Repository<AiSettings>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   /**
@@ -233,16 +236,94 @@ export class AiSettingsService {
 
   /**
    * 사용자가 사용 가능한 채팅 모드를 조회합니다.
+   * 관리자 승인을 받은 기업 계정만 기업 모드 사용 가능
    */
   async getAvailableChatModes(userId: string): Promise<ChatMode[]> {
     // 기본적으로 개인 모드는 모든 사용자가 사용 가능
     const modes = [ChatMode.PERSONAL];
 
-    // 사용자 정보를 조회하여 기업 모드 사용 가능 여부 확인
-    // 실제 구현에서는 User 엔티티를 조회해야 함
-    // 현재는 임시로 기업 모드도 추가
-    modes.push(ChatMode.BUSINESS);
+    // 사용자 정보 조회
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+
+    if (!user) {
+      return modes;
+    }
+
+    // 기업 모드 사용 가능 조건 확인
+    const canUseBusinessMode = this.canUserAccessBusinessMode(user);
+
+    if (canUseBusinessMode) {
+      modes.push(ChatMode.BUSINESS);
+    }
 
     return modes;
+  }
+
+  /**
+   * 사용자가 기업 모드를 사용할 수 있는지 확인합니다.
+   */
+  private canUserAccessBusinessMode(user: User): boolean {
+    // 1. 기업 사용자 타입이어야 함
+    if (user.userType !== UserType.BUSINESS) {
+      return false;
+    }
+
+    // 2. 조직에 속해야 함
+    if (!user.organizationId) {
+      return false;
+    }
+
+    // 3. 관리자 승인을 받았거나, 조직 관리자/슈퍼 관리자인 경우
+    const isApproved = user.businessProfile?.businessModeApproved === true;
+    const isOrgAdmin = user.role === UserRole.ORG_ADMIN;
+    const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
+
+    return isApproved || isOrgAdmin || isSuperAdmin;
+  }
+
+  /**
+   * 사용자의 기업 모드 사용을 승인합니다. (관리자만 가능)
+   */
+  async approveBusinessMode(
+    adminUserId: string,
+    targetUserId: string,
+    reason?: string,
+  ): Promise<void> {
+    // 관리자 권한 확인
+    const admin = await this.userRepository.findOne({
+      where: { id: adminUserId },
+    });
+
+    if (
+      !admin ||
+      (admin.role !== UserRole.ORG_ADMIN && admin.role !== UserRole.SUPER_ADMIN)
+    ) {
+      throw new Error('관리자 권한이 필요합니다.');
+    }
+
+    // 대상 사용자 조회 및 승인 처리
+    const targetUser = await this.userRepository.findOne({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException('대상 사용자를 찾을 수 없습니다.');
+    }
+
+    // businessProfile 업데이트
+    const updatedProfile = {
+      ...targetUser.businessProfile,
+      businessModeApproved: true,
+      approvedBy: adminUserId,
+      approvedAt: new Date(),
+      approvalReason: reason || '관리자 승인',
+    };
+
+    await this.userRepository.update(targetUserId, {
+      businessProfile: updatedProfile,
+    });
   }
 }

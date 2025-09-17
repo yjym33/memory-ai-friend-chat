@@ -64,7 +64,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="flex h-screen w-full relative">
+    <div className="flex h-screen w-full relative bg-gray-50 overflow-hidden">
       {/* 모바일 오버레이 - 모바일에서만 표시 */}
       {(isProfileOpen || isChatListOpen) && (
         <div
@@ -142,7 +142,7 @@ export default function Chatbot() {
       </div>
 
       {/* 메인 채팅 영역 */}
-      <div className="flex-1 flex flex-col bg-gray-50 min-w-0">
+      <div className="flex-1 flex flex-col bg-gray-50 min-w-0 h-full overflow-hidden">
         {/* 모바일 헤더 */}
         <div className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
           <button

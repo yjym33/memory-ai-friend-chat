@@ -70,6 +70,10 @@ export class User {
     department?: string;
     position?: string;
     permissions?: string[];
+    businessModeApproved?: boolean; // 기업 모드 사용 승인 여부
+    approvedBy?: string; // 승인한 관리자 ID
+    approvedAt?: Date; // 승인 날짜
+    approvalReason?: string; // 승인 사유
   };
 
   @OneToMany(() => Conversation, (conversation) => conversation.user)

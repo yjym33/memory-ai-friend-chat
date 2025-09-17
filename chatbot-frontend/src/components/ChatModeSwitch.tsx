@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Brain, Building2, Loader2 } from "lucide-react";
+import { apiClient } from "../services/apiClient";
 
 export enum ChatMode {
   PERSONAL = "personal",
@@ -33,18 +34,10 @@ export function ChatModeSwitch({
           return;
         }
 
-        const response = await fetch("/api/ai-settings/available-modes", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableModes(data.availableModes);
-        } else {
-          setAvailableModes([ChatMode.PERSONAL]);
-        }
+        const data = await apiClient.get<{ availableModes: string[] }>(
+          "/ai-settings/available-modes"
+        );
+        setAvailableModes(data.availableModes);
       } catch (error) {
         console.error("사용 가능한 모드 조회 실패:", error);
         setAvailableModes([ChatMode.PERSONAL]);
@@ -63,16 +56,10 @@ export function ChatModeSwitch({
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch("/api/ai-settings", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const settings = await response.json();
-          setCurrentMode(settings.chatMode || ChatMode.PERSONAL);
-        }
+        const settings = await apiClient.get<{ chatMode: string }>(
+          "/ai-settings"
+        );
+        setCurrentMode((settings.chatMode as ChatMode) || ChatMode.PERSONAL);
       } catch (error) {
         console.error("현재 설정 조회 실패:", error);
       }
@@ -89,25 +76,13 @@ export function ChatModeSwitch({
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/ai-settings/switch-mode", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ mode: newMode }),
-      });
+      await apiClient.post("/ai-settings/switch-mode", { mode: newMode });
 
-      if (response.ok) {
-        setCurrentMode(newMode);
-        onModeChange?.(newMode);
+      setCurrentMode(newMode);
+      onModeChange?.(newMode);
 
-        // 간단한 알림 (toast 대신)
-        console.log(`모드가 ${getModeLabel(newMode)}로 변경되었습니다.`);
-      } else {
-        throw new Error("모드 변경에 실패했습니다.");
-      }
+      // 간단한 알림 (toast 대신)
+      console.log(`모드가 ${getModeLabel(newMode)}로 변경되었습니다.`);
     } catch (error) {
       console.error("모드 변경 실패:", error);
       alert("모드 변경 중 오류가 발생했습니다.");
@@ -159,7 +134,7 @@ export function ChatModeSwitch({
           </span>
         </div>
         <div className="text-xs text-gray-500">
-          💡 기업 모드는 조직 가입 후 이용 가능
+          🔒 기업 모드는 관리자 승인 후 이용 가능
         </div>
       </div>
     );
