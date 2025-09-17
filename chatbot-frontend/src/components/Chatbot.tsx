@@ -173,7 +173,7 @@ export default function Chatbot() {
         </div>
 
         {/* 모드 스위치 추가 (데스크톱에서만 표시) */}
-        <div className="hidden lg:block bg-white border-b border-gray-200 p-4">
+        <div className="hidden lg:block bg-white border-b border-gray-200 px-4 py-3">
           <ChatModeSwitch
             onModeChange={setCurrentChatMode}
             disabled={loading}

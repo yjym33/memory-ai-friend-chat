@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChatService } from "../services";
 import { Message, Conversation } from "../types";
 import { error as toastError } from "../lib/toast";
+import { ChatMode } from "../components/ChatModeSwitch";
 
 /**
  * 채팅 관리를 위한 커스텀 훅

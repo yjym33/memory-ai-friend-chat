@@ -136,9 +136,9 @@ export function ChatModeSwitch({
 
   if (isInitializing) {
     return (
-      <div className="flex items-center space-x-2 p-4 bg-gray-100 rounded-lg">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-sm text-gray-600">
+      <div className="flex items-center space-x-2">
+        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+        <span className="text-sm text-gray-600 font-medium">
           모드 설정을 불러오는 중...
         </span>
       </div>
@@ -148,123 +148,65 @@ export function ChatModeSwitch({
   // 기업 모드를 사용할 수 없는 경우
   if (!availableModes.includes(ChatMode.BUSINESS)) {
     return (
-      <div className="p-4 bg-gray-100 rounded-lg">
-        <div className="flex items-center space-x-2 mb-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
           {getModeIcon(ChatMode.PERSONAL)}
-          <span className="font-medium">
-            {getModeLabel(ChatMode.PERSONAL)} 모드
+          <span className="font-semibold text-gray-900">
+            {getModeLabel(ChatMode.PERSONAL)}
           </span>
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
             활성
           </span>
         </div>
-        <p className="text-sm text-gray-600">
-          {getModeDescription(ChatMode.PERSONAL)}
-        </p>
-        <div className="mt-3 p-2 bg-blue-50 rounded border-l-4 border-blue-400">
-          <p className="text-xs text-blue-700">
-            💡 기업 쿼리 모드를 사용하려면 조직에 가입하세요!
-          </p>
+        <div className="text-xs text-gray-500">
+          💡 기업 모드는 조직 가입 후 이용 가능
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex items-center justify-between">
       {/* 현재 모드 표시 */}
-      <div className="p-4 bg-gray-100 rounded-lg">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            {getModeIcon(currentMode)}
-            <span className="font-medium">
-              {getModeLabel(currentMode)} 모드
-            </span>
-            <span
-              className={`px-2 py-1 text-xs rounded ${
-                currentMode === ChatMode.PERSONAL
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-green-100 text-green-800"
-              }`}
-            >
-              활성
-            </span>
-          </div>
-
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
+          {getModeIcon(currentMode)}
+          <span className="font-semibold text-gray-900">
+            {getModeLabel(currentMode)}
+          </span>
         </div>
-
-        <p className="text-sm text-gray-600 mb-3">
-          {getModeDescription(currentMode)}
-        </p>
-
-        {/* 모드 스위치 */}
-        <div className="flex items-center justify-center space-x-4">
-          <button
-            onClick={() => switchMode(ChatMode.PERSONAL)}
-            disabled={disabled || isLoading}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              currentMode === ChatMode.PERSONAL
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            <Brain className="w-4 h-4" />
-            <span>AI 친구</span>
-          </button>
-
-          <button
-            onClick={() => switchMode(ChatMode.BUSINESS)}
-            disabled={disabled || isLoading}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              currentMode === ChatMode.BUSINESS
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            <span>기업 쿼리</span>
-          </button>
-        </div>
+        {isLoading && (
+          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+        )}
       </div>
 
-      {/* 모드별 설명 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div
-          className={`p-3 rounded-lg border-2 transition-colors ${
+      {/* 모드 스위치 버튼 */}
+      <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        <button
+          onClick={() => switchMode(ChatMode.PERSONAL)}
+          disabled={disabled || isLoading}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
             currentMode === ChatMode.PERSONAL
-              ? "border-blue-200 bg-blue-50"
-              : "border-gray-200 bg-gray-50"
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          <div className="flex items-center space-x-2 mb-2">
-            <Brain className="w-4 h-4 text-blue-500" />
-            <span className="font-medium text-sm">AI 친구 모드</span>
-          </div>
-          <ul className="text-xs text-gray-600 space-y-1">
-            <li>• 감정적 교감과 개인 대화</li>
-            <li>• 목표 관리 및 동기 부여</li>
-            <li>• 지속적인 기억과 관계 형성</li>
-          </ul>
-        </div>
+          <Brain className="w-4 h-4" />
+          <span>AI 친구</span>
+        </button>
 
-        <div
-          className={`p-3 rounded-lg border-2 transition-colors ${
+        <button
+          onClick={() => switchMode(ChatMode.BUSINESS)}
+          disabled={disabled || isLoading}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
             currentMode === ChatMode.BUSINESS
-              ? "border-green-200 bg-green-50"
-              : "border-gray-200 bg-gray-50"
+              ? "bg-white text-green-600 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          <div className="flex items-center space-x-2 mb-2">
-            <Building2 className="w-4 h-4 text-green-500" />
-            <span className="font-medium text-sm">기업 쿼리 모드</span>
-          </div>
-          <ul className="text-xs text-gray-600 space-y-1">
-            <li>• 회사 문서 기반 정확한 답변</li>
-            <li>• 정책, 규정, 매뉴얼 검색</li>
-            <li>• 출처 명시 및 신뢰성 보장</li>
-          </ul>
-        </div>
+          <Building2 className="w-4 h-4" />
+          <span>기업 쿼리</span>
+        </button>
       </div>
     </div>
   );
