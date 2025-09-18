@@ -23,7 +23,13 @@ export function useLogin() {
       return await AuthService.login(credentials);
     },
     onSuccess: (data) => {
-      login(data.token, data.userId);
+      login(
+        data.token,
+        data.userId,
+        data.userType,
+        data.role,
+        data.organizationId
+      );
       router.push(`/chat/${data.userId}`);
     },
     onError: (error: unknown) => {
@@ -51,7 +57,13 @@ export function useRegister() {
       return await AuthService.register(registerData);
     },
     onSuccess: (data) => {
-      login(data.token, data.userId);
+      login(
+        data.token,
+        data.userId,
+        data.userType,
+        data.role,
+        data.organizationId
+      );
       router.push(`/chat/${data.userId}`);
     },
     onError: (error: unknown) => {

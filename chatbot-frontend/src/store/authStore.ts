@@ -8,12 +8,21 @@ interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
   userId: string | null;
+  userType: string | null;
+  role: string | null;
+  organizationId: string | null;
   isHydrated: boolean;
   userEmail: string | null; // 추가: 사용자 이메일
   userName: string | null; // 추가: 사용자 이름
 
   // 기존 메서드
-  login: (token: string, userId: string) => void;
+  login: (
+    token: string,
+    userId: string,
+    userType?: string,
+    role?: string,
+    organizationId?: string
+  ) => void;
   logout: () => void;
   validateToken: () => Promise<boolean>;
 
@@ -28,13 +37,34 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       token: null,
       userId: null,
+      userType: null,
+      role: null,
+      organizationId: null,
       isHydrated: false,
       userEmail: null,
       userName: null,
-      login: (token: string, userId: string) => {
-        set((state) => ({ ...state, isAuthenticated: true, token, userId }));
+      login: (
+        token: string,
+        userId: string,
+        userType?: string,
+        role?: string,
+        organizationId?: string
+      ) => {
+        set((state) => ({
+          ...state,
+          isAuthenticated: true,
+          token,
+          userId,
+          userType,
+          role,
+          organizationId,
+        }));
         localStorage.setItem("token", token);
         localStorage.setItem("userId", userId);
+        if (userType) localStorage.setItem("userType", userType);
+        if (role) localStorage.setItem("role", role);
+        if (organizationId)
+          localStorage.setItem("organizationId", organizationId);
         axiosInstance.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${token}`;
@@ -46,11 +76,17 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           token: null,
           userId: null,
+          userType: null,
+          role: null,
+          organizationId: null,
           userEmail: null,
           userName: null,
         }));
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
+        localStorage.removeItem("userType");
+        localStorage.removeItem("role");
+        localStorage.removeItem("organizationId");
         delete axiosInstance.defaults.headers.common["Authorization"];
       },
 
@@ -110,6 +146,9 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state: AuthState) => ({
         token: state.token,
         userId: state.userId,
+        userType: state.userType,
+        role: state.role,
+        organizationId: state.organizationId,
         isAuthenticated: state.isAuthenticated,
         userEmail: state.userEmail, // 추가
         userName: state.userName, // 추가

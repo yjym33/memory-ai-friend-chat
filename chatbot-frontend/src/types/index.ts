@@ -65,6 +65,9 @@ export interface RegisterData {
 export interface AuthResponse {
   token: string;
   userId: string;
+  userType?: string;
+  role?: string;
+  organizationId?: string;
   user?: Partial<User>;
 }
 

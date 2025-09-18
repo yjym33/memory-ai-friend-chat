@@ -17,6 +17,7 @@ import { AiSettingsModule } from './ai-settings/ai-settings.module';
 import { ConversationAnalyticsModule } from './conversation-analytics/conversation-analytics.module';
 import { AgentModule } from './agent/agent.module';
 import { DocumentModule } from './document/document.module';
+import { AdminModule } from './admin/admin.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -62,6 +63,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     ConversationAnalyticsModule, // 대화 분석
     AgentModule, // AI 에이전트
     DocumentModule, // 문서 관리
+    AdminModule, // 관리자
   ],
   controllers: [AppController],
   providers: [

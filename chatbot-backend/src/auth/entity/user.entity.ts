@@ -74,6 +74,13 @@ export class User {
     approvedBy?: string; // 승인한 관리자 ID
     approvedAt?: Date; // 승인 날짜
     approvalReason?: string; // 승인 사유
+    revokedBy?: string; // 승인을 취소한 관리자 ID
+    revokedAt?: Date; // 승인 취소 날짜
+    revokeReason?: string; // 승인 취소 사유
+    isActive?: boolean; // 사용자 활성화 상태
+    statusChangedBy?: string; // 상태를 변경한 관리자 ID
+    statusChangedAt?: Date; // 상태 변경 날짜
+    statusChangeReason?: string; // 상태 변경 사유
   };
 
   @OneToMany(() => Conversation, (conversation) => conversation.user)

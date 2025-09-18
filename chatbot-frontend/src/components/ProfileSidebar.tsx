@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
 import { useRouter } from "next/navigation";
 import axiosInstance from "../utils/axios";
-import { X, FileText, BarChart3 } from "lucide-react";
+import { X, FileText, BarChart3, Shield } from "lucide-react";
 
 interface ProfileSidebarProps {
   onClose?: () => void;
@@ -23,10 +23,12 @@ export default function ProfileSidebar({
     personalityType: "친근함",
     speechStyle: "반말",
   });
+  const [userRole, setUserRole] = useState<string>("user");
 
-  // 현재 설정 가져오기
+  // 현재 설정과 사용자 정보 가져오기
   useEffect(() => {
     fetchCurrentSettings();
+    fetchUserRole();
   }, []);
 
   const fetchCurrentSettings = async () => {
@@ -39,6 +41,22 @@ export default function ProfileSidebar({
     } catch (error) {
       console.error("설정 불러오기 실패:", error);
     }
+  };
+
+  const fetchUserRole = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUserRole(payload.role || "user");
+      }
+    } catch (error) {
+      console.error("사용자 역할 확인 실패:", error);
+    }
+  };
+
+  const isAdmin = () => {
+    return ["super_admin", "admin"].includes(userRole);
   };
 
   return (
@@ -110,6 +128,17 @@ export default function ProfileSidebar({
             <BarChart3 className="w-4 h-4" />
             <span>사용량</span>
           </button>
+
+          {/* 관리자 메뉴 - 관리자만 표시 */}
+          {isAdmin() && (
+            <button
+              onClick={() => router.push("/admin")}
+              className="w-full py-2 rounded-lg bg-gradient-to-r from-red-400 to-pink-400 text-white font-semibold shadow hover:from-red-500 hover:to-pink-500 transition flex items-center justify-center space-x-2"
+            >
+              <Shield className="w-4 h-4" />
+              <span>관리자 대시보드</span>
+            </button>
+          )}
 
           {/* 우리가 나눈 이야기들 버튼 추가 */}
           <button

@@ -59,6 +59,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.userRepository.findOne({
       where: { email },
+      relations: ['organization'],
     });
 
     if (!user) {
@@ -71,10 +72,20 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
 
-    const token = this.jwtService.sign({ userId: user.id });
+    const payload = {
+      userId: user.id,
+      userType: user.userType,
+      role: user.role,
+      organizationId: user.organizationId,
+    };
+
+    const token = this.jwtService.sign(payload);
 
     return {
       userId: user.id,
+      userType: user.userType,
+      role: user.role,
+      organizationId: user.organizationId,
       token,
     };
   }
