@@ -24,6 +24,7 @@ export default function ProfileSidebar({
     speechStyle: "반말",
   });
   const [userRole, setUserRole] = useState<string>("user");
+  const [userType, setUserType] = useState<string>("individual");
 
   // 현재 설정과 사용자 정보 가져오기
   useEffect(() => {
@@ -46,9 +47,13 @@ export default function ProfileSidebar({
   const fetchUserRole = async () => {
     try {
       const token = localStorage.getItem("token");
+      const storedUserType = localStorage.getItem("userType");
+      const storedRole = localStorage.getItem("role");
+      
       if (token) {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        setUserRole(payload.role || "user");
+        setUserRole(storedRole || payload.role || "user");
+        setUserType(storedUserType || payload.userType || "individual");
       }
     } catch (error) {
       console.error("사용자 역할 확인 실패:", error);
@@ -57,6 +62,10 @@ export default function ProfileSidebar({
 
   const isAdmin = () => {
     return ["super_admin", "admin"].includes(userRole);
+  };
+
+  const isBusinessUser = () => {
+    return userType === "business";
   };
 
   return (
@@ -111,33 +120,47 @@ export default function ProfileSidebar({
             목표 관리
           </button>
 
-          {/* 문서 관리 버튼 추가 */}
-          <button
-            onClick={() => window.open("/admin?tab=documents", "_blank")}
-            className="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold shadow hover:from-indigo-500 hover:to-purple-500 transition flex items-center justify-center space-x-2"
-          >
-            <FileText className="w-4 h-4" />
-            <span>문서 관리</span>
-          </button>
-
-          {/* 사용량 대시보드 버튼 추가 */}
-          <button
-            onClick={() => window.open("/admin?tab=usage", "_blank")}
-            className="w-full py-2 rounded-lg bg-gradient-to-r from-teal-400 to-cyan-400 text-white font-semibold shadow hover:from-teal-500 hover:to-cyan-500 transition flex items-center justify-center space-x-2"
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span>사용량</span>
-          </button>
-
-          {/* 관리자 메뉴 - 관리자만 표시 */}
-          {isAdmin() && (
+          {/* 기업 사용자 전용 메뉴 - 기업 사용자만 표시 */}
+          {isBusinessUser() && !isAdmin() && (
             <button
-              onClick={() => router.push("/admin")}
-              className="w-full py-2 rounded-lg bg-gradient-to-r from-red-400 to-pink-400 text-white font-semibold shadow hover:from-red-500 hover:to-pink-500 transition flex items-center justify-center space-x-2"
+              onClick={() => router.push("/documents")}
+              className="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold shadow hover:from-indigo-500 hover:to-purple-500 transition flex items-center justify-center space-x-2"
             >
-              <Shield className="w-4 h-4" />
-              <span>관리자 대시보드</span>
+              <FileText className="w-4 h-4" />
+              <span>문서 검색</span>
             </button>
+          )}
+
+          {/* 관리자 전용 메뉴들 - 관리자만 표시 */}
+          {isAdmin() && (
+            <>
+              {/* 문서 관리 버튼 */}
+              <button
+                onClick={() => window.open("/admin?tab=documents", "_blank")}
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold shadow hover:from-indigo-500 hover:to-purple-500 transition flex items-center justify-center space-x-2"
+              >
+                <FileText className="w-4 h-4" />
+                <span>문서 관리</span>
+              </button>
+
+              {/* 사용량 통계 버튼 */}
+              <button
+                onClick={() => window.open("/admin?tab=statistics", "_blank")}
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-teal-400 to-cyan-400 text-white font-semibold shadow hover:from-teal-500 hover:to-cyan-500 transition flex items-center justify-center space-x-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>사용량 통계</span>
+              </button>
+
+              {/* 관리자 대시보드 버튼 */}
+              <button
+                onClick={() => router.push("/admin")}
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-red-400 to-pink-400 text-white font-semibold shadow hover:from-red-500 hover:to-pink-500 transition flex items-center justify-center space-x-2"
+              >
+                <Shield className="w-4 h-4" />
+                <span>관리자 대시보드</span>
+              </button>
+            </>
           )}
 
           {/* 우리가 나눈 이야기들 버튼 추가 */}

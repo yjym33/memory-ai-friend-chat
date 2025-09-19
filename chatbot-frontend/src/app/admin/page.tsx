@@ -99,16 +99,29 @@ export default function AdminPage() {
 
   // 권한 확인
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      router.push("/login");
-      return;
-    }
+    const checkPermission = () => {
+      if (!isAuthenticated || !token) {
+        console.log("No authentication, redirecting to login");
+        router.push("/login");
+        return;
+      }
 
-    if (!["super_admin", "admin"].includes(role || "")) {
-      alert("관리자 권한이 필요합니다.");
-      router.push("/");
-      return;
-    }
+      const storedRole = localStorage.getItem("role");
+      const currentRole = role || storedRole;
+      
+      if (!["super_admin", "admin"].includes(currentRole || "")) {
+        console.log("No admin permission, current role:", currentRole);
+        alert("관리자 권한이 필요합니다.");
+        router.push("/");
+        return;
+      }
+      
+      console.log("Admin permission confirmed, role:", currentRole);
+    };
+
+    // 약간의 지연을 두어 상태가 완전히 로드된 후 체크
+    const timer = setTimeout(checkPermission, 100);
+    return () => clearTimeout(timer);
   }, [isAuthenticated, token, role, router]);
 
   useEffect(() => {
