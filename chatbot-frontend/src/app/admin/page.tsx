@@ -366,14 +366,12 @@ export default function AdminPage() {
           formData.append("type", docType);
           formData.append("description", `관리자가 업로드한 ${docType} 문서: ${file.name} (크기: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
 
-          console.log(`🚀 API 호출: /documents/upload`);
-          
-          const response = await apiClient.post("/documents/upload", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            timeout: 60000, // 60초 타임아웃
-          });
+           console.log(`🚀 API 호출: /documents/upload`);
+           
+           const response = await apiClient.post("/documents/upload", formData, {
+             timeout: 60000, // 60초 타임아웃
+             // Content-Type 헤더를 명시적으로 제거하여 브라우저가 자동 설정하도록 함
+           });
 
           console.log(`✅ 업로드 성공: ${file.name}`, response);
           successCount++;

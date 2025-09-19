@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import pdf from 'pdf-parse';
@@ -227,6 +227,72 @@ export class DocumentService {
     }
 
     return queryBuilder.getCount();
+  }
+
+  /**
+   * 임베딩 상태를 조회합니다.
+   */
+  async getEmbeddingStatus(organizationId: string) {
+    const totalChunks = await this.chunkRepository.count({
+      where: {
+        document: {
+          organizationId,
+        },
+      },
+      relations: ['document'],
+    });
+
+    const embeddedChunks = await this.chunkRepository.count({
+      where: {
+        document: {
+          organizationId,
+        },
+        embedding: Not(IsNull()),
+      },
+      relations: ['document'],
+    });
+
+    const pendingChunks = totalChunks - embeddedChunks;
+    const embeddingProgress = totalChunks > 0 ? Math.round((embeddedChunks / totalChunks) * 100) : 100;
+
+    return {
+      totalChunks,
+      embeddedChunks,
+      pendingChunks,
+      embeddingProgress,
+    };
+  }
+
+  /**
+   * 누락된 임베딩을 재처리합니다.
+   */
+  async reprocessMissingEmbeddings(organizationId: string) {
+    const pendingChunks = await this.chunkRepository.find({
+      where: {
+        document: {
+          organizationId,
+        },
+        embedding: IsNull(),
+      },
+      relations: ['document'],
+      take: 100, // 한 번에 최대 100개씩 처리
+    });
+
+    console.log(`🔄 임베딩 재처리 시작: ${pendingChunks.length}개 청크`);
+
+    for (const chunk of pendingChunks) {
+      try {
+        const embedding = await this.vectorService.generateEmbedding(chunk.content);
+        chunk.embedding = embedding;
+        await this.chunkRepository.save(chunk);
+        console.log(`✅ 청크 임베딩 완료: ${chunk.id}`);
+      } catch (error) {
+        console.error(`❌ 청크 임베딩 실패: ${chunk.id}`, error);
+      }
+    }
+
+    console.log(`🎉 임베딩 재처리 완료: ${pendingChunks.length}개 청크`);
+    return { processedChunks: pendingChunks.length };
   }
 
   /**

@@ -47,16 +47,26 @@ export class DocumentController {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'application/vnd.ms-excel',
           'text/plain',
+          'application/octet-stream', // 일부 브라우저에서 파일 타입을 올바르게 감지하지 못할 때
         ];
 
-        console.log(`📋 파일 필터 검사: ${file.originalname} (${file.mimetype})`);
+        // 파일 확장자 기반 검증도 추가
+        const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+        const fileExtension = file.originalname.toLowerCase().match(/\.[^.]+$/)?.[0];
 
-        if (allowedMimes.includes(file.mimetype)) {
-          console.log(`✅ 파일 타입 허용됨`);
+        console.log(`📋 파일 필터 검사: ${file.originalname}`);
+        console.log(`   - MIME 타입: ${file.mimetype}`);
+        console.log(`   - 확장자: ${fileExtension}`);
+
+        const isMimeAllowed = allowedMimes.includes(file.mimetype);
+        const isExtensionAllowed = fileExtension && allowedExtensions.includes(fileExtension);
+
+        if (isMimeAllowed || isExtensionAllowed) {
+          console.log(`✅ 파일 타입 허용됨 (MIME: ${isMimeAllowed}, 확장자: ${isExtensionAllowed})`);
           cb(null, true);
         } else {
-          console.log(`❌ 파일 타입 거부됨: ${file.mimetype}`);
-          cb(new BadRequestException(`지원하지 않는 파일 형식입니다: ${file.mimetype}. 지원 형식: PDF, DOC, DOCX, XLS, XLSX, TXT`), false);
+          console.log(`❌ 파일 타입 거부됨: MIME=${file.mimetype}, 확장자=${fileExtension}`);
+          cb(new BadRequestException(`지원하지 않는 파일 형식입니다. 지원 형식: PDF, DOC, DOCX, XLS, XLSX, TXT`), false);
         }
       },
     }),
@@ -96,14 +106,17 @@ export class DocumentController {
         );
       }
 
-      // 관리자의 경우 기본 조직 ID 사용 또는 첫 번째 조직 할당
+      // 관리자의 경우 기본 조직 ID 사용
       let targetOrganizationId = req.user.organizationId;
       
       if (isAdmin && !targetOrganizationId) {
-        // 관리자가 조직이 없는 경우, 관리자용 기본 조직 생성 또는 사용
-        // 임시로 'admin-default' 조직 ID 사용 (실제로는 DB에서 조회하거나 생성해야 함)
-        targetOrganizationId = 'admin-default';
+        // 관리자가 조직이 없는 경우, 관리자 조직 사용
+        targetOrganizationId = req.user.organizationId || '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
         console.log(`🏢 관리자 기본 조직 사용: ${targetOrganizationId}`);
+      }
+
+      if (!targetOrganizationId) {
+        throw new BadRequestException('조직 정보가 필요합니다.');
       }
 
       console.log(`🎯 대상 조직: ${targetOrganizationId}`);
