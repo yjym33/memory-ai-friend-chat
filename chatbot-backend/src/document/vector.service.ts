@@ -175,21 +175,97 @@ export class VectorService {
    */
   async updateChunkEmbeddings(chunks: DocumentChunk[]): Promise<void> {
     const batchSize = 100; // OpenAI API 제한 고려
+    console.log(`📊 임베딩 생성 시작: ${chunks.length}개 청크`);
 
     for (let i = 0; i < chunks.length; i += batchSize) {
       const batch = chunks.slice(i, i + batchSize);
+      console.log(`⚡ 배치 ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)} 처리 중...`);
 
-      const embeddings = await Promise.all(
-        batch.map((chunk) => this.generateEmbedding(chunk.content)),
-      );
+      try {
+        const embeddings = await Promise.all(
+          batch.map((chunk) => this.generateEmbedding(chunk.content)),
+        );
 
-      for (let j = 0; j < batch.length; j++) {
-        batch[j].embedding = embeddings[j];
-        await this.chunkRepository.save(batch[j]);
+        // 배치로 저장 (성능 개선)
+        const updates = batch.map((chunk, index) => {
+          chunk.embedding = embeddings[index];
+          return chunk;
+        });
+
+        await this.chunkRepository.save(updates);
+
+        console.log(`✅ 배치 완료: ${batch.length}개 청크 임베딩 생성`);
+      } catch (error) {
+        console.error(`❌ 배치 ${Math.floor(i / batchSize) + 1} 실패:`, error);
+        
+        // 개별 처리로 폴백
+        for (const chunk of batch) {
+          try {
+            chunk.embedding = await this.generateEmbedding(chunk.content);
+            await this.chunkRepository.save(chunk);
+          } catch (chunkError) {
+            console.error(`청크 임베딩 실패 (ID: ${chunk.id}):`, chunkError);
+          }
+        }
       }
 
       // API 속도 제한 방지를 위한 지연
       await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    console.log(`🎉 임베딩 생성 완료: ${chunks.length}개 청크`);
+  }
+
+  /**
+   * 임베딩 상태를 확인합니다.
+   */
+  async getEmbeddingStatus(organizationId: string): Promise<{
+    totalChunks: number;
+    embeddedChunks: number;
+    pendingChunks: number;
+    embeddingProgress: number;
+  }> {
+    const totalChunks = await this.chunkRepository
+      .createQueryBuilder('chunk')
+      .leftJoin('chunk.document', 'document')
+      .where('document.organizationId = :organizationId', { organizationId })
+      .andWhere('document.status = :status', { status: 'active' })
+      .getCount();
+
+    const embeddedChunks = await this.chunkRepository
+      .createQueryBuilder('chunk')
+      .leftJoin('chunk.document', 'document')
+      .where('document.organizationId = :organizationId', { organizationId })
+      .andWhere('document.status = :status', { status: 'active' })
+      .andWhere('chunk.embedding IS NOT NULL')
+      .getCount();
+
+    const pendingChunks = totalChunks - embeddedChunks;
+    const embeddingProgress = totalChunks > 0 ? (embeddedChunks / totalChunks) * 100 : 0;
+
+    return {
+      totalChunks,
+      embeddedChunks,
+      pendingChunks,
+      embeddingProgress: Math.round(embeddingProgress * 100) / 100,
+    };
+  }
+
+  /**
+   * 임베딩이 누락된 청크를 재처리합니다.
+   */
+  async reprocessMissingEmbeddings(organizationId: string): Promise<void> {
+    const chunksWithoutEmbedding = await this.chunkRepository
+      .createQueryBuilder('chunk')
+      .leftJoin('chunk.document', 'document')
+      .where('document.organizationId = :organizationId', { organizationId })
+      .andWhere('document.status = :status', { status: 'active' })
+      .andWhere('chunk.embedding IS NULL')
+      .getMany();
+
+    if (chunksWithoutEmbedding.length > 0) {
+      console.log(`🔄 누락된 임베딩 재처리: ${chunksWithoutEmbedding.length}개 청크`);
+      await this.updateChunkEmbeddings(chunksWithoutEmbedding);
     }
   }
 }

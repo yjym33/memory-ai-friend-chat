@@ -17,6 +17,7 @@ import {
   Upload,
   Search,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 
 interface User {
@@ -68,6 +69,13 @@ interface Document {
   };
 }
 
+interface EmbeddingStatus {
+  totalChunks: number;
+  embeddedChunks: number;
+  pendingChunks: number;
+  embeddingProgress: number;
+}
+
 interface Organization {
   id: string;
   name: string;
@@ -96,6 +104,8 @@ export default function AdminPage() {
   >("all");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [embeddingStatus, setEmbeddingStatus] = useState<EmbeddingStatus | null>(null);
+  const [reprocessingEmbeddings, setReprocessingEmbeddings] = useState(false);
 
   // 권한 확인
   useEffect(() => {
@@ -138,6 +148,7 @@ export default function AdminPage() {
         await loadStatistics();
       } else if (activeTab === "documents") {
         await loadDocuments();
+        await loadEmbeddingStatus();
       } else if (activeTab === "organizations") {
         await loadOrganizations();
       }
@@ -262,6 +273,40 @@ export default function AdminPage() {
     }
   };
 
+  const loadEmbeddingStatus = async () => {
+    try {
+      const response = await apiClient.get("/documents/embedding-status");
+      console.log("Embedding Status API Response:", response);
+      setEmbeddingStatus(response);
+    } catch (error) {
+      console.error("임베딩 상태 로딩 실패:", error);
+      setEmbeddingStatus(null);
+    }
+  };
+
+  const handleReprocessEmbeddings = async () => {
+    if (!confirm("누락된 임베딩을 재처리하시겠습니까? 시간이 오래 걸릴 수 있습니다.")) {
+      return;
+    }
+
+    setReprocessingEmbeddings(true);
+    try {
+      const response = await apiClient.post("/documents/reprocess-embeddings");
+      alert("임베딩 재처리가 시작되었습니다. 완료까지 시간이 걸릴 수 있습니다.");
+      
+      // 상태 새로고침
+      setTimeout(() => {
+        loadEmbeddingStatus();
+      }, 2000);
+    } catch (error: any) {
+      alert(
+        "임베딩 재처리 실패: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+    setReprocessingEmbeddings(false);
+  };
+
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -269,26 +314,103 @@ export default function AdminPage() {
     if (!files || files.length === 0) return;
 
     setUploadingFile(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    console.log(`📤 파일 업로드 시작: ${files.length}개 파일`);
+
     try {
       for (const file of Array.from(files)) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", file.name);
-        formData.append("type", "manual"); // 기본 타입
-        formData.append("description", `관리자가 업로드한 문서: ${file.name}`);
+        console.log(`📄 업로드 중: ${file.name} (${file.type}, ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+        
+        try {
+          // 파일 크기 검증 (50MB 제한)
+          if (file.size > 50 * 1024 * 1024) {
+            throw new Error("파일 크기는 50MB를 초과할 수 없습니다.");
+          }
 
-        await apiClient.post("/documents/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+          // 파일 타입 검증
+          const allowedTypes = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/plain'
+          ];
+
+          if (!allowedTypes.includes(file.type)) {
+            throw new Error(`지원하지 않는 파일 형식입니다: ${file.type}`);
+          }
+
+          const formData = new FormData();
+          formData.append("file", file);
+          
+          // 안전한 제목 생성
+          const safeTitle = file.name
+            .replace(/\.[^/.]+$/, "") // 확장자 제거
+            .replace(/[^\w\s가-힣.-]/g, "_") // 특수문자를 언더스코어로
+            .slice(0, 100); // 길이 제한
+          
+          formData.append("title", safeTitle);
+          
+          // 파일 타입에 따른 문서 타입 설정
+          const fileExt = file.name.split('.').pop()?.toLowerCase();
+          let docType = "manual";
+          if (fileExt === "pdf") docType = "manual";
+          else if (["doc", "docx"].includes(fileExt!)) docType = "procedure";
+          else if (["xls", "xlsx"].includes(fileExt!)) docType = "report";
+          else if (fileExt === "txt") docType = "faq";
+          
+          formData.append("type", docType);
+          formData.append("description", `관리자가 업로드한 ${docType} 문서: ${file.name} (크기: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+
+          console.log(`🚀 API 호출: /documents/upload`);
+          
+          const response = await apiClient.post("/documents/upload", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            timeout: 60000, // 60초 타임아웃
+          });
+
+          console.log(`✅ 업로드 성공: ${file.name}`, response);
+          successCount++;
+        } catch (error: any) {
+          console.error(`❌ 업로드 실패: ${file.name}`, error);
+          errorCount++;
+          
+          let errorMessage = error.message;
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.response?.status) {
+            errorMessage = `서버 오류 (${error.response.status}): ${error.response.statusText}`;
+          }
+          
+          errors.push(`${file.name}: ${errorMessage}`);
+        }
       }
 
-      alert(`${files.length}개 파일이 성공적으로 업로드되었습니다.`);
-      await loadDocuments();
+      // 결과 메시지 표시
+      if (successCount > 0 && errorCount === 0) {
+        alert(`✅ ${successCount}개 파일이 성공적으로 업로드되었습니다.\n\n문서가 VectorDB에 임베딩되어 기업모드 AI 채팅에서 활용됩니다.`);
+      } else if (successCount > 0 && errorCount > 0) {
+        alert(`⚠️ ${successCount}개 파일은 성공, ${errorCount}개 파일은 실패했습니다.\n\n실패한 파일:\n${errors.join('\n')}`);
+      } else {
+        alert(`❌ 모든 파일 업로드에 실패했습니다:\n${errors.join('\n')}`);
+      }
+
+      if (successCount > 0) {
+        await loadDocuments();
+        // 임베딩 상태도 새로고침 (약간의 지연 후)
+        setTimeout(() => {
+          loadEmbeddingStatus();
+        }, 1000);
+      }
     } catch (error: any) {
       alert(
-        "파일 업로드에 실패했습니다: " +
+        "파일 업로드 중 예상치 못한 오류가 발생했습니다: " +
           (error.response?.data?.message || error.message)
       );
     }
@@ -806,41 +928,125 @@ export default function AdminPage() {
         {activeTab === "documents" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  문서 관리
-                </h2>
-                <div className="flex space-x-4">
-                  <input
-                    type="text"
-                    placeholder="문서 제목 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="relative">
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    문서 관리
+                  </h2>
+                  <div className="flex space-x-4">
                     <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="file-upload"
-                      disabled={uploadingFile}
+                      type="text"
+                      placeholder="문서 제목 검색..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <label
-                      htmlFor="file-upload"
-                      className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                        uploadingFile
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                      }`}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {uploadingFile ? "업로드 중..." : "문서 업로드"}
-                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="file-upload"
+                        disabled={uploadingFile}
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                          uploadingFile
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                        }`}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {uploadingFile ? "업로드 중..." : "문서 업로드"}
+                      </label>
+                    </div>
                   </div>
                 </div>
+                
+                {/* 문서 관리 안내 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <FileText className="h-5 w-5 text-blue-400" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800">
+                        문서 관리 기능
+                      </h3>
+                      <div className="mt-2 text-sm text-blue-700">
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>업로드된 문서는 VectorDB에 임베딩되어 기업모드 AI 채팅에서 활용됩니다</li>
+                          <li>지원 파일 형식: PDF, DOC, DOCX, XLS, XLSX, TXT</li>
+                          <li>기업 사용자가 기업모드에서 질문 시 관련 문서 내용을 참조하여 답변합니다</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 임베딩 상태 */}
+                {embeddingStatus && (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-green-800">
+                            VectorDB 임베딩 상태
+                          </h3>
+                          <div className="mt-2 text-sm text-green-700">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <span className="font-medium">전체 청크:</span>
+                                <div className="text-lg font-bold">{embeddingStatus.totalChunks}</div>
+                              </div>
+                              <div>
+                                <span className="font-medium">임베딩 완료:</span>
+                                <div className="text-lg font-bold text-green-600">{embeddingStatus.embeddedChunks}</div>
+                              </div>
+                              <div>
+                                <span className="font-medium">처리 대기:</span>
+                                <div className="text-lg font-bold text-orange-600">{embeddingStatus.pendingChunks}</div>
+                              </div>
+                              <div>
+                                <span className="font-medium">진행률:</span>
+                                <div className="text-lg font-bold text-blue-600">{embeddingStatus.embeddingProgress}%</div>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${embeddingStatus.embeddingProgress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {embeddingStatus.pendingChunks > 0 && (
+                        <button
+                          onClick={handleReprocessEmbeddings}
+                          disabled={reprocessingEmbeddings}
+                          className={`inline-flex items-center px-3 py-1 text-xs rounded-md ${
+                            reprocessingEmbeddings
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-green-100 text-green-700 hover:bg-green-200"
+                          }`}
+                        >
+                          <RefreshCw className={`w-3 h-3 mr-1 ${reprocessingEmbeddings ? 'animate-spin' : ''}`} />
+                          {reprocessingEmbeddings ? "재처리 중..." : "재처리"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

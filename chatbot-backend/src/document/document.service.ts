@@ -50,19 +50,42 @@ export class DocumentService {
     file: Express.Multer.File,
     metadata: DocumentMetadata,
   ): Promise<Document> {
+    console.log(`🚀 문서 업로드 시작: ${file.originalname}`);
+    console.log(`📋 메타데이터:`, { organizationId, uploadedById, metadata });
+
     try {
-      // 1. 파일 저장
+      // 1. 입력 검증
+      if (!file || !file.buffer) {
+        throw new BadRequestException('유효하지 않은 파일입니다.');
+      }
+
+      if (!organizationId) {
+        throw new BadRequestException('조직 ID가 필요합니다.');
+      }
+
+      if (!uploadedById) {
+        throw new BadRequestException('업로드 사용자 ID가 필요합니다.');
+      }
+
+      console.log(`✅ 입력 검증 완료`);
+
+      // 2. 파일 저장
+      console.log(`💾 1/4: 파일 저장 중...`);
       const filePath = await this.saveFile(file);
 
-      // 2. 텍스트 추출
+      // 3. 텍스트 추출
+      console.log(`📄 2/4: 텍스트 추출 중...`);
       const extractedText = await this.extractText(file);
 
       if (!extractedText.trim()) {
-        throw new BadRequestException('파일에서 텍스트를 추출할 수 없습니다.');
+        throw new BadRequestException('파일에서 텍스트를 추출할 수 없습니다. 빈 파일이거나 지원하지 않는 형식입니다.');
       }
 
-      // 3. 문서 저장
-      const document = await this.documentRepository.save({
+      console.log(`✅ 텍스트 추출 완료: ${extractedText.length} 문자`);
+
+      // 4. 문서 메타데이터 준비
+      console.log(`📝 3/4: 문서 정보 저장 중...`);
+      const documentData = {
         ...metadata,
         originalFileName: file.originalname,
         filePath,
@@ -76,21 +99,51 @@ export class DocumentService {
           ...(metadata.tags && { tags: metadata.tags }),
           language: 'ko',
           lastModified: new Date(),
+          processingStatus: 'pending',
+          uploadTimestamp: new Date(),
         },
-      });
+      };
 
-      // 4. 백그라운드에서 텍스트 청킹 및 임베딩 처리
+      // 5. 문서 저장
+      const document = await this.documentRepository.save(documentData);
+      console.log(`✅ 문서 저장 완료: ID ${document.id}`);
+
+      // 6. 백그라운드에서 텍스트 청킹 및 임베딩 처리
+      console.log(`🔄 4/4: 백그라운드 임베딩 처리 시작...`);
       this.processDocumentForSearch(document).catch((error) => {
-        console.error('문서 처리 실패:', error);
+        console.error('❌ 문서 처리 실패:', error);
         // 실패 시 문서 상태를 draft로 변경
         this.documentRepository.update(document.id, {
           status: DocumentStatus.DRAFT,
+          metadata: {
+            ...document.metadata,
+            processingStatus: 'failed',
+            errorMessage: error.message,
+          },
         });
       });
 
+      console.log(`🎉 문서 업로드 완료: ${document.title} (ID: ${document.id})`);
       return document;
+
     } catch (error) {
-      console.error('문서 업로드 실패:', error);
+      console.error('❌ 문서 업로드 실패:', {
+        file: file?.originalname,
+        organizationId,
+        uploadedById,
+        error: error.message,
+        stack: error.stack
+      });
+      
+      // 업로드 실패 시 임시 파일 정리 (filePath가 있는 경우)
+      if (error.filePath) {
+        try {
+          await fs.unlink(error.filePath);
+        } catch (cleanupError) {
+          console.error('임시 파일 정리 실패:', cleanupError);
+        }
+      }
+
       throw error;
     }
   }
@@ -214,59 +267,159 @@ export class DocumentService {
    */
   private async saveFile(file: Express.Multer.File): Promise<string> {
     const uploadsDir = path.join(process.cwd(), 'uploads', 'documents');
+    
+    console.log(`💾 파일 저장 시작: ${file.originalname} (${file.size} bytes)`);
+    console.log(`📁 업로드 디렉토리: ${uploadsDir}`);
 
-    // 디렉토리 생성
-    await fs.mkdir(uploadsDir, { recursive: true });
+    try {
+      // 디렉토리 생성
+      await fs.mkdir(uploadsDir, { recursive: true });
+      console.log(`✅ 업로드 디렉토리 준비 완료`);
 
-    // 파일명 생성 (타임스탬프 + 원본 파일명)
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${file.originalname}`;
-    const filePath = path.join(uploadsDir, filename);
+      // 안전한 파일명 생성 (특수문자 제거)
+      const timestamp = Date.now();
+      const randomId = Math.floor(Math.random() * 1000000);
+      const safeFileName = file.originalname
+        .replace(/[^a-zA-Z0-9가-힣._-]/g, '_')  // 특수문자를 언더스코어로 변경
+        .replace(/_{2,}/g, '_')  // 연속된 언더스코어를 하나로 변경
+        .slice(0, 100);  // 파일명 길이 제한
+      
+      const filename = `${timestamp}-${randomId}-${safeFileName}`;
+      const filePath = path.join(uploadsDir, filename);
+      
+      console.log(`📝 저장할 파일명: ${filename}`);
 
-    // 파일 저장
-    await fs.writeFile(filePath, file.buffer);
+      // 파일 저장
+      await fs.writeFile(filePath, file.buffer);
+      
+      // 저장된 파일 검증
+      const stats = await fs.stat(filePath);
+      console.log(`✅ 파일 저장 완료: ${filePath} (${stats.size} bytes)`);
+      
+      if (stats.size !== file.buffer.length) {
+        throw new Error(`파일 크기 불일치: 원본 ${file.buffer.length} bytes, 저장됨 ${stats.size} bytes`);
+      }
 
-    return filePath;
+      return filePath;
+    } catch (error) {
+      console.error('❌ 파일 저장 실패:', {
+        originalname: file.originalname,
+        size: file.size,
+        uploadsDir,
+        error: error.message,
+        stack: error.stack
+      });
+      
+      throw new BadRequestException(
+        `파일 저장에 실패했습니다: ${error.message}`
+      );
+    }
   }
 
   /**
    * 파일에서 텍스트를 추출합니다.
    */
   private async extractText(file: Express.Multer.File): Promise<string> {
-    const { mimetype, buffer } = file;
+    const { mimetype, buffer, originalname } = file;
+    
+    console.log(`📄 텍스트 추출 시작: ${originalname} (${mimetype}, ${buffer.length} bytes)`);
 
     try {
+      let extractedText = '';
+      
       switch (mimetype) {
         case 'application/pdf':
-          const pdfData = await pdf(buffer);
-          return pdfData.text;
+          console.log('PDF 파일 처리 중...');
+          try {
+            const pdfData = await pdf(buffer);
+            extractedText = pdfData.text;
+            console.log(`✅ PDF 텍스트 추출 완료: ${extractedText.length} 문자`);
+          } catch (pdfError) {
+            console.error('PDF 추출 실패:', pdfError);
+            throw new Error(`PDF 파일을 처리할 수 없습니다: ${pdfError.message}`);
+          }
+          break;
 
         case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         case 'application/msword':
-          const docResult = await mammoth.extractRawText({ buffer });
-          return docResult.value;
+          console.log('Word 문서 처리 중...');
+          try {
+            const docResult = await mammoth.extractRawText({ buffer });
+            extractedText = docResult.value;
+            console.log(`✅ Word 텍스트 추출 완료: ${extractedText.length} 문자`);
+          } catch (docError) {
+            console.error('Word 추출 실패:', docError);
+            throw new Error(`Word 문서를 처리할 수 없습니다: ${docError.message}`);
+          }
+          break;
 
         case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
         case 'application/vnd.ms-excel':
-          const workbook = XLSX.read(buffer, { type: 'buffer' });
-          let excelText = '';
-          workbook.SheetNames.forEach((sheetName) => {
-            const sheet = workbook.Sheets[sheetName];
-            excelText += XLSX.utils.sheet_to_txt(sheet) + '\n';
-          });
-          return excelText;
+          console.log('Excel 파일 처리 중...');
+          try {
+            const workbook = XLSX.read(buffer, { type: 'buffer' });
+            let excelText = '';
+            workbook.SheetNames.forEach((sheetName) => {
+              const sheet = workbook.Sheets[sheetName];
+              const sheetText = XLSX.utils.sheet_to_txt(sheet);
+              excelText += `=== ${sheetName} ===\n${sheetText}\n\n`;
+            });
+            extractedText = excelText;
+            console.log(`✅ Excel 텍스트 추출 완료: ${extractedText.length} 문자, ${workbook.SheetNames.length}개 시트`);
+          } catch (excelError) {
+            console.error('Excel 추출 실패:', excelError);
+            throw new Error(`Excel 파일을 처리할 수 없습니다: ${excelError.message}`);
+          }
+          break;
 
         case 'text/plain':
-          return buffer.toString('utf-8');
+          console.log('텍스트 파일 처리 중...');
+          try {
+            extractedText = buffer.toString('utf-8');
+            console.log(`✅ 텍스트 파일 추출 완료: ${extractedText.length} 문자`);
+          } catch (textError) {
+            console.error('텍스트 추출 실패:', textError);
+            // UTF-8로 실패하면 다른 인코딩 시도
+            try {
+              extractedText = buffer.toString('latin1');
+              console.log(`✅ 텍스트 파일 추출 완료 (latin1): ${extractedText.length} 문자`);
+            } catch (fallbackError) {
+              throw new Error(`텍스트 파일을 처리할 수 없습니다: ${textError.message}`);
+            }
+          }
+          break;
 
         default:
           throw new BadRequestException(
-            `지원하지 않는 파일 형식입니다: ${mimetype}`,
+            `지원하지 않는 파일 형식입니다: ${mimetype}. 지원 형식: PDF, DOC, DOCX, XLS, XLSX, TXT`,
           );
       }
+
+      // 텍스트 검증
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('파일에서 텍스트를 찾을 수 없습니다. 빈 파일이거나 텍스트 내용이 없는 파일입니다.');
+      }
+
+      // 최소 길이 검증 (너무 짧은 텍스트 방지)
+      if (extractedText.trim().length < 10) {
+        console.warn(`⚠️ 추출된 텍스트가 매우 짧습니다: "${extractedText.trim()}"`);
+      }
+
+      console.log(`🎉 텍스트 추출 완료: ${extractedText.length} 문자`);
+      return extractedText;
+
     } catch (error) {
-      console.error('텍스트 추출 실패:', error);
-      throw new BadRequestException('파일에서 텍스트를 추출할 수 없습니다.');
+      console.error('❌ 텍스트 추출 실패:', {
+        file: originalname,
+        mimetype,
+        bufferSize: buffer.length,
+        error: error.message,
+        stack: error.stack
+      });
+      
+      throw new BadRequestException(
+        `파일에서 텍스트를 추출할 수 없습니다: ${error.message}`
+      );
     }
   }
 
@@ -579,5 +732,24 @@ export class DocumentService {
     });
 
     return Array.from(suggestions).slice(0, limit);
+  }
+
+  /**
+   * 임베딩 상태를 조회합니다.
+   */
+  async getEmbeddingStatus(organizationId: string): Promise<{
+    totalChunks: number;
+    embeddedChunks: number;
+    pendingChunks: number;
+    embeddingProgress: number;
+  }> {
+    return this.vectorService.getEmbeddingStatus(organizationId);
+  }
+
+  /**
+   * 누락된 임베딩을 재처리합니다.
+   */
+  async reprocessMissingEmbeddings(organizationId: string): Promise<void> {
+    return this.vectorService.reprocessMissingEmbeddings(organizationId);
   }
 }

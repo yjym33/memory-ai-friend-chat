@@ -226,6 +226,8 @@ export class ChatService {
     }
 
     try {
+      console.log(`🔍 기업모드 문서 검색 시작: ${user.organizationId} - "${message}"`);
+
       // 1. 관련 문서 검색
       const searchResults = await this.documentService.searchDocuments(
         user.organizationId,
@@ -237,8 +239,11 @@ export class ChatService {
         },
       );
 
+      console.log(`📊 검색 결과: ${searchResults.length}개 문서 청크 발견`);
+
       // 2. 검색 결과가 없는 경우
       if (searchResults.length === 0) {
+        console.log('❌ 관련 문서를 찾을 수 없음');
         return this.generateNoResultsResponse(message, aiSettings);
       }
 
@@ -246,17 +251,28 @@ export class ChatService {
       const context = this.buildContextFromSearchResults(searchResults);
       const prompt = this.buildBusinessPrompt(message, context, aiSettings);
 
+      console.log('🤖 AI 응답 생성 중...');
       const response = await this.generateLLMResponse(prompt);
 
       // 4. 출처 정보 추가 (설정에 따라)
       if (aiSettings.businessSettings?.includeSourceCitations !== false) {
-        return this.addSourceCitations(response, searchResults);
+        const finalResponse = this.addSourceCitations(response, searchResults);
+        console.log('✅ 기업모드 응답 생성 완료 (출처 포함)');
+        return finalResponse;
       }
 
+      console.log('✅ 기업모드 응답 생성 완료');
       return response;
     } catch (error) {
-      console.error('기업 모드 메시지 처리 실패:', error);
-      return '죄송합니다. 문서 검색 중 오류가 발생했습니다. 다시 시도해주세요.';
+      console.error('❌ 기업 모드 메시지 처리 실패:', error);
+      return `죄송합니다. 문서 검색 중 오류가 발생했습니다. 
+
+📝 **문제 해결 방법:**
+1. 다른 키워드로 다시 검색해보세요
+2. 문서가 업로드되어 있는지 확인해주세요
+3. 관리자에게 문의해주세요
+
+🔧 오류 정보: ${error.message}`;
     }
   }
 
@@ -300,33 +316,36 @@ export class ChatService {
   ): string {
     const { businessSettings } = settings;
 
-    let prompt = `당신은 회사의 문서를 기반으로 질문에 답하는 AI 어시스턴트입니다.
+    let prompt = `당신은 기업의 내부 문서를 기반으로 정확하고 유용한 정보를 제공하는 전문 AI 어시스턴트입니다.
 
-다음 문서 내용을 참고하여 질문에 정확하고 도움이 되는 답변을 제공해주세요:
-
-===== 관련 문서 내용 =====
+📋 **참고할 문서 내용:**
 ${context}
-===========================
 
-사용자 질문: ${query}
+❓ **사용자 질문:** ${query}
 
-답변 지침:
-- 제공된 문서 내용을 기반으로만 답변하세요
-- 확실하지 않은 정보는 추측하지 마세요
-- 구체적이고 실용적인 답변을 제공하세요`;
+📝 **답변 작성 지침:**
+1. **정확성 우선**: 제공된 문서 내용만을 기반으로 답변하세요
+2. **명확한 구조**: 답변을 논리적으로 구성하세요
+3. **실용적 정보**: 사용자가 바로 활용할 수 있는 정보를 제공하세요
+4. **불확실성 인정**: 문서에 없는 내용은 추측하지 말고 명시하세요
+5. **추가 도움**: 필요시 추가 질문이나 확인이 필요한 부분을 안내하세요`;
 
     // 응답 스타일 설정
     switch (businessSettings?.responseStyle) {
       case 'formal':
-        prompt += '\n- 정중하고 공식적인 톤으로 답변하세요';
+        prompt += '\n\n🎯 **톤**: 정중하고 전문적인 공식 톤으로 답변하세요';
         break;
       case 'technical':
-        prompt += '\n- 기술적이고 상세한 설명을 포함하세요';
+        prompt += '\n\n🔧 **톤**: 기술적이고 상세한 설명을 포함한 전문가 톤으로 답변하세요';
         break;
       case 'casual':
-        prompt += '\n- 친근하고 이해하기 쉬운 톤으로 답변하세요';
+        prompt += '\n\n😊 **톤**: 친근하고 이해하기 쉬운 대화체 톤으로 답변하세요';
         break;
+      default:
+        prompt += '\n\n💼 **톤**: 전문적이면서도 접근하기 쉬운 톤으로 답변하세요';
     }
+
+    prompt += '\n\n✨ **추가 요구사항:**\n- 답변은 한국어로 작성하세요\n- 중요한 내용은 강조 표시를 사용하세요\n- 단계별 설명이 필요한 경우 번호를 매겨 정리하세요';
 
     return prompt;
   }
