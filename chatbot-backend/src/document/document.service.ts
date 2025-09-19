@@ -153,6 +153,30 @@ export class DocumentService {
   }
 
   /**
+   * 조직의 문서 총 개수를 조회합니다.
+   */
+  async getOrganizationDocumentsCount(
+    organizationId: string,
+    options: {
+      type?: DocumentType;
+      status?: DocumentStatus;
+    } = {},
+  ): Promise<number> {
+    const { type, status = DocumentStatus.ACTIVE } = options;
+
+    let queryBuilder = this.documentRepository
+      .createQueryBuilder('document')
+      .where('document.organizationId = :organizationId', { organizationId })
+      .andWhere('document.status = :status', { status });
+
+    if (type) {
+      queryBuilder = queryBuilder.andWhere('document.type = :type', { type });
+    }
+
+    return queryBuilder.getCount();
+  }
+
+  /**
    * 문서를 삭제합니다.
    */
   async deleteDocument(documentId: string, userId: string): Promise<void> {

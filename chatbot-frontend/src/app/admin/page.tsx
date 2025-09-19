@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "../../services/apiClient";
+import { useAuthStore } from "../../store/authStore";
 import {
   Users,
   Settings,
@@ -74,10 +76,12 @@ interface Organization {
   subscriptionTier: string;
   domain?: string;
   createdAt: string;
-  users: User[];
+  users?: User[];
 }
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { isAuthenticated, token, role } = useAuthStore();
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState<User[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
@@ -91,6 +95,21 @@ export default function AdminPage() {
     "all" | "individual" | "business"
   >("all");
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 권한 확인
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      router.push("/login");
+      return;
+    }
+
+    if (!["super_admin", "admin"].includes(role || "")) {
+      alert("관리자 권한이 필요합니다.");
+      router.push("/");
+      return;
+    }
+  }, [isAuthenticated, token, role, router]);
 
   useEffect(() => {
     loadData();
@@ -98,6 +117,7 @@ export default function AdminPage() {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       if (activeTab === "users") {
         await loadUsers();
@@ -108,14 +128,21 @@ export default function AdminPage() {
       } else if (activeTab === "organizations") {
         await loadOrganizations();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("데이터 로딩 실패:", error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          "데이터 로딩에 실패했습니다."
+      );
     }
     setLoading(false);
   };
 
   const loadUsers = async () => {
     try {
+      console.log("Loading users with token:", token?.substring(0, 20) + "...");
+      
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "20",
@@ -128,20 +155,48 @@ export default function AdminPage() {
         params.append("userType", filterUserType);
       }
 
+      console.log("Calling API:", `/admin/users?${params}`);
       const response = await apiClient.get(`/admin/users?${params}`);
-      setUsers(response.data.users);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (error) {
+      console.log("Users API Response:", response);
+      console.log("Response type:", typeof response);
+      console.log("Response keys:", Object.keys(response || {}));
+      
+      // apiClient는 이미 response.data를 반환하므로 직접 접근
+      if (response && response.users && Array.isArray(response.users)) {
+        setUsers(response.users);
+        setTotalPages(response.pagination?.totalPages || 1);
+      } else {
+        console.error("Invalid users response structure:", response);
+        console.error("Expected: { users: Array, pagination: Object }");
+        setUsers([]);
+        setTotalPages(1);
+      }
+    } catch (error: any) {
       console.error("사용자 목록 로딩 실패:", error);
+      console.error("Error details:", {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data
+      });
+      setUsers([]);
+      setTotalPages(1);
     }
   };
 
   const loadStatistics = async () => {
     try {
       const response = await apiClient.get("/admin/statistics");
-      setStatistics(response.data);
+      console.log("Statistics API Response:", response);
+
+      if (response && typeof response === "object") {
+        setStatistics(response);
+      } else {
+        console.error("Invalid statistics response structure:", response);
+        setStatistics(null);
+      }
     } catch (error) {
       console.error("통계 로딩 실패:", error);
+      setStatistics(null);
     }
   };
 
@@ -157,8 +212,21 @@ export default function AdminPage() {
       }
 
       const response = await apiClient.get(`/documents?${params}`);
-      setDocuments(response.data.documents || []);
-      setTotalPages(response.data.pagination?.totalPages || 1);
+      console.log("Documents API Response:", response);
+
+      // 수정된 문서 API는 { documents: [...], pagination: {...} } 구조로 반환
+      if (response && response.documents) {
+        setDocuments(response.documents);
+        setTotalPages(response.pagination?.totalPages || 1);
+      } else if (Array.isArray(response)) {
+        // 이전 구조와의 호환성
+        setDocuments(response);
+        setTotalPages(1);
+      } else {
+        console.error("Invalid documents response structure:", response);
+        setDocuments([]);
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("문서 목록 로딩 실패:", error);
     }
@@ -167,9 +235,17 @@ export default function AdminPage() {
   const loadOrganizations = async () => {
     try {
       const response = await apiClient.get("/admin/organizations");
-      setOrganizations(response.data || []);
+      console.log("Organizations API Response:", response);
+
+      if (Array.isArray(response)) {
+        setOrganizations(response);
+      } else {
+        console.error("Invalid organizations response structure:", response);
+        setOrganizations([]);
+      }
     } catch (error) {
       console.error("조직 목록 로딩 실패:", error);
+      setOrganizations([]);
     }
   };
 
@@ -309,12 +385,49 @@ export default function AdminPage() {
     return colors[role as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
+  // 권한이 없으면 렌더링하지 않음
+  if (!isAuthenticated || !token || !["super_admin", "admin"].includes(role || "")) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">권한을 확인하는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
           <p className="text-gray-600 mt-2">시스템 사용자 및 조직 관리</p>
+
+          {error && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <XCircle className="h-5 w-5 text-red-400" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    오류 발생
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">{error}</div>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        setError(null);
+                        loadData();
+                      }}
+                      className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200"
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 탭 네비게이션 */}
@@ -934,7 +1047,7 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500">사용자</span>
                           <span className="font-medium text-gray-900">
-                            {org.users.length}명
+                            {org.users?.length || 0}명
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm mt-1">
@@ -945,7 +1058,7 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {org.users.length > 0 && (
+                      {org.users && org.users.length > 0 && (
                         <div className="mt-4">
                           <p className="text-xs text-gray-500 mb-2">구성원</p>
                           <div className="space-y-1">

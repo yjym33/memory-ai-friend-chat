@@ -116,6 +116,7 @@ export class DocumentController {
     @Query('status') status?: DocumentStatus,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
   ) {
     if (!req.user.organizationId) {
       throw new BadRequestException(
@@ -123,15 +124,35 @@ export class DocumentController {
       );
     }
 
-    return this.documentService.getOrganizationDocuments(
+    const pageNumber = page || 1;
+    const limitNumber = limit || 20;
+    const offsetNumber = offset || (pageNumber - 1) * limitNumber;
+
+    const documents = await this.documentService.getOrganizationDocuments(
       req.user.organizationId,
       {
         type,
         status,
-        limit,
-        offset,
+        limit: limitNumber,
+        offset: offsetNumber,
       },
     );
+
+    // 전체 문서 수 조회 (페이지네이션용)
+    const totalCount = await this.documentService.getOrganizationDocumentsCount(
+      req.user.organizationId,
+      { type, status },
+    );
+
+    return {
+      documents,
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNumber),
+      },
+    };
   }
 
   /**

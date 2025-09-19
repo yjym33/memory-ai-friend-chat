@@ -118,17 +118,23 @@ export const useAuthStore = create<AuthState>()(
       register: async (data: RegisterData) => {
         try {
           const response = await AuthService.register(data);
-          const { token, userId } = response;
+          const { token, userId, userType, role, organizationId } = response;
           set((state) => ({
             ...state,
             isAuthenticated: true,
             token,
             userId,
+            userType,
+            role,
+            organizationId,
             userEmail: data.email,
             userName: data.name,
           }));
           localStorage.setItem("token", token);
           localStorage.setItem("userId", userId);
+          if (userType) localStorage.setItem("userType", userType);
+          if (role) localStorage.setItem("role", role);
+          if (organizationId) localStorage.setItem("organizationId", organizationId);
         } catch (error) {
           console.error("회원가입 실패:", error);
           throw error;
