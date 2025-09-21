@@ -132,8 +132,8 @@ export default function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={
               chatMode === ChatMode.PERSONAL
-                ? "무엇이든 편하게 말해보세요..."
-                : "회사 문서에 대해 질문해보세요..."
+                ? "AI 친구 루나와 대화해보세요... 무엇이든 편하게 말씀해 주세요!"
+                : "업로드된 문서에 대해 질문해보세요... (예: 회사 정책, 업무 절차 등)"
             }
             className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900"
             rows={1}

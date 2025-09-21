@@ -800,22 +800,4 @@ export class DocumentService {
     return Array.from(suggestions).slice(0, limit);
   }
 
-  /**
-   * 임베딩 상태를 조회합니다.
-   */
-  async getEmbeddingStatus(organizationId: string): Promise<{
-    totalChunks: number;
-    embeddedChunks: number;
-    pendingChunks: number;
-    embeddingProgress: number;
-  }> {
-    return this.vectorService.getEmbeddingStatus(organizationId);
-  }
-
-  /**
-   * 누락된 임베딩을 재처리합니다.
-   */
-  async reprocessMissingEmbeddings(organizationId: string): Promise<void> {
-    return this.vectorService.reprocessMissingEmbeddings(organizationId);
-  }
 }

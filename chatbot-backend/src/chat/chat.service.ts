@@ -184,12 +184,22 @@ export class ChatService {
     userId: string,
     conversationId: number,
     message: string,
-  ): Promise<string> {
+  ): Promise<{
+    response: string;
+    sources: Array<{
+      title: string;
+      documentId: string;
+      type?: string;
+      relevance: number;
+      snippet: string;
+    }>;
+  }> {
     const user = await this.getUserWithSettings(userId);
     const aiSettings = await this.aiSettingsService.findByUserId(userId);
 
     if (aiSettings.chatMode === ChatMode.PERSONAL) {
-      return this.processPersonalMessage(user, conversationId, message);
+      const response = await this.processPersonalMessage(user, conversationId, message);
+      return { response, sources: [] };
     } else {
       return this.processBusinessMessage(
         user,
@@ -226,7 +236,9 @@ export class ChatService {
     }
 
     try {
-      console.log(`🔍 기업모드 문서 검색 시작: ${user.organizationId} - "${message}"`);
+      console.log(
+        `🔍 기업모드 문서 검색 시작: ${user.organizationId} - "${message}"`,
+      );
 
       // 1. 관련 문서 검색
       const searchResults = await this.documentService.searchDocuments(
@@ -336,16 +348,20 @@ ${context}
         prompt += '\n\n🎯 **톤**: 정중하고 전문적인 공식 톤으로 답변하세요';
         break;
       case 'technical':
-        prompt += '\n\n🔧 **톤**: 기술적이고 상세한 설명을 포함한 전문가 톤으로 답변하세요';
+        prompt +=
+          '\n\n🔧 **톤**: 기술적이고 상세한 설명을 포함한 전문가 톤으로 답변하세요';
         break;
       case 'casual':
-        prompt += '\n\n😊 **톤**: 친근하고 이해하기 쉬운 대화체 톤으로 답변하세요';
+        prompt +=
+          '\n\n😊 **톤**: 친근하고 이해하기 쉬운 대화체 톤으로 답변하세요';
         break;
       default:
-        prompt += '\n\n💼 **톤**: 전문적이면서도 접근하기 쉬운 톤으로 답변하세요';
+        prompt +=
+          '\n\n💼 **톤**: 전문적이면서도 접근하기 쉬운 톤으로 답변하세요';
     }
 
-    prompt += '\n\n✨ **추가 요구사항:**\n- 답변은 한국어로 작성하세요\n- 중요한 내용은 강조 표시를 사용하세요\n- 단계별 설명이 필요한 경우 번호를 매겨 정리하세요';
+    prompt +=
+      '\n\n✨ **추가 요구사항:**\n- 답변은 한국어로 작성하세요\n- 중요한 내용은 강조 표시를 사용하세요\n- 단계별 설명이 필요한 경우 번호를 매겨 정리하세요';
 
     return prompt;
   }

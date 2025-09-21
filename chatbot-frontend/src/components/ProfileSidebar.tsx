@@ -127,7 +127,7 @@ export default function ProfileSidebar({
               className="w-full py-2 rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-semibold shadow hover:from-indigo-500 hover:to-purple-500 transition flex items-center justify-center space-x-2"
             >
               <FileText className="w-4 h-4" />
-              <span>문서 검색</span>
+              <span>문서 관리</span>
             </button>
           )}
 

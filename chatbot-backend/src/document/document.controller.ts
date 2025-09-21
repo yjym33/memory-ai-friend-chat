@@ -51,22 +51,41 @@ export class DocumentController {
         ];
 
         // 파일 확장자 기반 검증도 추가
-        const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
-        const fileExtension = file.originalname.toLowerCase().match(/\.[^.]+$/)?.[0];
+        const allowedExtensions = [
+          '.pdf',
+          '.doc',
+          '.docx',
+          '.xls',
+          '.xlsx',
+          '.txt',
+        ];
+        const fileExtension = file.originalname
+          .toLowerCase()
+          .match(/\.[^.]+$/)?.[0];
 
         console.log(`📋 파일 필터 검사: ${file.originalname}`);
         console.log(`   - MIME 타입: ${file.mimetype}`);
         console.log(`   - 확장자: ${fileExtension}`);
 
         const isMimeAllowed = allowedMimes.includes(file.mimetype);
-        const isExtensionAllowed = fileExtension && allowedExtensions.includes(fileExtension);
+        const isExtensionAllowed =
+          fileExtension && allowedExtensions.includes(fileExtension);
 
         if (isMimeAllowed || isExtensionAllowed) {
-          console.log(`✅ 파일 타입 허용됨 (MIME: ${isMimeAllowed}, 확장자: ${isExtensionAllowed})`);
+          console.log(
+            `✅ 파일 타입 허용됨 (MIME: ${isMimeAllowed}, 확장자: ${isExtensionAllowed})`,
+          );
           cb(null, true);
         } else {
-          console.log(`❌ 파일 타입 거부됨: MIME=${file.mimetype}, 확장자=${fileExtension}`);
-          cb(new BadRequestException(`지원하지 않는 파일 형식입니다. 지원 형식: PDF, DOC, DOCX, XLS, XLSX, TXT`), false);
+          console.log(
+            `❌ 파일 타입 거부됨: MIME=${file.mimetype}, 확장자=${fileExtension}`,
+          );
+          cb(
+            new BadRequestException(
+              `지원하지 않는 파일 형식입니다. 지원 형식: PDF, DOC, DOCX, XLS, XLSX, TXT`,
+            ),
+            false,
+          );
         }
       },
     }),
@@ -81,12 +100,14 @@ export class DocumentController {
       role: req.user.role,
       userType: req.user.userType,
       organizationId: req.user.organizationId,
-      file: file ? {
-        name: file.originalname,
-        size: file.size,
-        type: file.mimetype
-      } : null,
-      dto: createDocumentDto
+      file: file
+        ? {
+            name: file.originalname,
+            size: file.size,
+            type: file.mimetype,
+          }
+        : null,
+      dto: createDocumentDto,
     });
 
     try {
@@ -94,29 +115,35 @@ export class DocumentController {
         throw new BadRequestException('파일이 업로드되지 않았습니다.');
       }
 
-      // 관리자 또는 기업 사용자만 문서 업로드 가능
-      const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(req.user.role);
-      const isBusiness = req.user.userType === UserType.BUSINESS && req.user.organizationId;
-      
-      console.log(`🔐 권한 확인: isAdmin=${isAdmin}, isBusiness=${isBusiness}`);
-      
+      // 기업 사용자 또는 관리자만 문서 업로드 가능
+      const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+        req.user.role,
+      );
+      const isBusiness = req.user.userType === UserType.BUSINESS;
+
+      console.log(
+        `🔐 권한 확인: isAdmin=${isAdmin}, isBusiness=${isBusiness}, organizationId=${req.user.organizationId}`,
+      );
+
       if (!isAdmin && !isBusiness) {
         throw new BadRequestException(
-          '관리자 또는 기업 사용자만 문서를 업로드할 수 있습니다.',
+          '기업 사용자 또는 관리자만 문서를 업로드할 수 있습니다.',
         );
       }
 
-      // 관리자의 경우 기본 조직 ID 사용
+      // 조직 ID 결정
       let targetOrganizationId = req.user.organizationId;
-      
-      if (isAdmin && !targetOrganizationId) {
-        // 관리자가 조직이 없는 경우, 관리자 조직 사용
-        targetOrganizationId = req.user.organizationId || '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
-        console.log(`🏢 관리자 기본 조직 사용: ${targetOrganizationId}`);
-      }
 
       if (!targetOrganizationId) {
-        throw new BadRequestException('조직 정보가 필요합니다.');
+        if (isAdmin) {
+          // 관리자가 조직이 없는 경우, 관리자 조직 사용
+          targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+          console.log(`🏢 관리자 기본 조직 사용: ${targetOrganizationId}`);
+        } else {
+          throw new BadRequestException(
+            '기업 사용자는 조직에 속해야 문서를 업로드할 수 있습니다.',
+          );
+        }
       }
 
       console.log(`🎯 대상 조직: ${targetOrganizationId}`);
@@ -130,13 +157,12 @@ export class DocumentController {
 
       console.log(`✅ 문서 업로드 완료: ${result.id}`);
       return result;
-
     } catch (error) {
       console.error(`❌ 문서 업로드 오류:`, {
         user: req.user.id,
         file: file?.originalname,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // 에러를 다시 던져서 글로벌 에러 핸들러가 처리하도록 함
@@ -152,14 +178,32 @@ export class DocumentController {
     @Request() req: AuthenticatedRequest,
     @Body() searchDto: SearchDocumentsDto,
   ) {
-    if (!req.user.organizationId) {
+    // 기업 사용자 또는 관리자만 문서 검색 가능
+    const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+      req.user.role,
+    );
+    const isBusiness = req.user.userType === UserType.BUSINESS;
+
+    if (!isAdmin && !isBusiness) {
       throw new BadRequestException(
-        '조직에 속한 사용자만 문서를 검색할 수 있습니다.',
+        '기업 사용자 또는 관리자만 문서를 검색할 수 있습니다.',
       );
     }
 
+    let targetOrganizationId = req.user.organizationId;
+
+    if (!targetOrganizationId) {
+      if (isAdmin) {
+        targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+      } else {
+        throw new BadRequestException(
+          '기업 사용자는 조직에 속해야 문서를 검색할 수 있습니다.',
+        );
+      }
+    }
+
     return this.documentService.searchDocuments(
-      req.user.organizationId,
+      targetOrganizationId,
       searchDto.query,
       {
         documentTypes: searchDto.types,
@@ -181,10 +225,28 @@ export class DocumentController {
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
   ) {
-    if (!req.user.organizationId) {
+    // 기업 사용자 또는 관리자만 문서 조회 가능
+    const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+      req.user.role,
+    );
+    const isBusiness = req.user.userType === UserType.BUSINESS;
+
+    if (!isAdmin && !isBusiness) {
       throw new BadRequestException(
-        '조직에 속한 사용자만 문서를 조회할 수 있습니다.',
+        '기업 사용자 또는 관리자만 문서를 조회할 수 있습니다.',
       );
+    }
+
+    let targetOrganizationId = req.user.organizationId;
+
+    if (!targetOrganizationId) {
+      if (isAdmin) {
+        targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+      } else {
+        throw new BadRequestException(
+          '기업 사용자는 조직에 속해야 문서를 조회할 수 있습니다.',
+        );
+      }
     }
 
     const pageNumber = page || 1;
@@ -192,7 +254,7 @@ export class DocumentController {
     const offsetNumber = offset || (pageNumber - 1) * limitNumber;
 
     const documents = await this.documentService.getOrganizationDocuments(
-      req.user.organizationId,
+      targetOrganizationId,
       {
         type,
         status,
@@ -203,7 +265,7 @@ export class DocumentController {
 
     // 전체 문서 수 조회 (페이지네이션용)
     const totalCount = await this.documentService.getOrganizationDocumentsCount(
-      req.user.organizationId,
+      targetOrganizationId,
       { type, status },
     );
 
@@ -219,6 +281,49 @@ export class DocumentController {
   }
 
   /**
+   * 문서 타입 목록을 조회합니다.
+   */
+  @Get('types')
+  async getDocumentTypes() {
+    return Object.values(DocumentType).map((type) => ({
+      value: type,
+      label: this.getDocumentTypeLabel(type),
+    }));
+  }
+
+  /**
+   * 임베딩 상태를 조회합니다.
+   */
+  @Get('embedding-status')
+  async getEmbeddingStatus(@Request() req: AuthenticatedRequest) {
+    // 기업 사용자 또는 관리자만 임베딩 상태 조회 가능
+    const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+      req.user.role,
+    );
+    const isBusiness = req.user.userType === UserType.BUSINESS;
+
+    if (!isAdmin && !isBusiness) {
+      throw new BadRequestException(
+        '기업 사용자 또는 관리자만 임베딩 상태를 조회할 수 있습니다.',
+      );
+    }
+
+    let targetOrganizationId = req.user.organizationId;
+
+    if (!targetOrganizationId) {
+      if (isAdmin) {
+        targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+      } else {
+        throw new BadRequestException(
+          '기업 사용자는 조직에 속해야 임베딩 상태를 조회할 수 있습니다.',
+        );
+      }
+    }
+
+    return this.documentService.getEmbeddingStatus(targetOrganizationId);
+  }
+
+  /**
    * 문서를 삭제합니다.
    */
   @Delete(':id')
@@ -230,17 +335,6 @@ export class DocumentController {
       documentId,
       req.user.userId || req.user.id,
     );
-  }
-
-  /**
-   * 문서 타입 목록을 조회합니다.
-   */
-  @Get('types')
-  async getDocumentTypes() {
-    return Object.values(DocumentType).map((type) => ({
-      value: type,
-      label: this.getDocumentTypeLabel(type),
-    }));
   }
 
   /**
@@ -284,40 +378,35 @@ export class DocumentController {
   }
 
   /**
-   * 임베딩 상태를 조회합니다.
-   */
-  @Get('embedding-status')
-  async getEmbeddingStatus(@Request() req: AuthenticatedRequest) {
-    if (!req.user.organizationId) {
-      throw new BadRequestException(
-        '조직에 속한 사용자만 임베딩 상태를 조회할 수 있습니다.',
-      );
-    }
-
-    return this.documentService.getEmbeddingStatus(req.user.organizationId);
-  }
-
-  /**
-   * 누락된 임베딩을 재처리합니다. (관리자 전용)
+   * 누락된 임베딩을 재처리합니다.
    */
   @Post('reprocess-embeddings')
   async reprocessEmbeddings(@Request() req: AuthenticatedRequest) {
-    // 관리자 또는 조직 관리자만 실행 가능
-    if (!['super_admin', 'admin', 'org_admin'].includes(req.user.role)) {
-      throw new BadRequestException(
-        '관리자만 임베딩 재처리를 실행할 수 있습니다.',
-      );
-    }
-
-    if (!req.user.organizationId) {
-      throw new BadRequestException(
-        '조직에 속한 사용자만 임베딩 재처리를 실행할 수 있습니다.',
-      );
-    }
-
-    await this.documentService.reprocessMissingEmbeddings(
-      req.user.organizationId,
+    // 기업 사용자 또는 관리자만 실행 가능
+    const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+      req.user.role,
     );
+    const isBusiness = req.user.userType === UserType.BUSINESS;
+
+    if (!isAdmin && !isBusiness) {
+      throw new BadRequestException(
+        '기업 사용자 또는 관리자만 임베딩 재처리를 실행할 수 있습니다.',
+      );
+    }
+
+    let targetOrganizationId = req.user.organizationId;
+
+    if (!targetOrganizationId) {
+      if (isAdmin) {
+        targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+      } else {
+        throw new BadRequestException(
+          '기업 사용자는 조직에 속해야 임베딩 재처리를 실행할 수 있습니다.',
+        );
+      }
+    }
+
+    await this.documentService.reprocessMissingEmbeddings(targetOrganizationId);
 
     return { message: '임베딩 재처리가 시작되었습니다.' };
   }

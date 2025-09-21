@@ -182,64 +182,27 @@ export class ChatController {
   @Post('completion/:conversationId')
   async chatCompletion(
     @Param('conversationId') conversationId: number,
-    @Body() body: { message: string; file?: any },
+    @Body() body: { message: string; file?: any; mode?: 'personal' | 'business' },
     @Request() req: AuthenticatedRequest,
   ) {
     try {
-      // 1. 사용자의 AI 설정 조회
-      const aiSettings = await this.aiSettingsService.findByUserId(
+      // 1) 기업/개인 모드 메시지 처리 (ChatService)
+      const { response, sources } = await this.chatService.processMessage(
         req.user.userId,
+        conversationId,
+        body.message,
       );
 
-      // 2. 파일 처리 및 내용 추출
-      let processedMessage = body.message;
-      let fileContent = '';
-      let userDisplayMessage = body.message; // 사용자에게 표시할 메시지
-
-      if (body.file) {
-        console.log('📎 파일 첨부됨:', body.file);
-
-        try {
-          // 파일 내용 추출
-          fileContent = await this.extractFileContent(body.file.path);
-          console.log(
-            '📖 파일 내용 추출 완료:',
-            fileContent.substring(0, 200) + '...',
-          );
-
-          // AI에게는 파일 내용의 핵심 부분만 전달
-          const processedContent = this.extractKeyContent(
-            fileContent,
-            body.file.originalName,
-          );
-
-          processedMessage = `${body.message}\n\n📎 첨부파일: ${body.file.originalName}\n\n📄 파일 핵심 내용:\n${processedContent}`;
-
-          // 사용자에게는 파일 첨부 정보만 표시
-          userDisplayMessage = `${body.message}\n\n📎 첨부파일: ${body.file.originalName}`;
-        } catch (error) {
-          console.error('파일 내용 추출 실패:', error);
-          processedMessage = `${body.message}\n\n📎 첨부파일: ${body.file.originalName}\n\n⚠️ 파일 내용을 읽을 수 없습니다.`;
-          userDisplayMessage = `${body.message}\n\n📎 첨부파일: ${body.file.originalName}\n\n⚠️ 파일 내용을 읽을 수 없습니다.`;
-        }
-      }
-
-      // 3. 에이전트를 통한 메시지 처리 (감정 분석 및 목표 추출)
-      const agentResponse = await this.agentService.processMessage(
-        req.user.userId,
-        processedMessage,
-      );
-
-      // 4. 대화 내용 업데이트
-      const conversation =
-        await this.chatService.getConversation(conversationId);
+      // 2) 대화 내용 업데이트
+      const conversation = await this.chatService.getConversation(conversationId);
       if (!conversation) {
         throw new NotFoundException('대화를 찾을 수 없습니다.');
       }
       const updatedMessages = [
         ...conversation.messages,
-        { role: 'user' as const, content: userDisplayMessage }, // 사용자에게 표시할 메시지 사용
-        { role: 'assistant' as const, content: agentResponse },
+        { role: 'user' as const, content: body.message },
+        // 응답에 출처 포함
+        { role: 'assistant' as const, content: response, sources },
       ];
 
       await this.chatService.updateConversation(
@@ -247,13 +210,11 @@ export class ChatController {
         updatedMessages,
       );
 
-      // 사용자의 메모리 캐시 무효화 (새로운 대화 내용 반영)
-      this.agentService.invalidateUserCache(req.user.userId);
-
-      // 5. AI 응답 반환
+      // 3) 응답 반환 (출처 포함)
       return {
         role: 'assistant',
-        content: agentResponse,
+        content: response,
+        sources: sources || [],
       };
     } catch (error) {
       console.error('Chat completion error:', error);
