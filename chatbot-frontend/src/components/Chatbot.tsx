@@ -50,9 +50,10 @@ export default function Chatbot() {
 
   // 사용자 유형에 따른 자동 모드 설정
   const { userType } = useAuthStore();
-  
+
   useEffect(() => {
-    const autoMode = userType === "business" ? ChatMode.BUSINESS : ChatMode.PERSONAL;
+    const autoMode =
+      userType === "business" ? ChatMode.BUSINESS : ChatMode.PERSONAL;
     setCurrentChatMode(autoMode);
   }, [userType]);
 
@@ -198,26 +199,38 @@ export default function Chatbot() {
         <div className="hidden lg:flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center space-x-3">
             <span className="text-sm text-gray-600">현재 모드:</span>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              currentChatMode === ChatMode.BUSINESS 
-                ? "bg-blue-100 text-blue-800" 
-                : "bg-purple-100 text-purple-800"
-            }`}>
-              {currentChatMode === ChatMode.BUSINESS ? "🏢 기업 쿼리" : "💬 AI 친구"}
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                currentChatMode === ChatMode.BUSINESS
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-purple-100 text-purple-800"
+              }`}
+            >
+              {currentChatMode === ChatMode.BUSINESS
+                ? "🏢 기업 쿼리"
+                : "💬 AI 친구"}
             </span>
           </div>
-          
+
           {/* 기업 모드에서만 참고 문서 버튼 표시 */}
           {currentChatMode === ChatMode.BUSINESS && (
             <button
               onClick={() => setShowSourcesPanel(!showSourcesPanel)}
               className={`inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border transition-colors ${
-                showSourcesPanel 
-                  ? "bg-blue-50 border-blue-300 text-blue-700" 
+                showSourcesPanel
+                  ? "bg-blue-50 border-blue-300 text-blue-700"
                   : "border-gray-300 text-gray-700 hover:bg-gray-50"
-              } ${currentSources.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+              } ${
+                currentSources.length === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               disabled={currentSources.length === 0}
-              title={currentSources.length === 0 ? "참고할 문서가 없습니다" : "참고 문서 보기"}
+              title={
+                currentSources.length === 0
+                  ? "참고할 문서가 없습니다"
+                  : "참고 문서 보기"
+              }
             >
               <BookOpen className="w-4 h-4" />
               참고 문서
@@ -262,26 +275,37 @@ export default function Chatbot() {
                 {currentSources.length === 0 ? (
                   <div className="text-center py-8">
                     <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">아직 참고할 문서가 없습니다</p>
-                    <p className="text-xs text-gray-400 mt-1">기업 모드에서 질문하면 관련 문서가 표시됩니다</p>
+                    <p className="text-sm text-gray-500">
+                      아직 참고할 문서가 없습니다
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      기업 모드에서 질문하면 관련 문서가 표시됩니다
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {currentSources.map((source, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div
+                        key={idx}
+                        className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
                         <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{source.title}</h4>
+                          <h4 className="font-medium text-gray-900 text-sm line-clamp-2">
+                            {source.title}
+                          </h4>
                           <div className="ml-2 flex-shrink-0">
                             <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                               {(source.relevance * 100).toFixed(0)}%
                             </span>
                           </div>
                         </div>
-                        
+
                         {source.snippet && (
-                          <p className="text-xs text-gray-600 mb-2 line-clamp-3">{source.snippet}</p>
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-3">
+                            {source.snippet}
+                          </p>
                         )}
-                        
+
                         <div className="flex items-center justify-between">
                           {source.type && (
                             <span className="text-[10px] px-2 py-0.5 rounded bg-white border text-gray-500">
@@ -289,7 +313,9 @@ export default function Chatbot() {
                             </span>
                           )}
                           <button
-                            onClick={() => window.open('/admin?tab=documents', '_blank')}
+                            onClick={() =>
+                              window.open("/admin?tab=documents", "_blank")
+                            }
                             className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
                           >
                             문서 관리에서 보기 →

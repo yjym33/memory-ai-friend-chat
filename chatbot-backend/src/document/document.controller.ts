@@ -11,7 +11,9 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  NotFoundException,
   ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService } from './document.service';
@@ -423,5 +425,47 @@ export class DocumentController {
       [DocumentType.OTHER]: '기타',
     };
     return labels[type] || type;
+  }
+
+  /**
+   * 특정 문서를 조회합니다.
+   */
+  @Get(':id')
+  async getDocument(
+    @Request() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    // 기업 사용자 또는 관리자만 문서 조회 가능
+    const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
+      req.user.role,
+    );
+    const isBusiness = req.user.userType === UserType.BUSINESS;
+
+    if (!isAdmin && !isBusiness) {
+      throw new BadRequestException(
+        '기업 사용자 또는 관리자만 문서를 조회할 수 있습니다.',
+      );
+    }
+
+    let targetOrganizationId = req.user.organizationId;
+
+    if (!targetOrganizationId) {
+      if (isAdmin) {
+        targetOrganizationId = '2eb0ef7b-ddab-40a7-82bd-b75d07520e7a'; // Admin Organization ID
+      } else {
+        throw new BadRequestException(
+          '기업 사용자는 조직에 속해야 문서를 조회할 수 있습니다.',
+        );
+      }
+    }
+
+    const document = await this.documentService.getDocumentById(
+      id,
+      targetOrganizationId,
+    );
+    if (!document) {
+      throw new NotFoundException(`ID ${id}인 문서를 찾을 수 없습니다.`);
+    }
+    return document;
   }
 }

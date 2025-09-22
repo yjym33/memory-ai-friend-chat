@@ -198,7 +198,11 @@ export class ChatService {
     const aiSettings = await this.aiSettingsService.findByUserId(userId);
 
     if (aiSettings.chatMode === ChatMode.PERSONAL) {
-      const response = await this.processPersonalMessage(user, conversationId, message);
+      const response = await this.processPersonalMessage(
+        user,
+        conversationId,
+        message,
+      );
       return { response, sources: [] };
     } else {
       return this.processBusinessMessage(

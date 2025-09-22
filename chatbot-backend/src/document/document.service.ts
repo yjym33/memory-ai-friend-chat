@@ -78,7 +78,9 @@ export class DocumentService {
       const extractedText = await this.extractText(file);
 
       if (!extractedText.trim()) {
-        throw new BadRequestException('파일에서 텍스트를 추출할 수 없습니다. 빈 파일이거나 지원하지 않는 형식입니다.');
+        throw new BadRequestException(
+          '파일에서 텍스트를 추출할 수 없습니다. 빈 파일이거나 지원하지 않는 형식입니다.',
+        );
       }
 
       console.log(`✅ 텍스트 추출 완료: ${extractedText.length} 문자`);
@@ -123,18 +125,19 @@ export class DocumentService {
         });
       });
 
-      console.log(`🎉 문서 업로드 완료: ${document.title} (ID: ${document.id})`);
+      console.log(
+        `🎉 문서 업로드 완료: ${document.title} (ID: ${document.id})`,
+      );
       return document;
-
     } catch (error) {
       console.error('❌ 문서 업로드 실패:', {
         file: file?.originalname,
         organizationId,
         uploadedById,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       // 업로드 실패 시 임시 파일 정리 (filePath가 있는 경우)
       if (error.filePath) {
         try {
@@ -253,7 +256,8 @@ export class DocumentService {
     });
 
     const pendingChunks = totalChunks - embeddedChunks;
-    const embeddingProgress = totalChunks > 0 ? Math.round((embeddedChunks / totalChunks) * 100) : 100;
+    const embeddingProgress =
+      totalChunks > 0 ? Math.round((embeddedChunks / totalChunks) * 100) : 100;
 
     return {
       totalChunks,
@@ -282,7 +286,9 @@ export class DocumentService {
 
     for (const chunk of pendingChunks) {
       try {
-        const embedding = await this.vectorService.generateEmbedding(chunk.content);
+        const embedding = await this.vectorService.generateEmbedding(
+          chunk.content,
+        );
         chunk.embedding = embedding;
         await this.chunkRepository.save(chunk);
         console.log(`✅ 청크 임베딩 완료: ${chunk.id}`);
@@ -333,7 +339,7 @@ export class DocumentService {
    */
   private async saveFile(file: Express.Multer.File): Promise<string> {
     const uploadsDir = path.join(process.cwd(), 'uploads', 'documents');
-    
+
     console.log(`💾 파일 저장 시작: ${file.originalname} (${file.size} bytes)`);
     console.log(`📁 업로드 디렉토리: ${uploadsDir}`);
 
@@ -346,24 +352,26 @@ export class DocumentService {
       const timestamp = Date.now();
       const randomId = Math.floor(Math.random() * 1000000);
       const safeFileName = file.originalname
-        .replace(/[^a-zA-Z0-9가-힣._-]/g, '_')  // 특수문자를 언더스코어로 변경
-        .replace(/_{2,}/g, '_')  // 연속된 언더스코어를 하나로 변경
-        .slice(0, 100);  // 파일명 길이 제한
-      
+        .replace(/[^a-zA-Z0-9가-힣._-]/g, '_') // 특수문자를 언더스코어로 변경
+        .replace(/_{2,}/g, '_') // 연속된 언더스코어를 하나로 변경
+        .slice(0, 100); // 파일명 길이 제한
+
       const filename = `${timestamp}-${randomId}-${safeFileName}`;
       const filePath = path.join(uploadsDir, filename);
-      
+
       console.log(`📝 저장할 파일명: ${filename}`);
 
       // 파일 저장
       await fs.writeFile(filePath, file.buffer);
-      
+
       // 저장된 파일 검증
       const stats = await fs.stat(filePath);
       console.log(`✅ 파일 저장 완료: ${filePath} (${stats.size} bytes)`);
-      
+
       if (stats.size !== file.buffer.length) {
-        throw new Error(`파일 크기 불일치: 원본 ${file.buffer.length} bytes, 저장됨 ${stats.size} bytes`);
+        throw new Error(
+          `파일 크기 불일치: 원본 ${file.buffer.length} bytes, 저장됨 ${stats.size} bytes`,
+        );
       }
 
       return filePath;
@@ -373,11 +381,11 @@ export class DocumentService {
         size: file.size,
         uploadsDir,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       throw new BadRequestException(
-        `파일 저장에 실패했습니다: ${error.message}`
+        `파일 저장에 실패했습니다: ${error.message}`,
       );
     }
   }
@@ -387,22 +395,28 @@ export class DocumentService {
    */
   private async extractText(file: Express.Multer.File): Promise<string> {
     const { mimetype, buffer, originalname } = file;
-    
-    console.log(`📄 텍스트 추출 시작: ${originalname} (${mimetype}, ${buffer.length} bytes)`);
+
+    console.log(
+      `📄 텍스트 추출 시작: ${originalname} (${mimetype}, ${buffer.length} bytes)`,
+    );
 
     try {
       let extractedText = '';
-      
+
       switch (mimetype) {
         case 'application/pdf':
           console.log('PDF 파일 처리 중...');
           try {
             const pdfData = await pdf(buffer);
             extractedText = pdfData.text;
-            console.log(`✅ PDF 텍스트 추출 완료: ${extractedText.length} 문자`);
+            console.log(
+              `✅ PDF 텍스트 추출 완료: ${extractedText.length} 문자`,
+            );
           } catch (pdfError) {
             console.error('PDF 추출 실패:', pdfError);
-            throw new Error(`PDF 파일을 처리할 수 없습니다: ${pdfError.message}`);
+            throw new Error(
+              `PDF 파일을 처리할 수 없습니다: ${pdfError.message}`,
+            );
           }
           break;
 
@@ -412,10 +426,14 @@ export class DocumentService {
           try {
             const docResult = await mammoth.extractRawText({ buffer });
             extractedText = docResult.value;
-            console.log(`✅ Word 텍스트 추출 완료: ${extractedText.length} 문자`);
+            console.log(
+              `✅ Word 텍스트 추출 완료: ${extractedText.length} 문자`,
+            );
           } catch (docError) {
             console.error('Word 추출 실패:', docError);
-            throw new Error(`Word 문서를 처리할 수 없습니다: ${docError.message}`);
+            throw new Error(
+              `Word 문서를 처리할 수 없습니다: ${docError.message}`,
+            );
           }
           break;
 
@@ -431,10 +449,14 @@ export class DocumentService {
               excelText += `=== ${sheetName} ===\n${sheetText}\n\n`;
             });
             extractedText = excelText;
-            console.log(`✅ Excel 텍스트 추출 완료: ${extractedText.length} 문자, ${workbook.SheetNames.length}개 시트`);
+            console.log(
+              `✅ Excel 텍스트 추출 완료: ${extractedText.length} 문자, ${workbook.SheetNames.length}개 시트`,
+            );
           } catch (excelError) {
             console.error('Excel 추출 실패:', excelError);
-            throw new Error(`Excel 파일을 처리할 수 없습니다: ${excelError.message}`);
+            throw new Error(
+              `Excel 파일을 처리할 수 없습니다: ${excelError.message}`,
+            );
           }
           break;
 
@@ -442,15 +464,21 @@ export class DocumentService {
           console.log('텍스트 파일 처리 중...');
           try {
             extractedText = buffer.toString('utf-8');
-            console.log(`✅ 텍스트 파일 추출 완료: ${extractedText.length} 문자`);
+            console.log(
+              `✅ 텍스트 파일 추출 완료: ${extractedText.length} 문자`,
+            );
           } catch (textError) {
             console.error('텍스트 추출 실패:', textError);
             // UTF-8로 실패하면 다른 인코딩 시도
             try {
               extractedText = buffer.toString('latin1');
-              console.log(`✅ 텍스트 파일 추출 완료 (latin1): ${extractedText.length} 문자`);
+              console.log(
+                `✅ 텍스트 파일 추출 완료 (latin1): ${extractedText.length} 문자`,
+              );
             } catch (fallbackError) {
-              throw new Error(`텍스트 파일을 처리할 수 없습니다: ${textError.message}`);
+              throw new Error(
+                `텍스트 파일을 처리할 수 없습니다: ${textError.message}`,
+              );
             }
           }
           break;
@@ -463,28 +491,31 @@ export class DocumentService {
 
       // 텍스트 검증
       if (!extractedText || extractedText.trim().length === 0) {
-        throw new Error('파일에서 텍스트를 찾을 수 없습니다. 빈 파일이거나 텍스트 내용이 없는 파일입니다.');
+        throw new Error(
+          '파일에서 텍스트를 찾을 수 없습니다. 빈 파일이거나 텍스트 내용이 없는 파일입니다.',
+        );
       }
 
       // 최소 길이 검증 (너무 짧은 텍스트 방지)
       if (extractedText.trim().length < 10) {
-        console.warn(`⚠️ 추출된 텍스트가 매우 짧습니다: "${extractedText.trim()}"`);
+        console.warn(
+          `⚠️ 추출된 텍스트가 매우 짧습니다: "${extractedText.trim()}"`,
+        );
       }
 
       console.log(`🎉 텍스트 추출 완료: ${extractedText.length} 문자`);
       return extractedText;
-
     } catch (error) {
       console.error('❌ 텍스트 추출 실패:', {
         file: originalname,
         mimetype,
         bufferSize: buffer.length,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       throw new BadRequestException(
-        `파일에서 텍스트를 추출할 수 없습니다: ${error.message}`
+        `파일에서 텍스트를 추출할 수 없습니다: ${error.message}`,
       );
     }
   }
@@ -800,4 +831,19 @@ export class DocumentService {
     return Array.from(suggestions).slice(0, limit);
   }
 
+  /**
+   * ID로 문서를 조회합니다.
+   */
+  async getDocumentById(
+    id: string,
+    organizationId: string,
+  ): Promise<Document | null> {
+    return this.documentRepository.findOne({
+      where: {
+        id,
+        organizationId,
+      },
+      relations: ['uploadedBy', 'organization'],
+    });
+  }
 }

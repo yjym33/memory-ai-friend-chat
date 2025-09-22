@@ -182,7 +182,8 @@ export class ChatController {
   @Post('completion/:conversationId')
   async chatCompletion(
     @Param('conversationId') conversationId: number,
-    @Body() body: { message: string; file?: any; mode?: 'personal' | 'business' },
+    @Body()
+    body: { message: string; file?: any; mode?: 'personal' | 'business' },
     @Request() req: AuthenticatedRequest,
   ) {
     try {
@@ -194,7 +195,8 @@ export class ChatController {
       );
 
       // 2) 대화 내용 업데이트
-      const conversation = await this.chatService.getConversation(conversationId);
+      const conversation =
+        await this.chatService.getConversation(conversationId);
       if (!conversation) {
         throw new NotFoundException('대화를 찾을 수 없습니다.');
       }
