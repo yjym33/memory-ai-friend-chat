@@ -78,6 +78,7 @@ export class Document {
     lastModified?: Date;
     pageCount?: number;
     processingStatus?: string;
+    errorMessage?: string;
   };
 
   @ManyToOne(() => Organization, { nullable: true })

@@ -234,9 +234,21 @@ export class ChatService {
     conversationId: number,
     message: string,
     aiSettings: AiSettings,
-  ): Promise<string> {
+  ): Promise<{
+    response: string;
+    sources: Array<{
+      title: string;
+      documentId: string;
+      type?: string;
+      relevance: number;
+      snippet: string;
+    }>;
+  }> {
     if (!user.organizationId) {
-      return '기업 모드를 사용하려면 조직에 속해야 합니다.';
+      return {
+        response: '기업 모드를 사용하려면 조직에 속해야 합니다.',
+        sources: [],
+      };
     }
 
     try {
@@ -260,7 +272,10 @@ export class ChatService {
       // 2. 검색 결과가 없는 경우
       if (searchResults.length === 0) {
         console.log('❌ 관련 문서를 찾을 수 없음');
-        return this.generateNoResultsResponse(message, aiSettings);
+        return {
+          response: this.generateNoResultsResponse(message, aiSettings),
+          sources: [],
+        };
       }
 
       // 3. 검색 결과를 컨텍스트로 활용하여 LLM 응답 생성
@@ -270,25 +285,39 @@ export class ChatService {
       console.log('🤖 AI 응답 생성 중...');
       const response = await this.generateLLMResponse(prompt);
 
-      // 4. 출처 정보 추가 (설정에 따라)
+      // 4. 출처 정보 생성
+      const extractedSources = searchResults.slice(0, 5).map((r) => ({
+        title: r.document?.title,
+        documentId: r.document?.id,
+        type: r.document?.type,
+        relevance: Number(r.score.toFixed(3)),
+        snippet:
+          (r.chunk?.content || '').substring(0, 220).replace(/\s+/g, ' ') +
+          ((r.chunk?.content || '').length > 220 ? '...' : ''),
+      }));
+
+      // 5. 출처 정보 추가 (설정에 따라)
       if (aiSettings.businessSettings?.includeSourceCitations !== false) {
         const finalResponse = this.addSourceCitations(response, searchResults);
         console.log('✅ 기업모드 응답 생성 완료 (출처 포함)');
-        return finalResponse;
+        return { response: finalResponse, sources: extractedSources };
       }
 
       console.log('✅ 기업모드 응답 생성 완료');
-      return response;
+      return { response, sources: extractedSources };
     } catch (error) {
       console.error('❌ 기업 모드 메시지 처리 실패:', error);
-      return `죄송합니다. 문서 검색 중 오류가 발생했습니다. 
+      return {
+        response: `죄송합니다. 문서 검색 중 오류가 발생했습니다. 
 
 📝 **문제 해결 방법:**
 1. 다른 키워드로 다시 검색해보세요
 2. 문서가 업로드되어 있는지 확인해주세요
 3. 관리자에게 문의해주세요
 
-🔧 오류 정보: ${error.message}`;
+🔧 오류 정보: ${error.message}`,
+        sources: [],
+      };
     }
   }
 
