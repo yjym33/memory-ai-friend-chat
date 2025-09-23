@@ -125,7 +125,13 @@ export class ChatService {
       role: "assistant",
       content: response.response,
       timestamp: new Date().toISOString(),
-      sources: response.sources, // 출처 정보 추가
+      sources: response.sources as Array<{
+        title: string;
+        documentId: string;
+        type?: string;
+        relevance: number;
+        snippet: string;
+      }>, // 출처 정보 추가
     };
   }
 

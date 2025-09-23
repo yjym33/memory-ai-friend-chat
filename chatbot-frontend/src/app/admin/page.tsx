@@ -104,7 +104,8 @@ export default function AdminPage() {
   >("all");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [embeddingStatus, setEmbeddingStatus] = useState<EmbeddingStatus | null>(null);
+  const [embeddingStatus, setEmbeddingStatus] =
+    useState<EmbeddingStatus | null>(null);
   const [reprocessingEmbeddings, setReprocessingEmbeddings] = useState(false);
 
   // 권한 확인
@@ -118,14 +119,14 @@ export default function AdminPage() {
 
       const storedRole = localStorage.getItem("role");
       const currentRole = role || storedRole;
-      
+
       if (!["super_admin", "admin"].includes(currentRole || "")) {
         console.log("No admin permission, current role:", currentRole);
         alert("관리자 권한이 필요합니다.");
         router.push("/");
         return;
       }
-      
+
       console.log("Admin permission confirmed, role:", currentRole);
     };
 
@@ -166,7 +167,7 @@ export default function AdminPage() {
   const loadUsers = async () => {
     try {
       console.log("Loading users with token:", token?.substring(0, 20) + "...");
-      
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "20",
@@ -184,11 +185,19 @@ export default function AdminPage() {
       console.log("Users API Response:", response);
       console.log("Response type:", typeof response);
       console.log("Response keys:", Object.keys(response || {}));
-      
+
       // apiClient는 이미 response.data를 반환하므로 직접 접근
-      if (response && response.users && Array.isArray(response.users)) {
-        setUsers(response.users);
-        setTotalPages(response.pagination?.totalPages || 1);
+      const typedResponse = response as {
+        users?: User[];
+        pagination?: { totalPages?: number };
+      };
+      if (
+        typedResponse &&
+        typedResponse.users &&
+        Array.isArray(typedResponse.users)
+      ) {
+        setUsers(typedResponse.users);
+        setTotalPages(typedResponse.pagination?.totalPages || 1);
       } else {
         console.error("Invalid users response structure:", response);
         console.error("Expected: { users: Array, pagination: Object }");
@@ -200,7 +209,7 @@ export default function AdminPage() {
       console.error("Error details:", {
         status: error.response?.status,
         message: error.response?.data?.message,
-        data: error.response?.data
+        data: error.response?.data,
       });
       setUsers([]);
       setTotalPages(1);
@@ -213,7 +222,7 @@ export default function AdminPage() {
       console.log("Statistics API Response:", response);
 
       if (response && typeof response === "object") {
-        setStatistics(response);
+        setStatistics(response as Statistics);
       } else {
         console.error("Invalid statistics response structure:", response);
         setStatistics(null);
@@ -239,12 +248,20 @@ export default function AdminPage() {
       console.log("Documents API Response:", response);
 
       // 수정된 문서 API는 { documents: [...], pagination: {...} } 구조로 반환
-      if (response && response.documents) {
-        setDocuments(response.documents);
-        setTotalPages(response.pagination?.totalPages || 1);
-      } else if (Array.isArray(response)) {
+      const typedResponse = response as
+        | { documents?: Document[]; pagination?: { totalPages?: number } }
+        | Document[];
+      if (
+        typedResponse &&
+        typeof typedResponse === "object" &&
+        "documents" in typedResponse &&
+        typedResponse.documents
+      ) {
+        setDocuments(typedResponse.documents);
+        setTotalPages(typedResponse.pagination?.totalPages || 1);
+      } else if (Array.isArray(typedResponse)) {
         // 이전 구조와의 호환성
-        setDocuments(response);
+        setDocuments(typedResponse);
         setTotalPages(1);
       } else {
         console.error("Invalid documents response structure:", response);
@@ -277,7 +294,7 @@ export default function AdminPage() {
     try {
       const response = await apiClient.get("/documents/embedding-status");
       console.log("Embedding Status API Response:", response);
-      setEmbeddingStatus(response);
+      setEmbeddingStatus(response as EmbeddingStatus);
     } catch (error) {
       console.error("임베딩 상태 로딩 실패:", error);
       setEmbeddingStatus(null);
@@ -285,15 +302,21 @@ export default function AdminPage() {
   };
 
   const handleReprocessEmbeddings = async () => {
-    if (!confirm("누락된 임베딩을 재처리하시겠습니까? 시간이 오래 걸릴 수 있습니다.")) {
+    if (
+      !confirm(
+        "누락된 임베딩을 재처리하시겠습니까? 시간이 오래 걸릴 수 있습니다."
+      )
+    ) {
       return;
     }
 
     setReprocessingEmbeddings(true);
     try {
       const response = await apiClient.post("/documents/reprocess-embeddings");
-      alert("임베딩 재처리가 시작되었습니다. 완료까지 시간이 걸릴 수 있습니다.");
-      
+      alert(
+        "임베딩 재처리가 시작되었습니다. 완료까지 시간이 걸릴 수 있습니다."
+      );
+
       // 상태 새로고침
       setTimeout(() => {
         loadEmbeddingStatus();
@@ -322,8 +345,14 @@ export default function AdminPage() {
 
     try {
       for (const file of Array.from(files)) {
-        console.log(`📄 업로드 중: ${file.name} (${file.type}, ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-        
+        console.log(
+          `📄 업로드 중: ${file.name} (${file.type}, ${(
+            file.size /
+            1024 /
+            1024
+          ).toFixed(2)}MB)`
+        );
+
         try {
           // 파일 크기 검증 (50MB 제한)
           if (file.size > 50 * 1024 * 1024) {
@@ -332,12 +361,12 @@ export default function AdminPage() {
 
           // 파일 타입 검증
           const allowedTypes = [
-            'application/pdf',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-excel',
-            'text/plain'
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
+            "text/plain",
           ];
 
           if (!allowedTypes.includes(file.type)) {
@@ -346,57 +375,70 @@ export default function AdminPage() {
 
           const formData = new FormData();
           formData.append("file", file);
-          
+
           // 안전한 제목 생성
           const safeTitle = file.name
             .replace(/\.[^/.]+$/, "") // 확장자 제거
             .replace(/[^\w\s가-힣.-]/g, "_") // 특수문자를 언더스코어로
             .slice(0, 100); // 길이 제한
-          
+
           formData.append("title", safeTitle);
-          
+
           // 파일 타입에 따른 문서 타입 설정
-          const fileExt = file.name.split('.').pop()?.toLowerCase();
+          const fileExt = file.name.split(".").pop()?.toLowerCase();
           let docType = "manual";
           if (fileExt === "pdf") docType = "manual";
           else if (["doc", "docx"].includes(fileExt!)) docType = "procedure";
           else if (["xls", "xlsx"].includes(fileExt!)) docType = "report";
           else if (fileExt === "txt") docType = "faq";
-          
-          formData.append("type", docType);
-          formData.append("description", `관리자가 업로드한 ${docType} 문서: ${file.name} (크기: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
 
-           console.log(`🚀 API 호출: /documents/upload`);
-           
-           const response = await apiClient.post("/documents/upload", formData, {
-             timeout: 60000, // 60초 타임아웃
-             // Content-Type 헤더를 명시적으로 제거하여 브라우저가 자동 설정하도록 함
-           });
+          formData.append("type", docType);
+          formData.append(
+            "description",
+            `관리자가 업로드한 ${docType} 문서: ${file.name} (크기: ${(
+              file.size /
+              1024 /
+              1024
+            ).toFixed(2)}MB)`
+          );
+
+          console.log(`🚀 API 호출: /documents/upload`);
+
+          const response = await apiClient.post("/documents/upload", formData, {
+            timeout: 60000, // 60초 타임아웃
+            // Content-Type 헤더를 명시적으로 제거하여 브라우저가 자동 설정하도록 함
+          });
 
           console.log(`✅ 업로드 성공: ${file.name}`, response);
           successCount++;
         } catch (error: any) {
           console.error(`❌ 업로드 실패: ${file.name}`, error);
           errorCount++;
-          
+
           let errorMessage = error.message;
           if (error.response?.data?.message) {
             errorMessage = error.response.data.message;
           } else if (error.response?.status) {
             errorMessage = `서버 오류 (${error.response.status}): ${error.response.statusText}`;
           }
-          
+
           errors.push(`${file.name}: ${errorMessage}`);
         }
       }
 
       // 결과 메시지 표시
       if (successCount > 0 && errorCount === 0) {
-        alert(`✅ ${successCount}개 파일이 성공적으로 업로드되었습니다.\n\n문서가 VectorDB에 임베딩되어 기업모드 AI 채팅에서 활용됩니다.`);
+        alert(
+          `✅ ${successCount}개 파일이 성공적으로 업로드되었습니다.\n\n문서가 VectorDB에 임베딩되어 기업모드 AI 채팅에서 활용됩니다.`
+        );
       } else if (successCount > 0 && errorCount > 0) {
-        alert(`⚠️ ${successCount}개 파일은 성공, ${errorCount}개 파일은 실패했습니다.\n\n실패한 파일:\n${errors.join('\n')}`);
+        alert(
+          `⚠️ ${successCount}개 파일은 성공, ${errorCount}개 파일은 실패했습니다.\n\n실패한 파일:\n${errors.join(
+            "\n"
+          )}`
+        );
       } else {
-        alert(`❌ 모든 파일 업로드에 실패했습니다:\n${errors.join('\n')}`);
+        alert(`❌ 모든 파일 업로드에 실패했습니다:\n${errors.join("\n")}`);
       }
 
       if (successCount > 0) {
@@ -519,7 +561,11 @@ export default function AdminPage() {
   };
 
   // 권한이 없으면 렌더링하지 않음
-  if (!isAuthenticated || !token || !["super_admin", "admin"].includes(role || "")) {
+  if (
+    !isAuthenticated ||
+    !token ||
+    !["super_admin", "admin"].includes(role || "")
+  ) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -963,7 +1009,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* 문서 관리 안내 */}
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                   <div className="flex">
@@ -976,9 +1022,17 @@ export default function AdminPage() {
                       </h3>
                       <div className="mt-2 text-sm text-blue-700">
                         <ul className="list-disc pl-5 space-y-1">
-                          <li>업로드된 문서는 VectorDB에 임베딩되어 기업모드 AI 채팅에서 활용됩니다</li>
-                          <li>지원 파일 형식: PDF, DOC, DOCX, XLS, XLSX, TXT</li>
-                          <li>기업 사용자가 기업모드에서 질문 시 관련 문서 내용을 참조하여 답변합니다</li>
+                          <li>
+                            업로드된 문서는 VectorDB에 임베딩되어 기업모드 AI
+                            채팅에서 활용됩니다
+                          </li>
+                          <li>
+                            지원 파일 형식: PDF, DOC, DOCX, XLS, XLSX, TXT
+                          </li>
+                          <li>
+                            기업 사용자가 기업모드에서 질문 시 관련 문서 내용을
+                            참조하여 답변합니다
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -1001,33 +1055,45 @@ export default function AdminPage() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <div>
                                 <span className="font-medium">전체 청크:</span>
-                                <div className="text-lg font-bold">{embeddingStatus.totalChunks}</div>
+                                <div className="text-lg font-bold">
+                                  {embeddingStatus.totalChunks}
+                                </div>
                               </div>
                               <div>
-                                <span className="font-medium">임베딩 완료:</span>
-                                <div className="text-lg font-bold text-green-600">{embeddingStatus.embeddedChunks}</div>
+                                <span className="font-medium">
+                                  임베딩 완료:
+                                </span>
+                                <div className="text-lg font-bold text-green-600">
+                                  {embeddingStatus.embeddedChunks}
+                                </div>
                               </div>
                               <div>
                                 <span className="font-medium">처리 대기:</span>
-                                <div className="text-lg font-bold text-orange-600">{embeddingStatus.pendingChunks}</div>
+                                <div className="text-lg font-bold text-orange-600">
+                                  {embeddingStatus.pendingChunks}
+                                </div>
                               </div>
                               <div>
                                 <span className="font-medium">진행률:</span>
-                                <div className="text-lg font-bold text-blue-600">{embeddingStatus.embeddingProgress}%</div>
+                                <div className="text-lg font-bold text-blue-600">
+                                  {embeddingStatus.embeddingProgress}%
+                                </div>
                               </div>
                             </div>
                             <div className="mt-3">
                               <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
                                   className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${embeddingStatus.embeddingProgress}%` }}
+                                  style={{
+                                    width: `${embeddingStatus.embeddingProgress}%`,
+                                  }}
                                 ></div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {embeddingStatus.pendingChunks > 0 && (
                         <button
                           onClick={handleReprocessEmbeddings}
@@ -1038,7 +1104,11 @@ export default function AdminPage() {
                               : "bg-green-100 text-green-700 hover:bg-green-200"
                           }`}
                         >
-                          <RefreshCw className={`w-3 h-3 mr-1 ${reprocessingEmbeddings ? 'animate-spin' : ''}`} />
+                          <RefreshCw
+                            className={`w-3 h-3 mr-1 ${
+                              reprocessingEmbeddings ? "animate-spin" : ""
+                            }`}
+                          />
                           {reprocessingEmbeddings ? "재처리 중..." : "재처리"}
                         </button>
                       )}

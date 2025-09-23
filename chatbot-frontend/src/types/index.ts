@@ -20,6 +20,13 @@ export interface Message {
   // 프론트엔드에서만 사용하는 추가 필드들
   id?: string;
   timestamp?: Date | string;
+  sources?: Array<{
+    title: string;
+    documentId: string;
+    type?: string;
+    relevance: number;
+    snippet: string;
+  }>;
 }
 
 // =====================================

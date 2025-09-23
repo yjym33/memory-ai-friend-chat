@@ -37,7 +37,7 @@ export function ChatModeSwitch({
         const data = await apiClient.get<{ availableModes: string[] }>(
           "/ai-settings/available-modes"
         );
-        setAvailableModes(data.availableModes);
+        setAvailableModes(data.availableModes as ChatMode[]);
       } catch (error) {
         console.error("사용 가능한 모드 조회 실패:", error);
         setAvailableModes([ChatMode.PERSONAL]);

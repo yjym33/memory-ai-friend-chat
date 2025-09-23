@@ -51,9 +51,15 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (credentials: RegisterCredentials) => {
       // RegisterCredentials를 RegisterData로 변환
-      const { passwordCheck, ...registerData } = credentials;
+      const { passwordCheck, ...rest } = credentials;
       // passwordCheck는 프론트엔드에서만 사용하므로 백엔드에 전송하지 않음
       void passwordCheck;
+
+      const registerData = {
+        ...rest,
+        birthYear: parseInt(rest.birthYear, 10), // string을 number로 변환
+      };
+
       return await AuthService.register(registerData);
     },
     onSuccess: (data) => {
