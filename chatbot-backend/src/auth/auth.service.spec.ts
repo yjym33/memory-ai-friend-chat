@@ -18,7 +18,10 @@ describe('AuthService', () => {
     password: 'hashedPassword',
     name: 'Test User',
     gender: 'male',
-    birthYear: '1990',
+    birthYear: 1990,
+    userType: 'individual' as any,
+    role: 'user' as any,
+    businessProfile: {},
     conversations: [],
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -73,7 +76,7 @@ describe('AuthService', () => {
         'password123',
         'Test User',
         'male',
-        '1990',
+        1990,
       );
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
@@ -97,7 +100,7 @@ describe('AuthService', () => {
           'password123',
           'Test User',
           'male',
-          '1990',
+          1990,
         ),
       ).rejects.toThrow(ConflictException);
     });

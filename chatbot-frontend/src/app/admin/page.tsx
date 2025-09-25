@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../services/apiClient";
 import { useAuthStore } from "../../store/authStore";
+import { logger } from "../../lib/logger";
 import {
   Users,
   Settings,
@@ -112,7 +113,7 @@ export default function AdminPage() {
   useEffect(() => {
     const checkPermission = () => {
       if (!isAuthenticated || !token) {
-        console.log("No authentication, redirecting to login");
+        logger.info("인증되지 않은 사용자, 로그인 페이지로 리다이렉트");
         router.push("/login");
         return;
       }
@@ -121,13 +122,13 @@ export default function AdminPage() {
       const currentRole = role || storedRole;
 
       if (!["super_admin", "admin"].includes(currentRole || "")) {
-        console.log("No admin permission, current role:", currentRole);
+        logger.warn("관리자 권한 없음", { currentRole });
         alert("관리자 권한이 필요합니다.");
         router.push("/");
         return;
       }
 
-      console.log("Admin permission confirmed, role:", currentRole);
+      logger.info("관리자 권한 확인됨", { role: currentRole });
     };
 
     // 약간의 지연을 두어 상태가 완전히 로드된 후 체크
@@ -153,7 +154,7 @@ export default function AdminPage() {
       } else if (activeTab === "organizations") {
         await loadOrganizations();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("데이터 로딩 실패:", error);
       setError(
         error.response?.data?.message ||
@@ -180,11 +181,7 @@ export default function AdminPage() {
         params.append("userType", filterUserType);
       }
 
-      console.log("Calling API:", `/admin/users?${params}`);
       const response = await apiClient.get(`/admin/users?${params}`);
-      console.log("Users API Response:", response);
-      console.log("Response type:", typeof response);
-      console.log("Response keys:", Object.keys(response || {}));
 
       // apiClient는 이미 response.data를 반환하므로 직접 접근
       const typedResponse = response as {
@@ -199,12 +196,11 @@ export default function AdminPage() {
         setUsers(typedResponse.users);
         setTotalPages(typedResponse.pagination?.totalPages || 1);
       } else {
-        console.error("Invalid users response structure:", response);
-        console.error("Expected: { users: Array, pagination: Object }");
+        logger.error("잘못된 사용자 응답 구조", { response });
         setUsers([]);
         setTotalPages(1);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("사용자 목록 로딩 실패:", error);
       console.error("Error details:", {
         status: error.response?.status,
@@ -321,7 +317,7 @@ export default function AdminPage() {
       setTimeout(() => {
         loadEmbeddingStatus();
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
         "임베딩 재처리 실패: " +
           (error.response?.data?.message || error.message)
@@ -411,7 +407,7 @@ export default function AdminPage() {
 
           console.log(`✅ 업로드 성공: ${file.name}`, response);
           successCount++;
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(`❌ 업로드 실패: ${file.name}`, error);
           errorCount++;
 
@@ -448,7 +444,7 @@ export default function AdminPage() {
           loadEmbeddingStatus();
         }, 1000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
         "파일 업로드 중 예상치 못한 오류가 발생했습니다: " +
           (error.response?.data?.message || error.message)
@@ -466,7 +462,7 @@ export default function AdminPage() {
       await apiClient.delete(`/documents/${documentId}`);
       alert("문서가 삭제되었습니다.");
       await loadDocuments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
         "문서 삭제에 실패했습니다: " +
           (error.response?.data?.message || error.message)
@@ -497,7 +493,7 @@ export default function AdminPage() {
         } 사용자로 변경되었습니다.`
       );
       await loadUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
         "사용자 유형 변경에 실패했습니다: " +
           (error.response?.data?.message || error.message)
@@ -525,7 +521,7 @@ export default function AdminPage() {
       }
 
       await loadUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
         "기업 모드 상태 변경에 실패했습니다: " +
           (error.response?.data?.message || error.message)

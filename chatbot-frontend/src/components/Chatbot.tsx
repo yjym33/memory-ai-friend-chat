@@ -12,7 +12,7 @@ import AiSettingsModal from "./AiSettingsModal";
 import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
 import { ChatMode } from "./ChatModeSwitch";
-import { UploadedFile } from "../types";
+import { UploadedFile, Message } from "../types";
 import { Menu, Settings, FileText, BookOpen } from "lucide-react";
 
 export default function Chatbot() {
@@ -60,14 +60,9 @@ export default function Chatbot() {
   // 최신 AI 응답의 참고 문서 수집 (기업 모드용)
   const latestAssistantWithSources = [...(activeConversation?.messages || [])]
     .reverse()
-    .find((m) => m.role === "assistant" && (m as any).sources?.length);
-  const currentSources: Array<{
-    title: string;
-    documentId?: string;
-    type?: string;
-    relevance: number;
-    snippet?: string;
-  }> = (latestAssistantWithSources as any)?.sources || [];
+    .find((m) => m.role === "assistant" && m.sources?.length);
+  const currentSources: NonNullable<Message["sources"]> =
+    latestAssistantWithSources?.sources || [];
 
   // 메시지 전송 처리
   const handleSendMessage = async (message?: string, file?: UploadedFile) => {

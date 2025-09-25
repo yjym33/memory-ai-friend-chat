@@ -41,7 +41,7 @@ describe('UploadController', () => {
         filename: 'test-123.txt',
         path: 'uploads/test-123.txt',
         buffer: Buffer.from('test content'),
-        stream: undefined,
+        stream: null as any,
       };
 
       const expectedResult = {
@@ -70,7 +70,7 @@ describe('UploadController', () => {
         filename: 'document-456.pdf',
         path: 'uploads/document-456.pdf',
         buffer: Buffer.from('pdf content'),
-        stream: undefined,
+        stream: null as any,
       };
 
       const expectedResult = {

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { error as toastError, success as toastSuccess } from "../lib/toast";
+import { logger } from "../lib/logger";
 
-export interface WebSocketMessage {
+export interface WebSocketMessage<T = unknown> {
   type: string;
-  data: any;
+  data: T;
   timestamp: number;
 }
 
@@ -14,7 +15,7 @@ export interface WebSocketConfig {
   maxReconnectAttempts?: number;
   heartbeatInterval?: number;
   onOpen?: (event: Event) => void;
-  onMessage?: (message: WebSocketMessage) => void;
+  onMessage?: (message: WebSocketMessage<unknown>) => void;
   onError?: (error: Event) => void;
   onClose?: (event: CloseEvent) => void;
 }
@@ -24,7 +25,7 @@ export interface WebSocketState {
   isConnecting: boolean;
   error: string | null;
   reconnectAttempts: number;
-  lastMessage: WebSocketMessage | null;
+  lastMessage: WebSocketMessage<unknown> | null;
   connectionId: string | null;
 }
 
@@ -45,7 +46,7 @@ export function useWebSocket(config: WebSocketConfig) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const messageQueueRef = useRef<WebSocketMessage[]>([]);
+  const messageQueueRef = useRef<WebSocketMessage<unknown>[]>([]);
   const configRef = useRef(config);
 
   // 설정 업데이트
@@ -77,7 +78,7 @@ export function useWebSocket(config: WebSocketConfig) {
       );
 
       ws.onopen = (event) => {
-        console.log("🔗 WebSocket 연결 성공:", configRef.current.url);
+        logger.info("WebSocket 연결 성공", { url: configRef.current.url });
 
         setState((prev) => ({
           ...prev,
@@ -107,7 +108,7 @@ export function useWebSocket(config: WebSocketConfig) {
 
       ws.onmessage = (event) => {
         try {
-          const message: WebSocketMessage = JSON.parse(event.data);
+          const message: WebSocketMessage<unknown> = JSON.parse(event.data);
 
           setState((prev) => ({
             ...prev,
@@ -116,12 +117,12 @@ export function useWebSocket(config: WebSocketConfig) {
 
           configRef.current.onMessage?.(message);
         } catch (error) {
-          console.error("WebSocket 메시지 파싱 오류:", error);
+          logger.error("WebSocket 메시지 파싱 오류", error);
         }
       };
 
       ws.onerror = (event) => {
-        console.error("WebSocket 오류:", event);
+        logger.error("WebSocket 오류", event);
 
         setState((prev) => ({
           ...prev,
@@ -132,7 +133,10 @@ export function useWebSocket(config: WebSocketConfig) {
       };
 
       ws.onclose = (event) => {
-        console.log("🔌 WebSocket 연결 종료:", event.code, event.reason);
+        logger.info("WebSocket 연결 종료", {
+          code: event.code,
+          reason: event.reason,
+        });
 
         setState((prev) => ({
           ...prev,
@@ -152,7 +156,7 @@ export function useWebSocket(config: WebSocketConfig) {
 
       wsRef.current = ws;
     } catch (error) {
-      console.error("WebSocket 연결 생성 실패:", error);
+      logger.error("WebSocket 연결 생성 실패", error);
       setState((prev) => ({
         ...prev,
         isConnecting: false,
@@ -204,9 +208,11 @@ export function useWebSocket(config: WebSocketConfig) {
       }
 
       const nextAttempt = prev.reconnectAttempts + 1;
-      console.log(
-        `🔄 WebSocket 재연결 시도 ${nextAttempt}/${maxAttempts} (${interval}ms 후)`
-      );
+      logger.info("WebSocket 재연결 시도", {
+        attempt: nextAttempt,
+        maxAttempts,
+        delayMs: interval * nextAttempt,
+      });
 
       reconnectTimeoutRef.current = setTimeout(() => {
         connect();
@@ -249,19 +255,19 @@ export function useWebSocket(config: WebSocketConfig) {
   /**
    * 메시지 전송
    */
-  const sendMessage = useCallback((message: WebSocketMessage) => {
+  const sendMessage = useCallback((message: WebSocketMessage<unknown>) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       try {
         wsRef.current.send(JSON.stringify(message));
         return true;
       } catch (error) {
-        console.error("메시지 전송 실패:", error);
+        logger.error("메시지 전송 실패", error);
         return false;
       }
     } else {
       // 연결이 안 되어 있으면 큐에 저장
       messageQueueRef.current.push(message);
-      console.log("메시지가 큐에 저장되었습니다:", message.type);
+      logger.debug("메시지가 큐에 저장됨", { type: message.type });
       return false;
     }
   }, []);
@@ -270,7 +276,7 @@ export function useWebSocket(config: WebSocketConfig) {
    * 특정 타입의 메시지 전송 (편의 함수)
    */
   const sendTypedMessage = useCallback(
-    (type: string, data: any) => {
+    <T = unknown>(type: string, data: T) => {
       return sendMessage({
         type,
         data,
@@ -309,7 +315,7 @@ export function useWebSocket(config: WebSocketConfig) {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && !state.isConnected) {
-        console.log("🔄 브라우저 활성화 - WebSocket 재연결 시도");
+        logger.info("브라우저 활성화 - WebSocket 재연결 시도");
         connect();
       }
     };
@@ -354,9 +360,9 @@ export function useChatWebSocket(chatId?: string) {
     onMessage: (message) => {
       // 채팅 메시지 특별 처리
       if (message.type === "chat_message") {
-        console.log("💬 새 채팅 메시지:", message.data);
+        logger.debug("새 채팅 메시지", message.data);
       } else if (message.type === "typing_indicator") {
-        console.log("⌨️ 타이핑 표시:", message.data);
+        logger.debug("타이핑 표시", message.data);
       }
     },
   });

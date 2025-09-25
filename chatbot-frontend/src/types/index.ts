@@ -25,7 +25,7 @@ export interface Message {
     documentId: string;
     type?: string;
     relevance: number;
-    snippet: string;
+    snippet?: string;
   }>;
 }
 
