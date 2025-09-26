@@ -1,6 +1,7 @@
 import { Providers } from "./providers";
 import "./globals.css";
 import type { Metadata } from "next";
+import { ErrorBoundary } from "../components/error/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "AI 친구와의 대화",
@@ -40,7 +41,9 @@ export default function RootLayout({
         <link rel="icon" href="/icon-192x192.png" />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <ErrorBoundary>
+          <Providers>{children}</Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -1,73 +1,10 @@
 import axiosInstance from "../utils/axios";
-import { error as toastError } from "../lib/toast";
-
-/**
- * API 에러 타입 정의
- */
-interface ApiError {
-  response?: {
-    status?: number;
-    data?: {
-      message?: string;
-      error?: string;
-    };
-  };
-  message?: string;
-}
-
-/**
- * 에러 메시지 추출
- */
-const extractErrorMessage = (error: unknown): string => {
-  const apiError = error as ApiError;
-
-  if (apiError.response?.data?.message) {
-    return apiError.response.data.message;
-  }
-  if (apiError.response?.data?.error) {
-    return apiError.response.data.error;
-  }
-  if (apiError.message) {
-    return apiError.message;
-  }
-  return "알 수 없는 오류가 발생했습니다.";
-};
-
-/**
- * 특정 HTTP 상태 코드에 따른 에러 처리
- */
-const handleSpecificErrors = (
-  statusCode: number | undefined,
-  message: string
-): void => {
-  switch (statusCode) {
-    case 401:
-      toastError("인증이 필요합니다. 다시 로그인해주세요.");
-      break;
-    case 403:
-      toastError("접근 권한이 없습니다.");
-      break;
-    case 404:
-      toastError("요청한 리소스를 찾을 수 없습니다.");
-      break;
-    case 422:
-      toastError("입력 데이터가 올바르지 않습니다.");
-      break;
-    case 429:
-      toastError("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
-      break;
-    case 500:
-      toastError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      break;
-    default:
-      if (statusCode && statusCode >= 400) {
-        toastError(message || `오류가 발생했습니다. (${statusCode})`);
-      }
-  }
-};
+import { errorHandler } from "../lib/errorHandler";
+import { logger } from "../lib/logger";
 
 /**
  * API 클라이언트 - 모든 HTTP 요청을 처리하는 중앙집중식 클라이언트
+ * 새로운 에러 핸들링 시스템을 사용합니다.
  */
 export const apiClient = {
   /**
@@ -88,19 +25,62 @@ export const apiClient = {
       });
       return response.data;
     } catch (error: unknown) {
-      // 에러 로깅
-      console.error(`API 요청 실패 [${method} ${url}]:`, error);
+      // 새로운 에러 핸들링 시스템 사용
+      let appError;
 
-      // 상세한 에러 정보 추출
-      const errorMessage = extractErrorMessage(error);
-      const apiError = error as ApiError;
-      const statusCode = apiError.response?.status;
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as any;
 
-      // 특정 상태 코드에 따른 처리
-      handleSpecificErrors(statusCode, errorMessage);
+        if (axiosError.response) {
+          // HTTP 에러 응답
+          appError = errorHandler.createHttpError(
+            axiosError.message || "API 요청 실패",
+            axiosError.response.status,
+            axiosError.response.statusText,
+            {
+              url: axiosError.config?.url,
+              method: axiosError.config?.method,
+              context: {
+                requestData: axiosError.config?.data,
+                responseData: axiosError.response.data,
+              },
+            }
+          );
+        } else if (axiosError.request) {
+          // 네트워크 에러
+          appError = errorHandler.createNetworkError(
+            "네트워크 연결을 확인해주세요.",
+            {
+              context: {
+                url: axiosError.config?.url,
+                method: axiosError.config?.method,
+              },
+            }
+          );
+        } else {
+          // 요청 설정 에러
+          appError = errorHandler.createApiError(
+            axiosError.message || "API 요청 설정 오류",
+            axiosError.config?.url
+          );
+        }
+      } else {
+        // 일반 에러
+        appError = errorHandler.createSystemError(
+          error instanceof Error ? error.message : "알 수 없는 오류",
+          error
+        );
+      }
+
+      // 에러 처리 (토스트는 표시하지 않고 에러 리스너들에게만 알림)
+      await errorHandler.handleError(appError, {
+        showToast: false, // 호출하는 곳에서 결정하도록
+        reportToService: true,
+        logToConsole: true,
+      });
 
       // 에러 재던지기 (호출하는 곳에서 추가 처리 가능)
-      throw error;
+      throw appError;
     }
   },
 

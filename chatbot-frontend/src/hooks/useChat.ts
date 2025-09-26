@@ -3,6 +3,7 @@ import { ChatService } from "../services";
 import { Message, Conversation } from "../types";
 import { error as toastError } from "../lib/toast";
 import { ChatMode } from "../components/ChatModeSwitch";
+import { useErrorHandler } from "./useErrorHandler";
 
 /**
  * 채팅 관리를 위한 커스텀 훅
@@ -11,6 +12,7 @@ export function useChat() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const { handleError, createApiError } = useErrorHandler();
 
   // 현재 활성 대화
   const activeConversation = conversations.find(
@@ -28,7 +30,11 @@ export function useChat() {
         setActiveChatId(data[0].id);
       }
     } catch (error) {
-      console.error("대화 목록 불러오기 실패:", error);
+      const apiError = createApiError(
+        "대화 목록을 불러오는데 실패했습니다.",
+        "/conversations"
+      );
+      handleError(apiError, { showToast: true });
     }
   };
 
@@ -86,8 +92,11 @@ export function useChat() {
       // 대화 목록 갱신
       await fetchConversations();
     } catch (error) {
-      console.error("메시지 전송 실패:", error);
-      toastError("메시지 전송에 실패했습니다.");
+      const apiError = createApiError(
+        "메시지 전송에 실패했습니다.",
+        "/chat/completion"
+      );
+      handleError(apiError, { showToast: true });
     } finally {
       setLoading(false);
     }
@@ -100,8 +109,11 @@ export function useChat() {
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
     } catch (error) {
-      console.error("새 대화 시작 실패:", error);
-      toastError("새 대화를 시작할 수 없습니다.");
+      const apiError = createApiError(
+        "새 대화를 시작할 수 없습니다.",
+        "/conversations"
+      );
+      handleError(apiError, { showToast: true });
     }
   };
 
@@ -118,8 +130,11 @@ export function useChat() {
         setActiveChatId(updated.length > 0 ? updated[0].id : null);
       }
     } catch (error) {
-      console.error("대화방 삭제 실패:", error);
-      toastError("대화방을 삭제하는데 실패했습니다.");
+      const apiError = createApiError(
+        "대화방을 삭제하는데 실패했습니다.",
+        `/conversations/${chatId}`
+      );
+      handleError(apiError, { showToast: true });
     }
   };
 
@@ -133,8 +148,11 @@ export function useChat() {
         )
       );
     } catch (error) {
-      console.error("대화방 이름 변경 실패:", error);
-      toastError("대화방 이름 변경에 실패했습니다.");
+      const apiError = createApiError(
+        "대화방 이름 변경에 실패했습니다.",
+        `/conversations/${chatId}`
+      );
+      handleError(apiError, { showToast: true });
     }
   };
 
@@ -159,8 +177,11 @@ export function useChat() {
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
     } catch (error) {
-      console.error("대화방 고정/해제 실패:", error);
-      toastError("대화방 고정/해제에 실패했습니다.");
+      const apiError = createApiError(
+        "대화방 고정/해제에 실패했습니다.",
+        `/conversations/${chatId}/pin`
+      );
+      handleError(apiError, { showToast: true });
     }
   };
 
