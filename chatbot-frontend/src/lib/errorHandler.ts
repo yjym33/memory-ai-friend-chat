@@ -59,24 +59,27 @@ class ErrorHandler {
 
   // 전역 에러 핸들링 설정
   private setupGlobalErrorHandling(): void {
-    // 처리되지 않은 Promise 거부 처리
-    window.addEventListener("unhandledrejection", (event) => {
-      const error = this.createSystemError(
-        "Unhandled Promise Rejection",
-        event.reason
-      );
-      this.handleError(error, { showToast: true });
-      event.preventDefault();
-    });
+    // 브라우저 환경에서만 실행
+    if (typeof window !== "undefined") {
+      // 처리되지 않은 Promise 거부 처리
+      window.addEventListener("unhandledrejection", (event) => {
+        const error = this.createSystemError(
+          "Unhandled Promise Rejection",
+          event.reason
+        );
+        this.handleError(error, { showToast: true });
+        event.preventDefault();
+      });
 
-    // 일반 JavaScript 에러 처리
-    window.addEventListener("error", (event) => {
-      const error = this.createSystemError(
-        "Unhandled JavaScript Error",
-        event.error
-      );
-      this.handleError(error, { showToast: true });
-    });
+      // 일반 JavaScript 에러 처리
+      window.addEventListener("error", (event) => {
+        const error = this.createSystemError(
+          "Unhandled JavaScript Error",
+          event.error
+        );
+        this.handleError(error, { showToast: true });
+      });
+    }
   }
 
   // 에러 리스너 추가
@@ -134,7 +137,7 @@ class ErrorHandler {
       category: ErrorCategory.NETWORK,
       severity: ErrorSeverity.HIGH,
       timestamp: new Date(),
-      isOnline: navigator.onLine,
+      isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
       userMessage: "네트워크 연결을 확인해주세요.",
       actionable: true,
       retryable: true,

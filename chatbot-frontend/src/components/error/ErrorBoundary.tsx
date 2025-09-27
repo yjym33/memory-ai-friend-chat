@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { ErrorInfo, ReactNode } from "react";
 import { errorHandler } from "../../lib/errorHandler";
