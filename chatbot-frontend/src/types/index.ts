@@ -246,6 +246,52 @@ export interface AgentStatus {
 }
 
 // =====================================
+// 문서 관련 타입
+// =====================================
+export interface Document {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  status: string;
+  originalFileName: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
+  updatedAt: string;
+  organization?: {
+    id: string;
+    name: string;
+  };
+  uploadedBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface EmbeddingStatus {
+  totalChunks: number;
+  embeddedChunks: number;
+  pendingChunks: number;
+  embeddingProgress: number;
+}
+
+// =====================================
+// 조직 관련 타입
+// =====================================
+export interface Organization {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  subscriptionTier: string;
+  domain?: string;
+  createdAt: string;
+  users?: User[];
+}
+
+// =====================================
 // API 응답 공통 타입
 // =====================================
 export interface ApiResponse<T = unknown> {
@@ -266,6 +312,75 @@ export interface PaginatedResponse<T = unknown> {
   data: T[];
   meta: PaginationMeta;
 }
+
+// 실제 백엔드 응답 패턴들
+export interface ListResponse<T = unknown> {
+  [key: string]: T[] | PaginationMeta | unknown;
+}
+
+export interface UserListResponse {
+  users: User[];
+  pagination: {
+    totalPages: number;
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export interface DocumentListResponse {
+  documents: Document[];
+  pagination: {
+    totalPages: number;
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export interface OrganizationListResponse {
+  organizations: Organization[];
+  pagination: {
+    totalPages: number;
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export interface StatisticsResponse {
+  totalUsers: number;
+  totalConversations: number;
+  totalMessages: number;
+  totalDocuments: number;
+  totalStorage: number;
+  dailyActive: number;
+  monthlyActive: number;
+  storageUsed: number;
+  storageLimit: number;
+}
+
+export interface EmbeddingStatusResponse {
+  totalDocuments: number;
+  embeddedDocuments: number;
+  pendingDocuments: number;
+  failedDocuments: number;
+  processingDocuments: number;
+  lastProcessedAt: string | null;
+  estimatedTimeRemaining: number | null;
+}
+
+// 응답 타입 유니온
+export type ApiResponseType<T = unknown> =
+  | T
+  | T[]
+  | UserListResponse
+  | DocumentListResponse
+  | OrganizationListResponse
+  | StatisticsResponse
+  | EmbeddingStatusResponse
+  | PaginatedResponse<T>
+  | ListResponse<T>;
 
 // =====================================
 // 프론트엔드 전용 타입

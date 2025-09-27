@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "../../services/apiClient";
 import { useAuthStore } from "../../store/authStore";
 import {
+  useDocumentList,
+  useEmbeddingStatus,
+} from "../../hooks/useApiResponse";
+import { Document, EmbeddingStatusResponse } from "../../types";
+import {
   FileText,
   Upload,
   Trash2,
@@ -46,16 +51,19 @@ interface EmbeddingStatus {
 export default function DocumentsPage() {
   const router = useRouter();
   const { isAuthenticated, token, userType } = useAuthStore();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+
+  // 새로운 API 응답 처리 훅들 사용
+  const documentList = useDocumentList();
+  const embeddingStatus = useEmbeddingStatus();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [embeddingStatus, setEmbeddingStatus] =
-    useState<EmbeddingStatus | null>(null);
   const [reprocessingEmbeddings, setReprocessingEmbeddings] = useState(false);
+
+  // 통합된 로딩 상태
+  const loading =
+    documentList.loading.isLoading || embeddingStatus.loading.isLoading;
 
   // 권한 확인
   useEffect(() => {
@@ -106,11 +114,7 @@ export default function DocumentsPage() {
       }
 
       const response = await apiClient.get(`/documents?${params}`);
-      console.log("Documents API Response:", response);
-
-      const typedResponse = response as
-        | { documents?: Document[]; pagination?: { totalPages?: number } }
-        | Document[];
+      documentList.updateData(response, documentList.pagination.currentPage);
       if (
         typedResponse &&
         typeof typedResponse === "object" &&
@@ -578,7 +582,7 @@ export default function DocumentsPage() {
                         </td>
                       </tr>
                     ) : (
-                      documents.map((doc) => (
+                      documentList.data.map((doc) => (
                         <tr key={doc.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>

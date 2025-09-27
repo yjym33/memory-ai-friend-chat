@@ -6,6 +6,20 @@ import { apiClient } from "../../services/apiClient";
 import { useAuthStore } from "../../store/authStore";
 import { logger } from "../../lib/logger";
 import {
+  useUserList,
+  useDocumentList,
+  useOrganizationList,
+  useStatistics,
+  useEmbeddingStatus,
+} from "../../hooks/useApiResponse";
+import {
+  User,
+  Document,
+  Organization,
+  StatisticsResponse,
+  EmbeddingStatusResponse,
+} from "../../types";
+import {
   Users,
   Settings,
   BarChart3,
@@ -92,22 +106,29 @@ export default function AdminPage() {
   const router = useRouter();
   const { isAuthenticated, token, role } = useAuthStore();
   const [activeTab, setActiveTab] = useState("users");
-  const [users, setUsers] = useState<User[]>([]);
-  const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+
+  // 새로운 API 응답 처리 훅들 사용
+  const userList = useUserList();
+  const documentList = useDocumentList();
+  const organizationList = useOrganizationList();
+  const statistics = useStatistics();
+  const embeddingStatus = useEmbeddingStatus();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterUserType, setFilterUserType] = useState<
     "all" | "individual" | "business"
   >("all");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [embeddingStatus, setEmbeddingStatus] =
-    useState<EmbeddingStatus | null>(null);
   const [reprocessingEmbeddings, setReprocessingEmbeddings] = useState(false);
+
+  // 통합된 로딩 상태
+  const loading =
+    userList.loading.isLoading ||
+    documentList.loading.isLoading ||
+    organizationList.loading.isLoading ||
+    statistics.loading.isLoading ||
+    embeddingStatus.loading.isLoading;
 
   // 권한 확인
   useEffect(() => {
@@ -170,7 +191,7 @@ export default function AdminPage() {
       console.log("Loading users with token:", token?.substring(0, 20) + "...");
 
       const params = new URLSearchParams({
-        page: currentPage.toString(),
+        page: userList.pagination.currentPage.toString(),
         limit: "20",
       });
 
@@ -182,24 +203,7 @@ export default function AdminPage() {
       }
 
       const response = await apiClient.get(`/admin/users?${params}`);
-
-      // apiClient는 이미 response.data를 반환하므로 직접 접근
-      const typedResponse = response as {
-        users?: User[];
-        pagination?: { totalPages?: number };
-      };
-      if (
-        typedResponse &&
-        typedResponse.users &&
-        Array.isArray(typedResponse.users)
-      ) {
-        setUsers(typedResponse.users);
-        setTotalPages(typedResponse.pagination?.totalPages || 1);
-      } else {
-        logger.error("잘못된 사용자 응답 구조", { response });
-        setUsers([]);
-        setTotalPages(1);
-      }
+      userList.updateData(response, userList.pagination.currentPage);
     } catch (error: unknown) {
       console.error("사용자 목록 로딩 실패:", error);
       console.error("Error details:", {
@@ -700,7 +704,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map((user) => (
+                      {userList.data.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
