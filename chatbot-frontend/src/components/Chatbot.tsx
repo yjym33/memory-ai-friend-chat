@@ -13,7 +13,7 @@ import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
 import { ChatMode } from "./ChatModeSwitch";
 import { UploadedFile, Message } from "../types";
-import { Menu, Settings, FileText, BookOpen } from "lucide-react";
+import { Menu, FileText, BookOpen } from "lucide-react";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");

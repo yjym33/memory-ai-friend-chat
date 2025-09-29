@@ -60,8 +60,8 @@ export default function ChatInput({
       {/* 모드별 힌트 메시지 */}
       {chatMode === ChatMode.BUSINESS && (
         <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/20 rounded text-xs text-blue-700 dark:text-blue-300">
-          💡 회사 문서에 대해 질문해보세요! (예: "휴가 정책", "보안 규정", "업무
-          절차")
+          💡 회사 문서에 대해 질문해보세요! (예: &quot;휴가 정책&quot;,
+          &quot;보안 규정&quot;, &quot;업무 절차&quot;)
         </div>
       )}
 

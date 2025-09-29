@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "./logger";
-import { error as toastError, success as toastSuccess } from "./toast";
+import { error as toastError } from "./toast";
 import {
   AppError,
-  BaseError,
   ErrorCategory,
   ErrorSeverity,
   ErrorHandlingOptions,

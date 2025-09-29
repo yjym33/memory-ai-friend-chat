@@ -1,6 +1,5 @@
 import axiosInstance from "../utils/axios";
 import { errorHandler } from "../lib/errorHandler";
-import { logger } from "../lib/logger";
 
 /**
  * API 클라이언트 - 모든 HTTP 요청을 처리하는 중앙집중식 클라이언트

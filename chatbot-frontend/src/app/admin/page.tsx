@@ -12,13 +12,7 @@ import {
   useStatistics,
   useEmbeddingStatus,
 } from "../../hooks/useApiResponse";
-import {
-  User,
-  Document,
-  Organization,
-  StatisticsResponse,
-  EmbeddingStatusResponse,
-} from "../../types";
+import { User as UserType, Document as DocumentType } from "../../types";
 import {
   Users,
   Settings,
@@ -30,7 +24,6 @@ import {
   UserX,
   FileText,
   Upload,
-  Search,
   Trash2,
   RefreshCw,
 } from "lucide-react";
@@ -91,7 +84,7 @@ interface EmbeddingStatus {
   embeddingProgress: number;
 }
 
-interface Organization {
+interface _Organization {
   id: string;
   name: string;
   description?: string;
@@ -159,10 +152,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadData();
-  }, [activeTab, currentPage, searchTerm, filterUserType]);
+  }, [activeTab, searchTerm, filterUserType]);
 
   const loadData = async () => {
-    setLoading(true);
     setError(null);
     try {
       if (activeTab === "users") {
@@ -177,13 +169,8 @@ export default function AdminPage() {
       }
     } catch (error: unknown) {
       console.error("데이터 로딩 실패:", error);
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          "데이터 로딩에 실패했습니다."
-      );
+      setError("데이터 로딩에 실패했습니다.");
     }
-    setLoading(false);
   };
 
   const loadUsers = async () => {
@@ -202,41 +189,34 @@ export default function AdminPage() {
         params.append("userType", filterUserType);
       }
 
-      const response = await apiClient.get(`/admin/users?${params}`);
-      userList.updateData(response, userList.pagination.currentPage);
+      const _response = await apiClient.get(`/admin/users?${params}`);
+      userList.updateData(_response, userList.pagination.currentPage);
     } catch (error: unknown) {
       console.error("사용자 목록 로딩 실패:", error);
+      const errorObj = error as any;
       console.error("Error details:", {
-        status: error.response?.status,
-        message: error.response?.data?.message,
-        data: error.response?.data,
+        status: errorObj.response?.status,
+        message: errorObj.response?.data?.message,
+        data: errorObj.response?.data,
       });
-      setUsers([]);
-      setTotalPages(1);
+      userList.setError("사용자 목록을 불러오는데 실패했습니다.");
     }
   };
 
   const loadStatistics = async () => {
     try {
-      const response = await apiClient.get("/admin/statistics");
-      console.log("Statistics API Response:", response);
-
-      if (response && typeof response === "object") {
-        setStatistics(response as Statistics);
-      } else {
-        console.error("Invalid statistics response structure:", response);
-        setStatistics(null);
-      }
+      const _response = await apiClient.get("/admin/statistics");
+      statistics.updateData(_response);
     } catch (error) {
       console.error("통계 로딩 실패:", error);
-      setStatistics(null);
+      statistics.setError("통계 데이터를 불러오는데 실패했습니다.");
     }
   };
 
   const loadDocuments = async () => {
     try {
       const params = new URLSearchParams({
-        page: currentPage.toString(),
+        page: documentList.pagination.currentPage.toString(),
         limit: "20",
       });
 
@@ -244,60 +224,34 @@ export default function AdminPage() {
         params.append("search", searchTerm);
       }
 
-      const response = await apiClient.get(`/documents?${params}`);
-      console.log("Documents API Response:", response);
-
-      // 수정된 문서 API는 { documents: [...], pagination: {...} } 구조로 반환
-      const typedResponse = response as
-        | { documents?: Document[]; pagination?: { totalPages?: number } }
-        | Document[];
-      if (
-        typedResponse &&
-        typeof typedResponse === "object" &&
-        "documents" in typedResponse &&
-        typedResponse.documents
-      ) {
-        setDocuments(typedResponse.documents);
-        setTotalPages(typedResponse.pagination?.totalPages || 1);
-      } else if (Array.isArray(typedResponse)) {
-        // 이전 구조와의 호환성
-        setDocuments(typedResponse);
-        setTotalPages(1);
-      } else {
-        console.error("Invalid documents response structure:", response);
-        setDocuments([]);
-        setTotalPages(1);
-      }
+      const _response = await apiClient.get(`/documents?${params}`);
+      documentList.updateData(_response, documentList.pagination.currentPage);
     } catch (error) {
       console.error("문서 목록 로딩 실패:", error);
+      documentList.setError("문서 목록을 불러오는데 실패했습니다.");
     }
   };
 
   const loadOrganizations = async () => {
     try {
-      const response = await apiClient.get("/admin/organizations");
-      console.log("Organizations API Response:", response);
-
-      if (Array.isArray(response)) {
-        setOrganizations(response);
-      } else {
-        console.error("Invalid organizations response structure:", response);
-        setOrganizations([]);
-      }
+      const _response = await apiClient.get("/admin/organizations");
+      organizationList.updateData(
+        _response,
+        organizationList.pagination.currentPage
+      );
     } catch (error) {
       console.error("조직 목록 로딩 실패:", error);
-      setOrganizations([]);
+      organizationList.setError("조직 목록을 불러오는데 실패했습니다.");
     }
   };
 
   const loadEmbeddingStatus = async () => {
     try {
-      const response = await apiClient.get("/documents/embedding-status");
-      console.log("Embedding Status API Response:", response);
-      setEmbeddingStatus(response as EmbeddingStatus);
+      const _response = await apiClient.get("/documents/embedding-status");
+      embeddingStatus.updateData(_response);
     } catch (error) {
       console.error("임베딩 상태 로딩 실패:", error);
-      setEmbeddingStatus(null);
+      embeddingStatus.setError("임베딩 상태를 불러오는데 실패했습니다.");
     }
   };
 
@@ -322,9 +276,12 @@ export default function AdminPage() {
         loadEmbeddingStatus();
       }, 2000);
     } catch (error: unknown) {
+      const errorObj = error as any;
       alert(
         "임베딩 재처리 실패: " +
-          (error.response?.data?.message || error.message)
+          (errorObj.response?.data?.message ||
+            errorObj.message ||
+            "알 수 없는 오류")
       );
     }
     setReprocessingEmbeddings(false);
@@ -415,11 +372,12 @@ export default function AdminPage() {
           console.error(`❌ 업로드 실패: ${file.name}`, error);
           errorCount++;
 
-          let errorMessage = error.message;
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.response?.status) {
-            errorMessage = `서버 오류 (${error.response.status}): ${error.response.statusText}`;
+          const errorObj = error as any;
+          let errorMessage = errorObj.message || "알 수 없는 오류";
+          if (errorObj.response?.data?.message) {
+            errorMessage = errorObj.response.data.message;
+          } else if (errorObj.response?.status) {
+            errorMessage = `서버 오류 (${errorObj.response.status}): ${errorObj.response.statusText}`;
           }
 
           errors.push(`${file.name}: ${errorMessage}`);
@@ -449,9 +407,12 @@ export default function AdminPage() {
         }, 1000);
       }
     } catch (error: unknown) {
+      const errorObj = error as any;
       alert(
         "파일 업로드 중 예상치 못한 오류가 발생했습니다: " +
-          (error.response?.data?.message || error.message)
+          (errorObj.response?.data?.message ||
+            errorObj.message ||
+            "알 수 없는 오류")
       );
     }
     setUploadingFile(false);

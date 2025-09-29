@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChatService } from "../services";
-import { Message, Conversation } from "../types";
-import { error as toastError } from "../lib/toast";
+import { Message, Conversation, UploadedFile } from "../types";
 import { ChatMode } from "../components/ChatModeSwitch";
 import { useErrorHandler } from "./useErrorHandler";
 
@@ -29,10 +28,11 @@ export function useChat() {
       if (data.length > 0 && !activeChatId) {
         setActiveChatId(data[0].id);
       }
-    } catch (error) {
+    } catch (err) {
       const apiError = createApiError(
         "대화 목록을 불러오는데 실패했습니다.",
-        "/conversations"
+        err,
+        { endpoint: "/conversations" }
       );
       handleError(apiError, { showToast: true });
     }
@@ -41,7 +41,7 @@ export function useChat() {
   // 메시지 전송 (모드별 처리 기능 추가)
   const sendMessage = async (
     message: string,
-    file?: any,
+    file?: UploadedFile,
     chatMode: ChatMode = ChatMode.PERSONAL
   ) => {
     if (!activeChatId || (!message.trim() && !file)) return;
@@ -91,11 +91,12 @@ export function useChat() {
 
       // 대화 목록 갱신
       await fetchConversations();
-    } catch (error) {
-      const apiError = createApiError(
-        "메시지 전송에 실패했습니다.",
-        "/chat/completion"
-      );
+    } catch (err) {
+      const apiError = createApiError("메시지 전송에 실패했습니다.", err, {
+        endpoint: "/chat/completion",
+        message,
+        chatMode,
+      });
       handleError(apiError, { showToast: true });
     } finally {
       setLoading(false);
@@ -108,11 +109,10 @@ export function useChat() {
       const newChat = await ChatService.createConversation();
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
-    } catch (error) {
-      const apiError = createApiError(
-        "새 대화를 시작할 수 없습니다.",
-        "/conversations"
-      );
+    } catch (err) {
+      const apiError = createApiError("새 대화를 시작할 수 없습니다.", err, {
+        endpoint: "/conversations",
+      });
       handleError(apiError, { showToast: true });
     }
   };
@@ -129,10 +129,11 @@ export function useChat() {
       if (activeChatId === chatId) {
         setActiveChatId(updated.length > 0 ? updated[0].id : null);
       }
-    } catch (error) {
+    } catch (err) {
       const apiError = createApiError(
         "대화방을 삭제하는데 실패했습니다.",
-        `/conversations/${chatId}`
+        err,
+        { endpoint: `/conversations/${chatId}` }
       );
       handleError(apiError, { showToast: true });
     }
@@ -147,11 +148,10 @@ export function useChat() {
           chat.id === chatId ? { ...chat, title: newTitle } : chat
         )
       );
-    } catch (error) {
-      const apiError = createApiError(
-        "대화방 이름 변경에 실패했습니다.",
-        `/conversations/${chatId}`
-      );
+    } catch (err) {
+      const apiError = createApiError("대화방 이름 변경에 실패했습니다.", err, {
+        endpoint: `/conversations/${chatId}`,
+      });
       handleError(apiError, { showToast: true });
     }
   };
@@ -176,11 +176,10 @@ export function useChat() {
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
-    } catch (error) {
-      const apiError = createApiError(
-        "대화방 고정/해제에 실패했습니다.",
-        `/conversations/${chatId}/pin`
-      );
+    } catch (err) {
+      const apiError = createApiError("대화방 고정/해제에 실패했습니다.", err, {
+        endpoint: `/conversations/${chatId}/pin`,
+      });
       handleError(apiError, { showToast: true });
     }
   };

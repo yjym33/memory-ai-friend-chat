@@ -3,7 +3,6 @@
 import React from "react";
 import { ErrorInfo, ReactNode } from "react";
 import { errorHandler } from "../../lib/errorHandler";
-import { ErrorCategory } from "../../types/error";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryProps {

@@ -8,18 +8,10 @@ import {
   useDocumentList,
   useEmbeddingStatus,
 } from "../../hooks/useApiResponse";
-import { Document, EmbeddingStatusResponse } from "../../types";
-import {
-  FileText,
-  Upload,
-  Trash2,
-  Search,
-  RefreshCw,
-  CheckCircle,
-  Building2,
-} from "lucide-react";
+import { Document as DocumentType } from "../../types";
+import { FileText, Upload, Trash2, RefreshCw, CheckCircle } from "lucide-react";
 
-interface Document {
+interface _Document {
   id: string;
   title: string;
   description?: string;
@@ -83,29 +75,23 @@ export default function DocumentsPage() {
     if (isAuthenticated && userType === "business") {
       loadData();
     }
-  }, [currentPage, searchTerm, isAuthenticated, userType]);
+  }, [searchTerm, isAuthenticated, userType]);
 
   const loadData = async () => {
-    setLoading(true);
     setError(null);
     try {
       await loadDocuments();
       await loadEmbeddingStatus();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("데이터 로딩 실패:", error);
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          "데이터 로딩에 실패했습니다."
-      );
+      setError("데이터 로딩에 실패했습니다.");
     }
-    setLoading(false);
   };
 
   const loadDocuments = async () => {
     try {
       const params = new URLSearchParams({
-        page: currentPage.toString(),
+        page: documentList.pagination.currentPage.toString(),
         limit: "20",
       });
 
@@ -113,28 +99,11 @@ export default function DocumentsPage() {
         params.append("search", searchTerm);
       }
 
-      const response = await apiClient.get(`/documents?${params}`);
-      documentList.updateData(response, documentList.pagination.currentPage);
-      if (
-        typedResponse &&
-        typeof typedResponse === "object" &&
-        "documents" in typedResponse &&
-        typedResponse.documents
-      ) {
-        setDocuments(typedResponse.documents);
-        setTotalPages(typedResponse.pagination?.totalPages || 1);
-      } else if (Array.isArray(typedResponse)) {
-        setDocuments(typedResponse);
-        setTotalPages(1);
-      } else {
-        console.error("Invalid documents response structure:", response);
-        setDocuments([]);
-        setTotalPages(1);
-      }
+      const _response = await apiClient.get(`/documents?${params}`);
+      documentList.updateData(_response, documentList.pagination.currentPage);
     } catch (error) {
       console.error("문서 목록 로딩 실패:", error);
-      setDocuments([]);
-      setTotalPages(1);
+      documentList.setError("문서 목록을 불러오는데 실패했습니다.");
     }
   };
 

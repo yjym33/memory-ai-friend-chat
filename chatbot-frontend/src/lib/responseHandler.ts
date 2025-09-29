@@ -1,16 +1,13 @@
 import { logger } from "./logger";
 import {
-  ApiResponseType,
   UserListResponse,
   DocumentListResponse,
   OrganizationListResponse,
   StatisticsResponse,
   EmbeddingStatusResponse,
-  PaginatedResponse,
   User,
   Document,
   Organization,
-  EmbeddingStatus,
 } from "../types";
 
 // 응답 검증 및 타입 가드
