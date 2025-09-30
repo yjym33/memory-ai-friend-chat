@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Conversation } from "../types";
 import { useSearchDebounce } from "../hooks/useDebounce";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -15,7 +15,7 @@ interface ChatListSidebarProps {
   onClose?: () => void;
 }
 
-export default function ChatListSidebar({
+const ChatListSidebar = React.memo(function ChatListSidebar({
   conversations,
   activeChatId,
   setActiveChatId,
@@ -93,28 +93,31 @@ export default function ChatListSidebar({
     return sorted;
   }, [conversations, debouncedSearchTerm, sidebarSettings]);
 
-  const handleTitleEdit = (chat: { id: number; title: string }) => {
+  const handleTitleEdit = useCallback((chat: { id: number; title: string }) => {
     setEditingId(chat.id);
     setEditingTitle(chat.title);
-  };
+  }, []);
 
-  const handleTitleSave = async (chatId: number) => {
-    if (
-      editingTitle.trim() &&
-      editingTitle !== conversations.find((c) => c.id === chatId)?.title
-    ) {
-      await onUpdateTitle(chatId, editingTitle.trim());
-    }
+  const handleTitleSave = useCallback(
+    async (chatId: number) => {
+      if (
+        editingTitle.trim() &&
+        editingTitle !== conversations.find((c) => c.id === chatId)?.title
+      ) {
+        await onUpdateTitle(chatId, editingTitle.trim());
+      }
+      setEditingId(null);
+      setEditingTitle("");
+    },
+    [editingTitle, conversations, onUpdateTitle]
+  );
+
+  const handleTitleCancel = useCallback(() => {
     setEditingId(null);
     setEditingTitle("");
-  };
+  }, []);
 
-  const handleTitleCancel = () => {
-    setEditingId(null);
-    setEditingTitle("");
-  };
-
-  const formatDate = (date: string | Date) => {
+  const formatDate = useCallback((date: string | Date) => {
     const d = typeof date === "string" ? new Date(date) : date;
     const now = new Date();
     const diffInHours = (now.getTime() - d.getTime()) / (1000 * 60 * 60);
@@ -128,7 +131,7 @@ export default function ChatListSidebar({
     } else {
       return d.toLocaleDateString();
     }
-  };
+  }, []);
 
   return (
     <div className="w-80 lg:w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
@@ -366,4 +369,6 @@ export default function ChatListSidebar({
       </div>
     </div>
   );
-}
+});
+
+export default ChatListSidebar;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -17,7 +17,7 @@ interface ChatWindowProps {
   chatMode?: ChatMode;
 }
 
-export default function ChatWindow({
+const ChatWindow = React.memo(function ChatWindow({
   messages,
   currentTheme,
   onThemeChange,
@@ -25,31 +25,43 @@ export default function ChatWindow({
   chatMode = ChatMode.PERSONAL,
 }: ChatWindowProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // 스타일 최적화
+  const sectionStyle = useMemo(
+    () => ({
+      background:
+        currentTheme?.background?.value ||
+        "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
+      backgroundColor: currentTheme?.colors?.background || "#f8fafc",
+      color: currentTheme?.colors?.text?.primary || "#1f2937",
+      height: "100%",
+      width: "100%",
+    }),
+    [currentTheme]
+  );
+
+  const headerStyle = useMemo(
+    () => ({
+      backgroundColor: `${currentTheme?.colors?.surface || "#ffffff"}CC`,
+      borderColor: currentTheme?.colors?.text?.secondary || "#9ca3af",
+    }),
+    [currentTheme]
+  );
+
   return (
     <section
       className="flex-1 flex flex-col chat-container overflow-hidden"
-      style={{
-        background:
-          currentTheme?.background?.value ||
-          "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
-        backgroundColor: currentTheme?.colors?.background || "#f8fafc",
-        color: currentTheme?.colors?.text?.primary || "#1f2937",
-        height: "100%",
-        width: "100%",
-      }}
+      style={sectionStyle}
     >
       {/* 테마 선택기 헤더 */}
       {currentTheme && onThemeChange && conversationId && (
         <div
           className="sticky top-0 z-10 backdrop-blur-sm border-b p-2 sm:p-4"
-          style={{
-            backgroundColor: `${currentTheme.colors.surface}CC`,
-            borderColor: currentTheme.colors.text.secondary,
-          }}
+          style={headerStyle}
         >
           <div className="max-w-2xl mx-auto flex justify-between items-center">
             <h2
@@ -185,4 +197,6 @@ export default function ChatWindow({
       </div>
     </section>
   );
-}
+});
+
+export default ChatWindow;

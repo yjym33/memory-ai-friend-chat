@@ -10,7 +10,7 @@ interface AgentStatusModalProps {
   onClose: () => void;
 }
 
-export default function AgentStatusModal({
+const AgentStatusModal = React.memo(function AgentStatusModal({
   isOpen,
   onClose,
 }: AgentStatusModalProps) {
@@ -57,4 +57,6 @@ export default function AgentStatusModal({
       </div>
     </div>
   );
-}
+});
+
+export default AgentStatusModal;

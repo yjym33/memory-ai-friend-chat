@@ -11,7 +11,9 @@ interface GoalManagerProps {
   onGoalUpdate?: () => void;
 }
 
-export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
+const GoalManager = React.memo(function GoalManager({
+  onGoalUpdate,
+}: GoalManagerProps) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [statistics, setStatistics] = useState<UserGoals["statistics"] | null>(
     null
@@ -448,4 +450,6 @@ export default function GoalManager({ onGoalUpdate }: GoalManagerProps) {
       )}
     </div>
   );
-}
+});
+
+export default GoalManager;

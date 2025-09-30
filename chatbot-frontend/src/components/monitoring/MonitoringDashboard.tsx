@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAsyncOperation } from "../../hooks/useAsyncOperation";
 import {
   Activity,
@@ -95,7 +95,7 @@ interface MonitoringData {
   timestamp: number;
 }
 
-export default function MonitoringDashboard() {
+const MonitoringDashboard = React.memo(function MonitoringDashboard() {
   const [monitoringData, setMonitoringData] = useState<MonitoringData | null>(
     null
   );
@@ -137,39 +137,39 @@ export default function MonitoringDashboard() {
   }, [autoRefresh, refreshInterval, fetchMonitoringData]);
 
   // 수동 새로고침
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     const data = await fetchMonitoringData(loadMonitoringData);
     if (data) {
       setMonitoringData(data);
     }
-  };
+  }, [fetchMonitoringData]);
 
   // 바이트를 읽기 쉬운 형태로 변환
-  const formatBytes = (bytes: number) => {
+  const formatBytes = useCallback((bytes: number) => {
     if (bytes === 0) return "0 B";
     const k = 1024;
     const sizes = ["B", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+  }, []);
 
   // 시간 포맷팅
-  const formatTime = (timestamp: number) => {
+  const formatTime = useCallback((timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString();
-  };
+  }, []);
 
   // 상태 색상 결정
-  const getStatusColor = (
-    value: number,
-    thresholds: { warning: number; critical: number }
-  ) => {
-    if (value >= thresholds.critical) return "text-red-500";
-    if (value >= thresholds.warning) return "text-yellow-500";
-    return "text-green-500";
-  };
+  const getStatusColor = useCallback(
+    (value: number, thresholds: { warning: number; critical: number }) => {
+      if (value >= thresholds.critical) return "text-red-500";
+      if (value >= thresholds.warning) return "text-yellow-500";
+      return "text-green-500";
+    },
+    []
+  );
 
   // 알림 아이콘
-  const getAlertIcon = (severity: string) => {
+  const getAlertIcon = useCallback((severity: string) => {
     switch (severity) {
       case "critical":
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
@@ -180,7 +180,7 @@ export default function MonitoringDashboard() {
       default:
         return <AlertTriangle className="w-4 h-4 text-blue-500" />;
     }
-  };
+  }, []);
 
   if (loading && !monitoringData) {
     return (
@@ -581,4 +581,6 @@ export default function MonitoringDashboard() {
       )}
     </div>
   );
-}
+});
+
+export default MonitoringDashboard;

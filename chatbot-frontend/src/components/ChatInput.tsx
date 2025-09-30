@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { UploadedFile } from "../services/uploadService";
 import EnhancedFileUpload from "./upload/EnhancedFileUpload";
 import { ChatMode } from "./ChatModeSwitch";
@@ -12,7 +12,7 @@ interface ChatInputProps {
   chatMode?: ChatMode;
 }
 
-export default function ChatInput({
+const ChatInput = React.memo(function ChatInput({
   input,
   setInput,
   sendMessage,
@@ -23,28 +23,21 @@ export default function ChatInput({
   const [showFileUpload, setShowFileUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleFileUploaded = (file: UploadedFile) => {
+  const handleFileUploaded = useCallback((file: UploadedFile) => {
     setUploadedFile(file);
     setShowFileUpload(false);
-  };
+  }, []);
 
-  const handleFileRemoved = () => {
+  const handleFileRemoved = useCallback(() => {
     setUploadedFile(null);
     setShowFileUpload(false);
-  };
+  }, []);
 
-  const toggleFileUpload = () => {
-    setShowFileUpload(!showFileUpload);
-  };
+  const toggleFileUpload = useCallback(() => {
+    setShowFileUpload((prev) => !prev);
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (uploadedFile) {
       // 파일과 함께 메시지 전송
       sendMessage(input || "파일을 첨부했습니다.", uploadedFile);
@@ -53,7 +46,17 @@ export default function ChatInput({
       // 일반 메시지 전송
       sendMessage(input);
     }
-  };
+  }, [uploadedFile, input, sendMessage]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
 
   return (
     <div className="p-2 sm:p-4 bg-white border-t">
@@ -162,4 +165,6 @@ export default function ChatInput({
       </div>
     </div>
   );
-}
+});
+
+export default ChatInput;

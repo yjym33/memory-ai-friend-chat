@@ -428,9 +428,12 @@ export default function AdminPage() {
       alert("문서가 삭제되었습니다.");
       await loadDocuments();
     } catch (error: unknown) {
+      const errorObj = error as any;
       alert(
         "문서 삭제에 실패했습니다: " +
-          (error.response?.data?.message || error.message)
+          (errorObj.response?.data?.message ||
+            errorObj.message ||
+            "알 수 없는 오류")
       );
     }
   };
@@ -459,9 +462,12 @@ export default function AdminPage() {
       );
       await loadUsers();
     } catch (error: unknown) {
+      const errorObj = error as any;
       alert(
         "사용자 유형 변경에 실패했습니다: " +
-          (error.response?.data?.message || error.message)
+          (errorObj.response?.data?.message ||
+            errorObj.message ||
+            "알 수 없는 오류")
       );
     }
   };
@@ -487,15 +493,19 @@ export default function AdminPage() {
 
       await loadUsers();
     } catch (error: unknown) {
+      const errorObj = error as any;
       alert(
         "기업 모드 상태 변경에 실패했습니다: " +
-          (error.response?.data?.message || error.message)
+          (errorObj.response?.data?.message ||
+            errorObj.message ||
+            "알 수 없는 오류")
       );
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ko-KR", {
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleDateString("ko-KR", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -680,40 +690,45 @@ export default function AdminPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getUserTypeColor(
-                                user.userType
+                                (user as any).userType
                               )}`}
                             >
-                              {user.userType === "business" ? "기업" : "개인"}
+                              {(user as any).userType === "business"
+                                ? "기업"
+                                : "개인"}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(
-                                user.role
+                                (user as any).role
                               )}`}
                             >
-                              {user.role}
+                              {(user as any).role}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {user.organization?.name || "-"}
+                            {(user as any).organization?.name || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {user.userType === "business" ? (
+                            {(user as any).userType === "business" ? (
                               <div className="flex items-center space-x-2">
-                                {user.businessProfile?.businessModeApproved ? (
+                                {(user as any).businessProfile
+                                  ?.businessModeApproved ? (
                                   <CheckCircle className="w-4 h-4 text-green-500" />
                                 ) : (
                                   <XCircle className="w-4 h-4 text-red-500" />
                                 )}
                                 <span
                                   className={`text-xs ${
-                                    user.businessProfile?.businessModeApproved
+                                    (user as any).businessProfile
+                                      ?.businessModeApproved
                                       ? "text-green-600"
                                       : "text-red-600"
                                   }`}
                                 >
-                                  {user.businessProfile?.businessModeApproved
+                                  {(user as any).businessProfile
+                                    ?.businessModeApproved
                                     ? "승인됨"
                                     : "미승인"}
                                 </span>
@@ -732,18 +747,18 @@ export default function AdminPage() {
                               onClick={() =>
                                 handleUserTypeChange(
                                   user.id,
-                                  user.userType === "business"
+                                  (user as any).userType === "business"
                                     ? "individual"
                                     : "business"
                                 )
                               }
                               className={`inline-flex items-center px-2 py-1 text-xs rounded ${
-                                user.userType === "business"
+                                (user as any).userType === "business"
                                   ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                   : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                               }`}
                             >
-                              {user.userType === "business" ? (
+                              {(user as any).userType === "business" ? (
                                 <>
                                   <UserX className="w-3 h-3 mr-1" />
                                   개인전환
@@ -755,21 +770,24 @@ export default function AdminPage() {
                                 </>
                               )}
                             </button>
-                            {user.userType === "business" && (
+                            {(user as any).userType === "business" && (
                               <button
                                 onClick={() =>
                                   handleBusinessModeToggle(
                                     user.id,
-                                    !user.businessProfile?.businessModeApproved
+                                    !(user as any).businessProfile
+                                      ?.businessModeApproved
                                   )
                                 }
                                 className={`inline-flex items-center px-2 py-1 text-xs rounded ${
-                                  user.businessProfile?.businessModeApproved
+                                  (user as any).businessProfile
+                                    ?.businessModeApproved
                                     ? "bg-red-100 text-red-700 hover:bg-red-200"
                                     : "bg-green-100 text-green-700 hover:bg-green-200"
                                 }`}
                               >
-                                {user.businessProfile?.businessModeApproved
+                                {(user as any).businessProfile
+                                  ?.businessModeApproved
                                   ? "승인취소"
                                   : "승인"}
                               </button>
