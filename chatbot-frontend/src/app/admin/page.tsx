@@ -178,7 +178,7 @@ export default function AdminPage() {
       console.log("Loading users with token:", token?.substring(0, 20) + "...");
 
       const params = new URLSearchParams({
-        page: userList.pagination.currentPage.toString(),
+        page: userList.pagination.page.toString(),
         limit: "20",
       });
 
@@ -190,7 +190,7 @@ export default function AdminPage() {
       }
 
       const _response = await apiClient.get(`/admin/users?${params}`);
-      userList.updateData(_response, userList.pagination.currentPage);
+      userList.updateData(_response, userList.pagination.page);
     } catch (error: unknown) {
       console.error("사용자 목록 로딩 실패:", error);
       const errorObj = error as any;
@@ -216,7 +216,7 @@ export default function AdminPage() {
   const loadDocuments = async () => {
     try {
       const params = new URLSearchParams({
-        page: documentList.pagination.currentPage.toString(),
+        page: documentList.pagination.userList.pagination.page.toString(),
         limit: "20",
       });
 
@@ -225,7 +225,10 @@ export default function AdminPage() {
       }
 
       const _response = await apiClient.get(`/documents?${params}`);
-      documentList.updateData(_response, documentList.pagination.currentPage);
+      documentList.updateData(
+        _response,
+        documentList.pagination.userList.pagination.page
+      );
     } catch (error) {
       console.error("문서 목록 로딩 실패:", error);
       documentList.setError("문서 목록을 불러오는데 실패했습니다.");
@@ -237,7 +240,7 @@ export default function AdminPage() {
       const _response = await apiClient.get("/admin/organizations");
       organizationList.updateData(
         _response,
-        organizationList.pagination.currentPage
+        organizationList.pagination.userList.pagination.page
       );
     } catch (error) {
       console.error("조직 목록 로딩 실패:", error);
@@ -805,21 +808,32 @@ export default function AdminPage() {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() =>
-                          setCurrentPage(Math.max(1, currentPage - 1))
+                          userList.setPage(
+                            Math.max(1, userList.pagination.page - 1)
+                          )
                         }
-                        disabled={currentPage === 1}
+                        disabled={userList.pagination.page === 1}
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         이전
                       </button>
                       <span className="text-sm text-gray-700">
-                        페이지 {currentPage} / {totalPages}
+                        페이지 {userList.pagination.page} /{" "}
+                        {userList.pagination.totalPages}
                       </span>
                       <button
                         onClick={() =>
-                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                          userList.setPage(
+                            Math.min(
+                              userList.pagination.totalPages,
+                              userList.pagination.page + 1
+                            )
+                          )
                         }
-                        disabled={currentPage === totalPages}
+                        disabled={
+                          userList.pagination.page ===
+                          userList.pagination.totalPages
+                        }
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         다음
@@ -1226,21 +1240,32 @@ export default function AdminPage() {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() =>
-                          setCurrentPage(Math.max(1, currentPage - 1))
+                          userList.setPage(
+                            Math.max(1, userList.pagination.page - 1)
+                          )
                         }
-                        disabled={currentPage === 1}
+                        disabled={userList.pagination.page === 1}
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         이전
                       </button>
                       <span className="text-sm text-gray-700">
-                        페이지 {currentPage} / {totalPages}
+                        페이지 {userList.pagination.page} /{" "}
+                        {userList.pagination.totalPages}
                       </span>
                       <button
                         onClick={() =>
-                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                          userList.setPage(
+                            Math.min(
+                              userList.pagination.totalPages,
+                              userList.pagination.page + 1
+                            )
+                          )
                         }
-                        disabled={currentPage === totalPages}
+                        disabled={
+                          userList.pagination.page ===
+                          userList.pagination.totalPages
+                        }
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         다음
