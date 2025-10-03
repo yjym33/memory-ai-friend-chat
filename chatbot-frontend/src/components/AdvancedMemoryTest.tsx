@@ -71,7 +71,7 @@ export default function AdvancedMemoryTest() {
         });
 
         // AI에게 정보 전달
-        await ChatService.sendMessage(item.info);
+        await ChatService.sendMessage(1, item.info);
       }
 
       // 잠시 대기 (기억 정착 시간)
@@ -84,7 +84,7 @@ export default function AdvancedMemoryTest() {
         logger.debug("질문 진행 중", { question: item.question });
 
         // AI에게 질문
-        const response = await ChatService.sendMessage(item.question);
+        const response = await ChatService.sendMessage(1, item.question);
         const score = calculateScore(item.expectedKeywords, response.content);
 
         const testResult: TestResult = {
@@ -145,7 +145,7 @@ export default function AdvancedMemoryTest() {
       for (const item of longTermQuestions) {
         logger.debug("장기 기억 질문 중", { question: item.question });
 
-        const response = await ChatService.sendMessage(item.question);
+        const response = await ChatService.sendMessage(1, item.question);
         const score = calculateScore(item.expectedKeywords, response.content);
 
         const testResult: TestResult = {

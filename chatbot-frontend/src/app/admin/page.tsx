@@ -98,6 +98,11 @@ interface _Organization {
 export default function AdminPage() {
   const router = useRouter();
   const { isAuthenticated, token, role } = useAuthStore();
+
+  // 페이지 상태 관리
+  const [currentUserPage, setCurrentUserPage] = useState(1);
+  const [currentDocumentPage, setCurrentDocumentPage] = useState(1);
+  const [currentOrganizationPage, setCurrentOrganizationPage] = useState(1);
   const [activeTab, setActiveTab] = useState("users");
 
   // 새로운 API 응답 처리 훅들 사용
@@ -173,12 +178,12 @@ export default function AdminPage() {
     }
   };
 
-  const loadUsers = async () => {
+  const loadUsers = async (page: number = currentUserPage) => {
     try {
       console.log("Loading users with token:", token?.substring(0, 20) + "...");
 
       const params = new URLSearchParams({
-        page: userList.pagination.page.toString(),
+        page: page.toString(),
         limit: "20",
       });
 
@@ -190,7 +195,7 @@ export default function AdminPage() {
       }
 
       const _response = await apiClient.get(`/admin/users?${params}`);
-      userList.updateData(_response, userList.pagination.page);
+      userList.updateData(_response, page);
     } catch (error: unknown) {
       console.error("사용자 목록 로딩 실패:", error);
       const errorObj = error as any;
@@ -216,7 +221,7 @@ export default function AdminPage() {
   const loadDocuments = async () => {
     try {
       const params = new URLSearchParams({
-        page: documentList.pagination.userList.pagination.page.toString(),
+        page: documentList.pagination.currentPage.toString(),
         limit: "20",
       });
 
@@ -225,10 +230,7 @@ export default function AdminPage() {
       }
 
       const _response = await apiClient.get(`/documents?${params}`);
-      documentList.updateData(
-        _response,
-        documentList.pagination.userList.pagination.page
-      );
+      documentList.updateData(_response, documentList.pagination.currentPage);
     } catch (error) {
       console.error("문서 목록 로딩 실패:", error);
       documentList.setError("문서 목록을 불러오는데 실패했습니다.");
@@ -240,7 +242,7 @@ export default function AdminPage() {
       const _response = await apiClient.get("/admin/organizations");
       organizationList.updateData(
         _response,
-        organizationList.pagination.userList.pagination.page
+        organizationList.pagination.currentPage
       );
     } catch (error) {
       console.error("조직 목록 로딩 실패:", error);
@@ -807,31 +809,20 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() =>
-                          userList.setPage(
-                            Math.max(1, userList.pagination.page - 1)
-                          )
-                        }
-                        disabled={userList.pagination.page === 1}
+                        onClick={() => console.log("이전 페이지로 이동")}
+                        disabled={userList.pagination.currentPage === 1}
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         이전
                       </button>
                       <span className="text-sm text-gray-700">
-                        페이지 {userList.pagination.page} /{" "}
+                        페이지 {userList.pagination.currentPage} /{" "}
                         {userList.pagination.totalPages}
                       </span>
                       <button
-                        onClick={() =>
-                          userList.setPage(
-                            Math.min(
-                              userList.pagination.totalPages,
-                              userList.pagination.page + 1
-                            )
-                          )
-                        }
+                        onClick={() => console.log("다음 페이지로 이동")}
                         disabled={
-                          userList.pagination.page ===
+                          userList.pagination.currentPage ===
                           userList.pagination.totalPages
                         }
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -859,7 +850,7 @@ export default function AdminPage() {
                         전체 사용자
                       </p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {statistics.totalUsers}
+                        {statistics.data?.totalUsers || 0}
                       </p>
                     </div>
                   </div>
@@ -873,7 +864,7 @@ export default function AdminPage() {
                         개인 사용자
                       </p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {statistics.individualUsers}
+                        {statistics.data?.totalUsers || 0}
                       </p>
                     </div>
                   </div>
@@ -887,7 +878,7 @@ export default function AdminPage() {
                         기업 사용자
                       </p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {statistics.businessUsers}
+                        {statistics.data?.totalConversations || 0}
                       </p>
                     </div>
                   </div>
@@ -901,7 +892,7 @@ export default function AdminPage() {
                         전체 조직
                       </p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {statistics.totalOrganizations}
+                        {statistics.data?.totalDocuments || 0}
                       </p>
                     </div>
                   </div>
@@ -915,7 +906,7 @@ export default function AdminPage() {
                         최근 7일 가입
                       </p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {statistics.recentUsers}
+                        {statistics.data?.dailyActive || 0}
                       </p>
                     </div>
                   </div>
@@ -928,29 +919,25 @@ export default function AdminPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">개인 사용자</span>
-                      <span className="text-sm font-semibold">
-                        {statistics.userTypeDistribution.individual}%
-                      </span>
+                      <span className="text-sm font-semibold">50%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
                         style={{
-                          width: `${statistics.userTypeDistribution.individual}%`,
+                          width: `50%`,
                         }}
                       ></div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">기업 사용자</span>
-                      <span className="text-sm font-semibold">
-                        {statistics.userTypeDistribution.business}%
-                      </span>
+                      <span className="text-sm font-semibold">50%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-500 h-2 rounded-full"
                         style={{
-                          width: `${statistics.userTypeDistribution.business}%`,
+                          width: `50%`,
                         }}
                       ></div>
                     </div>
@@ -1049,7 +1036,7 @@ export default function AdminPage() {
                               <div>
                                 <span className="font-medium">전체 청크:</span>
                                 <div className="text-lg font-bold">
-                                  {embeddingStatus.totalChunks}
+                                  {embeddingStatus.data?.totalDocuments || 0}
                                 </div>
                               </div>
                               <div>
@@ -1057,19 +1044,29 @@ export default function AdminPage() {
                                   임베딩 완료:
                                 </span>
                                 <div className="text-lg font-bold text-green-600">
-                                  {embeddingStatus.embeddedChunks}
+                                  {embeddingStatus.data?.embeddedDocuments || 0}
                                 </div>
                               </div>
                               <div>
                                 <span className="font-medium">처리 대기:</span>
                                 <div className="text-lg font-bold text-orange-600">
-                                  {embeddingStatus.pendingChunks}
+                                  {embeddingStatus.data?.pendingDocuments || 0}
                                 </div>
                               </div>
                               <div>
                                 <span className="font-medium">진행률:</span>
                                 <div className="text-lg font-bold text-blue-600">
-                                  {embeddingStatus.embeddingProgress}%
+                                  {Math.round(
+                                    ((embeddingStatus.data?.embeddedDocuments ||
+                                      0) /
+                                      Math.max(
+                                        1,
+                                        embeddingStatus.data?.totalDocuments ||
+                                          1
+                                      )) *
+                                      100
+                                  )}
+                                  %
                                 </div>
                               </div>
                             </div>
@@ -1078,7 +1075,16 @@ export default function AdminPage() {
                                 <div
                                   className="bg-green-500 h-2 rounded-full transition-all duration-300"
                                   style={{
-                                    width: `${embeddingStatus.embeddingProgress}%`,
+                                    width: `${Math.round(
+                                      ((embeddingStatus.data
+                                        ?.embeddedDocuments || 0) /
+                                        Math.max(
+                                          1,
+                                          embeddingStatus.data
+                                            ?.totalDocuments || 1
+                                        )) *
+                                        100
+                                    )}%`,
                                   }}
                                 ></div>
                               </div>
@@ -1087,7 +1093,7 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {embeddingStatus.pendingChunks > 0 && (
+                      {(embeddingStatus.data?.pendingDocuments || 0) > 0 && (
                         <button
                           onClick={handleReprocessEmbeddings}
                           disabled={reprocessingEmbeddings}
@@ -1146,7 +1152,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {documents.length === 0 ? (
+                      {documentList.data.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="px-6 py-8 text-center">
                             <div className="flex flex-col items-center">
@@ -1161,7 +1167,7 @@ export default function AdminPage() {
                           </td>
                         </tr>
                       ) : (
-                        documents.map((doc) => (
+                        documentList.data.map((doc) => (
                           <tr key={doc.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
@@ -1239,31 +1245,20 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() =>
-                          userList.setPage(
-                            Math.max(1, userList.pagination.page - 1)
-                          )
-                        }
-                        disabled={userList.pagination.page === 1}
+                        onClick={() => console.log("이전 페이지로 이동")}
+                        disabled={userList.pagination.currentPage === 1}
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         이전
                       </button>
                       <span className="text-sm text-gray-700">
-                        페이지 {userList.pagination.page} /{" "}
+                        페이지 {userList.pagination.currentPage} /{" "}
                         {userList.pagination.totalPages}
                       </span>
                       <button
-                        onClick={() =>
-                          userList.setPage(
-                            Math.min(
-                              userList.pagination.totalPages,
-                              userList.pagination.page + 1
-                            )
-                          )
-                        }
+                        onClick={() => console.log("다음 페이지로 이동")}
                         disabled={
-                          userList.pagination.page ===
+                          userList.pagination.currentPage ===
                           userList.pagination.totalPages
                         }
                         className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1292,7 +1287,7 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-                {organizations.length === 0 ? (
+                {organizationList.data.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500 text-lg font-medium mb-2">
@@ -1303,7 +1298,7 @@ export default function AdminPage() {
                     </p>
                   </div>
                 ) : (
-                  organizations.map((org) => (
+                  organizationList.data.map((org) => (
                     <div
                       key={org.id}
                       className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"

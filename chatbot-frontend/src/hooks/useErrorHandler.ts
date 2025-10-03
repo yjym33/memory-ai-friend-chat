@@ -181,28 +181,13 @@ export function useApiErrorHandler() {
           const httpError = createHttpError(
             axiosError.message || "API 요청 실패",
             axiosError.response.status,
-            axiosError.response.statusText,
-            {
-              endpoint,
-              context: {
-                url: axiosError.config?.url,
-                method: axiosError.config?.method,
-                data: axiosError.response.data,
-              },
-            }
+            axiosError.response.statusText
           );
           await handleError(httpError);
         } else if (axiosError.request) {
           // 네트워크 에러
-          const networkError = createNetworkError(
-            "네트워크 연결을 확인해주세요.",
-            {
-              context: {
-                endpoint,
-                url: axiosError.config?.url,
-              },
-            }
-          );
+          const networkError =
+            createNetworkError("네트워크 연결을 확인해주세요.");
           await handleError(networkError);
         } else {
           // 기타 API 에러

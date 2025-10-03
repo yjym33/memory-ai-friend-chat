@@ -52,6 +52,7 @@ export default function DocumentsPage() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reprocessingEmbeddings, setReprocessingEmbeddings] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // 통합된 로딩 상태
   const loading =
@@ -111,10 +112,10 @@ export default function DocumentsPage() {
     try {
       const response = await apiClient.get("/documents/embedding-status");
       console.log("Embedding Status API Response:", response);
-      setEmbeddingStatus(response as EmbeddingStatus);
+      embeddingStatus.updateData(response);
     } catch (error) {
       console.error("임베딩 상태 로딩 실패:", error);
-      setEmbeddingStatus(null);
+      embeddingStatus.setError("임베딩 상태를 불러오는데 실패했습니다.");
     }
   };
 
@@ -441,25 +442,34 @@ export default function DocumentsPage() {
                             <div>
                               <span className="font-medium">전체 청크:</span>
                               <div className="text-lg font-bold">
-                                {embeddingStatus.totalChunks}
+                                {embeddingStatus.data?.totalDocuments || 0}
                               </div>
                             </div>
                             <div>
                               <span className="font-medium">임베딩 완료:</span>
                               <div className="text-lg font-bold text-green-600">
-                                {embeddingStatus.embeddedChunks}
+                                {embeddingStatus.data?.embeddedDocuments || 0}
                               </div>
                             </div>
                             <div>
                               <span className="font-medium">처리 대기:</span>
                               <div className="text-lg font-bold text-orange-600">
-                                {embeddingStatus.pendingChunks}
+                                {embeddingStatus.data?.pendingDocuments || 0}
                               </div>
                             </div>
                             <div>
                               <span className="font-medium">진행률:</span>
                               <div className="text-lg font-bold text-blue-600">
-                                {embeddingStatus.embeddingProgress}%
+                                {Math.round(
+                                  ((embeddingStatus.data?.embeddedDocuments ||
+                                    0) /
+                                    Math.max(
+                                      1,
+                                      embeddingStatus.data?.totalDocuments || 1
+                                    )) *
+                                    100
+                                )}
+                                %
                               </div>
                             </div>
                           </div>
@@ -468,7 +478,16 @@ export default function DocumentsPage() {
                               <div
                                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
                                 style={{
-                                  width: `${embeddingStatus.embeddingProgress}%`,
+                                  width: `${Math.round(
+                                    ((embeddingStatus.data?.embeddedDocuments ||
+                                      0) /
+                                      Math.max(
+                                        1,
+                                        embeddingStatus.data?.totalDocuments ||
+                                          1
+                                      )) *
+                                      100
+                                  )}%`,
                                 }}
                               ></div>
                             </div>
@@ -477,7 +496,7 @@ export default function DocumentsPage() {
                       </div>
                     </div>
 
-                    {embeddingStatus.pendingChunks > 0 && (
+                    {(embeddingStatus.data?.pendingDocuments || 0) > 0 && (
                       <button
                         onClick={handleReprocessEmbeddings}
                         disabled={reprocessingEmbeddings}
@@ -536,7 +555,7 @@ export default function DocumentsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {documents.length === 0 ? (
+                    {documentList.data.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-8 text-center">
                           <div className="flex flex-col items-center">
@@ -638,13 +657,21 @@ export default function DocumentsPage() {
                       이전
                     </button>
                     <span className="text-sm text-gray-700">
-                      페이지 {currentPage} / {totalPages}
+                      페이지 {currentPage} /{" "}
+                      {documentList.pagination.totalPages}
                     </span>
                     <button
                       onClick={() =>
-                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        setCurrentPage(
+                          Math.min(
+                            documentList.pagination.totalPages,
+                            currentPage + 1
+                          )
+                        )
                       }
-                      disabled={currentPage === totalPages}
+                      disabled={
+                        currentPage === documentList.pagination.totalPages
+                      }
                       className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       다음

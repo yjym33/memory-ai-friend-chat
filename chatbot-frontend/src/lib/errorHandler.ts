@@ -266,14 +266,11 @@ class ErrorHandler {
   createFromError(error: unknown, category?: ErrorCategory): AppError {
     if (error instanceof Error) {
       return this.createSystemError(error.message, error, {
-        category: category || ErrorCategory.UNKNOWN,
         stackTrace: error.stack,
       });
     }
 
-    return this.createSystemError("Unknown error occurred", error, {
-      category: category || ErrorCategory.UNKNOWN,
-    });
+    return this.createSystemError("Unknown error occurred", error);
   }
 
   // 메인 에러 처리 메서드

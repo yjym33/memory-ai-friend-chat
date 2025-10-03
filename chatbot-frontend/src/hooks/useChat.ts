@@ -31,8 +31,7 @@ export function useChat() {
     } catch (err) {
       const apiError = createApiError(
         "대화 목록을 불러오는데 실패했습니다.",
-        err,
-        { endpoint: "/conversations" }
+        "/conversations"
       );
       handleError(apiError, { showToast: true });
     }
@@ -92,11 +91,10 @@ export function useChat() {
       // 대화 목록 갱신
       await fetchConversations();
     } catch (err) {
-      const apiError = createApiError("메시지 전송에 실패했습니다.", err, {
-        endpoint: "/chat/completion",
-        message,
-        chatMode,
-      });
+      const apiError = createApiError(
+        "메시지 전송에 실패했습니다.",
+        "/chat/completion"
+      );
       handleError(apiError, { showToast: true });
     } finally {
       setLoading(false);
@@ -110,9 +108,10 @@ export function useChat() {
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
     } catch (err) {
-      const apiError = createApiError("새 대화를 시작할 수 없습니다.", err, {
-        endpoint: "/conversations",
-      });
+      const apiError = createApiError(
+        "새 대화를 시작할 수 없습니다.",
+        "/conversations"
+      );
       handleError(apiError, { showToast: true });
     }
   };
@@ -132,8 +131,7 @@ export function useChat() {
     } catch (err) {
       const apiError = createApiError(
         "대화방을 삭제하는데 실패했습니다.",
-        err,
-        { endpoint: `/conversations/${chatId}` }
+        `/conversations/${chatId}`
       );
       handleError(apiError, { showToast: true });
     }
@@ -149,9 +147,10 @@ export function useChat() {
         )
       );
     } catch (err) {
-      const apiError = createApiError("대화방 이름 변경에 실패했습니다.", err, {
-        endpoint: `/conversations/${chatId}`,
-      });
+      const apiError = createApiError(
+        "대화방 이름 변경에 실패했습니다.",
+        `/conversations/${chatId}`
+      );
       handleError(apiError, { showToast: true });
     }
   };
@@ -177,9 +176,10 @@ export function useChat() {
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
     } catch (err) {
-      const apiError = createApiError("대화방 고정/해제에 실패했습니다.", err, {
-        endpoint: `/conversations/${chatId}/pin`,
-      });
+      const apiError = createApiError(
+        "대화방 고정/해제에 실패했습니다.",
+        `/conversations/${chatId}/pin`
+      );
       handleError(apiError, { showToast: true });
     }
   };
