@@ -65,6 +65,17 @@ export class ChatService {
     );
   }
 
+  // 대화 보관/해제
+  static async toggleConversationArchive(
+    conversationId: number,
+    archived: boolean
+  ): Promise<Conversation> {
+    return apiClient.put<Conversation>(
+      `/chat/conversations/${conversationId}/archive`,
+      { archived }
+    );
+  }
+
   /**
    * 대화 삭제
    */

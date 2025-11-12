@@ -38,6 +38,7 @@ export interface Conversation {
   messages: Message[];
   userId: string;
   pinned: boolean;
+  isArchived?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

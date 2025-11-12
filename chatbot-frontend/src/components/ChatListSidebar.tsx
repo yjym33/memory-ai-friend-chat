@@ -12,6 +12,7 @@ interface ChatListSidebarProps {
   onDeleteChat: (chatId: number) => void;
   onUpdateTitle: (chatId: number, newTitle: string) => void;
   onTogglePin: (chatId: number) => void;
+  onToggleArchive: (chatId: number) => void;
   onClose?: () => void;
 }
 
@@ -23,6 +24,7 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
   onDeleteChat,
   onUpdateTitle,
   onTogglePin,
+  onToggleArchive,
   onClose,
 }: ChatListSidebarProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -65,10 +67,10 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
       );
     }
 
-    // 보관함 필터 (현재 isArchived 속성이 없으므로 주석 처리)
-    // if (!sidebarSettings.showArchived) {
-    //   filtered = filtered.filter((conv) => !conv.isArchived);
-    // }
+    // 보관함 필터
+    if (!sidebarSettings.showArchived) {
+      filtered = filtered.filter((conv) => !conv.isArchived);
+    }
 
     // 정렬
     const sorted = [...filtered].sort((a, b) => {
@@ -92,6 +94,17 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
 
     return sorted;
   }, [conversations, debouncedSearchTerm, sidebarSettings]);
+
+  // 통계 계산
+  const pinnedCount = useMemo(
+    () => conversations.filter((conv) => conv.pinned).length,
+    [conversations]
+  );
+
+  const archivedCount = useMemo(
+    () => conversations.filter((conv) => conv.isArchived).length,
+    [conversations]
+  );
 
   const handleTitleEdit = useCallback((chat: { id: number; title: string }) => {
     setEditingId(chat.id);
@@ -240,123 +253,154 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
           </div>
         ) : (
           <div className="space-y-1 p-2">
-            {filteredAndSortedConversations.map((chat) => (
-              <div
-                key={chat.id}
-                className={`group relative rounded-lg transition-all duration-200 ${
-                  activeChatId === chat.id
-                    ? "bg-blue-100 border-l-4 border-blue-500"
-                    : "hover:bg-gray-100"
-                } ${chat.pinned ? "ring-1 ring-yellow-300" : ""}`}
-              >
-                <div
-                  onClick={() => setActiveChatId(chat.id)}
-                  className="w-full text-left p-3 sm:p-3 focus:outline-none cursor-pointer"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setActiveChatId(chat.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {chat.pinned && (
-                        <Pin className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      )}
+            {filteredAndSortedConversations.map((chat) => {
+              const isArchived = chat.isArchived ?? false;
 
-                      {editingId === chat.id ? (
-                        <div className="flex-1 flex gap-2">
-                          <input
-                            type="text"
-                            value={editingTitle}
-                            onChange={(e) => setEditingTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
+              return (
+                <div
+                  key={chat.id}
+                  className={`group relative rounded-lg transition-all duration-200 ${
+                    activeChatId === chat.id
+                      ? "bg-blue-100 border-l-4 border-blue-500"
+                      : "hover:bg-gray-100"
+                  } ${chat.pinned ? "ring-1 ring-yellow-300" : ""} ${
+                    isArchived ? "opacity-60" : ""
+                  }`}
+                >
+                  <div
+                    onClick={() => setActiveChatId(chat.id)}
+                    className="w-full text-left p-3 sm:p-3 focus:outline-none cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveChatId(chat.id);
+                      }
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {chat.pinned && (
+                          <Pin className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                        )}
+
+                        {editingId === chat.id ? (
+                          <div className="flex-1 flex gap-2">
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleTitleSave(chat.id);
+                                } else if (e.key === "Escape") {
+                                  handleTitleCancel();
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              autoFocus
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleTitleSave(chat.id);
-                              } else if (e.key === "Escape") {
-                                handleTitleCancel();
-                              }
-                            }}
-                            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            autoFocus
-                          />
+                              }}
+                              className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                            >
+                              저장
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                              <span className="truncate min-w-0">
+                                {chat.title}
+                              </span>
+                              {isArchived && (
+                                <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-200 text-gray-600 flex-shrink-0">
+                                  보관됨
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-xs text-gray-600 truncate mt-1">
+                              {chat.messages && chat.messages.length > 0
+                                ? chat.messages[chat.messages.length - 1]
+                                    .content
+                                : "대화를 시작해보세요!"}
+                            </p>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {formatDate(chat.createdAt)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 액션 버튼들 */}
+                      {editingId !== chat.id && (
+                        <div className="flex items-center gap-2 sm:gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-white bg-opacity-80 lg:bg-transparent rounded-lg lg:rounded-none p-1 lg:p-0">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTitleSave(chat.id);
+                              onTogglePin(chat.id);
                             }}
-                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                            className={`p-1.5 sm:p-1 rounded transition-colors ${
+                              chat.pinned
+                                ? "text-yellow-500 hover:text-yellow-600"
+                                : "text-gray-400 hover:text-yellow-500"
+                            }`}
+                            title={chat.pinned ? "고정 해제" : "고정"}
                           >
-                            저장
+                            <Pin className="w-4 h-4 sm:w-3 sm:h-3" />
                           </button>
-                        </div>
-                      ) : (
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate text-sm">
-                            {chat.title}
-                          </h3>
-                          <p className="text-xs text-gray-600 truncate mt-1">
-                            {chat.messages && chat.messages.length > 0
-                              ? chat.messages[chat.messages.length - 1].content
-                              : "대화를 시작해보세요!"}
-                          </p>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {formatDate(chat.createdAt)}
-                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTitleEdit(chat);
+                            }}
+                            className="p-1.5 sm:p-1 text-gray-400 hover:text-blue-500 rounded transition-colors"
+                            title="제목 수정"
+                          >
+                            <Edit2 className="w-4 h-4 sm:w-3 sm:h-3" />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleArchive(chat.id);
+                            }}
+                            className={`p-1.5 sm:p-1 rounded transition-colors ${
+                              isArchived
+                                ? "text-blue-500 hover:text-blue-600"
+                                : "text-gray-400 hover:text-blue-500"
+                            }`}
+                            title={isArchived ? "보관 해제" : "보관하기"}
+                          >
+                            <Archive className="w-4 h-4 sm:w-3 sm:h-3" />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (
+                                window.confirm("이 대화를 삭제하시겠습니까?")
+                              ) {
+                                onDeleteChat(chat.id);
+                              }
+                            }}
+                            className="p-1.5 sm:p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
+                            title="대화 삭제"
+                          >
+                            <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
+                          </button>
                         </div>
                       )}
                     </div>
-
-                    {/* 액션 버튼들 */}
-                    {editingId !== chat.id && (
-                      <div className="flex items-center gap-2 sm:gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-white bg-opacity-80 lg:bg-transparent rounded-lg lg:rounded-none p-1 lg:p-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTogglePin(chat.id);
-                          }}
-                          className={`p-1.5 sm:p-1 rounded transition-colors ${
-                            chat.pinned
-                              ? "text-yellow-500 hover:text-yellow-600"
-                              : "text-gray-400 hover:text-yellow-500"
-                          }`}
-                          title={chat.pinned ? "고정 해제" : "고정"}
-                        >
-                          <Pin className="w-4 h-4 sm:w-3 sm:h-3" />
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTitleEdit(chat);
-                          }}
-                          className="p-1.5 sm:p-1 text-gray-400 hover:text-blue-500 rounded transition-colors"
-                          title="제목 수정"
-                        >
-                          <Edit2 className="w-4 h-4 sm:w-3 sm:h-3" />
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm("이 대화를 삭제하시겠습니까?")) {
-                              onDeleteChat(chat.id);
-                            }
-                          }}
-                          className="p-1.5 sm:p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
-                          title="대화 삭제"
-                        >
-                          <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -364,8 +408,8 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
       {/* 통계 정보 */}
       <div className="p-3 border-t border-gray-200 text-xs text-gray-500">
         전체 {conversations.length}개 대화
-        {conversations.filter((c) => c.pinned).length > 0 &&
-          ` • 고정 ${conversations.filter((c) => c.pinned).length}개`}
+        {pinnedCount > 0 && ` • 고정 ${pinnedCount}개`}
+        {archivedCount > 0 && ` • 보관 ${archivedCount}개`}
       </div>
     </div>
   );

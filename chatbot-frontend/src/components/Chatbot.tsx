@@ -43,6 +43,7 @@ export default function Chatbot() {
     deleteChat,
     updateChatTitle,
     toggleChatPin,
+    toggleChatArchive,
   } = useChat();
 
   // 테마 관리
@@ -129,6 +130,7 @@ export default function Chatbot() {
           onDeleteChat={deleteChat}
           onUpdateTitle={updateChatTitle}
           onTogglePin={toggleChatPin}
+          onToggleArchive={toggleChatArchive}
         />
       </div>
 
@@ -155,6 +157,7 @@ export default function Chatbot() {
           onDeleteChat={deleteChat}
           onUpdateTitle={updateChatTitle}
           onTogglePin={toggleChatPin}
+          onToggleArchive={toggleChatArchive}
           onClose={() => setIsChatListOpen(false)}
         />
       </div>

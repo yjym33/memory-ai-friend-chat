@@ -184,6 +184,35 @@ export function useChat() {
     }
   };
 
+  // 대화방 보관/해제
+  const toggleChatArchive = async (chatId: number) => {
+    try {
+      // 현재 대화의 archived 상태를 찾기
+      const currentConversation = conversations.find((c) => c.id === chatId);
+      if (!currentConversation) {
+        throw new Error("대화를 찾을 수 없습니다.");
+      }
+
+      // 현재 상태의 반대값으로 토글
+      const newArchivedState = !currentConversation.isArchived;
+
+      const updatedConversation = await ChatService.toggleConversationArchive(
+        chatId,
+        newArchivedState
+      );
+
+      setConversations((prev) =>
+        prev.map((c) => (c.id === chatId ? updatedConversation : c))
+      );
+    } catch (err) {
+      const apiError = createApiError(
+        "대화방 보관/해제에 실패했습니다.",
+        `/conversations/${chatId}/archive`
+      );
+      handleError(apiError, { showToast: true });
+    }
+  };
+
   // 컴포넌트 마운트 시 대화 목록 불러오기
   useEffect(() => {
     fetchConversations();
@@ -201,6 +230,7 @@ export function useChat() {
     deleteChat,
     updateChatTitle,
     toggleChatPin,
+    toggleChatArchive,
     fetchConversations,
   };
 }
