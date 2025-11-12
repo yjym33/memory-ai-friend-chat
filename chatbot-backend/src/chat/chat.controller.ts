@@ -106,6 +106,19 @@ export class ChatController {
   }
 
   /**
+   * 대화의 보관 상태를 업데이트합니다.
+   * @param id - 대화 ID
+   * @param body - 보관 상태
+   */
+  @Put('conversations/:id/archive')
+  async updateConversationArchive(
+    @Param('id') id: number,
+    @Body() body: { archived: boolean },
+  ) {
+    return this.chatService.updateConversationArchive(id, body.archived);
+  }
+
+  /**
    * 대화의 테마를 업데이트합니다.
    * @param id - 대화 ID
    * @param body - 테마 설정

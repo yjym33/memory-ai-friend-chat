@@ -31,6 +31,9 @@ export class Conversation {
   @Column({ default: false })
   pinned: boolean;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
   @Column({ type: 'jsonb', default: '{}' })
   theme: {
     // 기본 테마 설정
