@@ -3,32 +3,42 @@
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../../../store/authStore";
-import { success as toastSuccess, error as toastError } from "../../../lib/toast";
+import {
+  success as toastSuccess,
+  error as toastError,
+} from "../../../lib/toast";
 
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const login = useAuthStore((state) => state.login);
 
   useEffect(() => {
     const token = searchParams.get("token");
     const userId = searchParams.get("userId");
+    const userType = searchParams.get("userType");
+    const role = searchParams.get("role");
+    const organizationId = searchParams.get("organizationId");
 
     if (token && userId) {
-      // 토큰과 사용자 ID를 저장
-      setAuth(token, userId);
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", userId);
-      
+      // 기존 login 메서드 사용
+      login(
+        token,
+        userId,
+        userType || undefined,
+        role || undefined,
+        organizationId || undefined
+      );
+
       toastSuccess("소셜 로그인에 성공했습니다! 🎉");
-      
+
       // 메인 페이지로 리다이렉트
       router.push("/");
     } else {
       toastError("로그인에 실패했습니다. 다시 시도해주세요.");
       router.push("/login");
     }
-  }, [searchParams, setAuth, router]);
+  }, [searchParams, login, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-purple-600 flex items-center justify-center p-6">
@@ -50,9 +60,7 @@ export default function CallbackPage() {
         <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-purple-600 flex items-center justify-center p-6">
           <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
-              로딩 중...
-            </h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">로딩 중...</h2>
           </div>
         </div>
       }
@@ -61,4 +69,3 @@ export default function CallbackPage() {
     </Suspense>
   );
 }
-

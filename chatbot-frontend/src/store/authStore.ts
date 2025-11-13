@@ -134,7 +134,8 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem("userId", userId);
           if (userType) localStorage.setItem("userType", userType);
           if (role) localStorage.setItem("role", role);
-          if (organizationId) localStorage.setItem("organizationId", organizationId);
+          if (organizationId)
+            localStorage.setItem("organizationId", organizationId);
         } catch (error) {
           console.error("회원가입 실패:", error);
           throw error;
