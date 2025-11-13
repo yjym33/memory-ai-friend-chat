@@ -18,9 +18,9 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = (provider: "google" | "kakao") => {
-    // 소셜 로그인 로직 (추후 구현)
-    console.log(`${provider} 로그인 선택됨`);
-    toastWarning(`${provider} 로그인은 준비 중입니다! 🚧`);
+    // 백엔드 OAuth 엔드포인트로 리다이렉트
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    window.location.href = `${apiUrl}/auth/${provider}`;
   };
 
   return (
