@@ -119,6 +119,23 @@ export const developmentConfig = {
     },
   },
 
+  // OAuth 설정
+  oauth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      callbackUrl:
+        process.env.GOOGLE_CALLBACK_URL ||
+        'http://localhost:8080/auth/google/callback',
+    },
+    kakao: {
+      clientId: process.env.KAKAO_CLIENT_ID || '',
+      callbackUrl:
+        process.env.KAKAO_CALLBACK_URL ||
+        'http://localhost:8080/auth/kakao/callback',
+    },
+  },
+
   // 이메일 설정 (개발 환경에서는 콘솔 출력)
   email: {
     enabled: false,

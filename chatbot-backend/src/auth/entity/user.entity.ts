@@ -31,8 +31,18 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
+
+  // 소셜 로그인 필드
+  @Column({ nullable: true })
+  provider: string; // 'google', 'kakao', 'local'
+
+  @Column({ nullable: true })
+  providerId: string; // 소셜 로그인 제공자의 사용자 ID
+
+  @Column({ nullable: true })
+  profileImage: string; // 프로필 이미지 URL
 
   @Column({ nullable: true })
   name: string;

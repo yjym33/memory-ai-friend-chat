@@ -111,6 +111,17 @@ export interface AppConfig {
     };
     helmet: any;
   };
+  oauth: {
+    google: {
+      clientId: string;
+      clientSecret: string;
+      callbackUrl: string;
+    };
+    kakao: {
+      clientId: string;
+      callbackUrl: string;
+    };
+  };
   email: {
     enabled: boolean;
     provider: string;

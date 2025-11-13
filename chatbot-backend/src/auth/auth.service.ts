@@ -110,4 +110,64 @@ export class AuthService {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
   }
+
+  async validateOAuthLogin(profile: {
+    provider: string;
+    providerId: string;
+    email: string;
+    name: string;
+    profileImage?: string;
+  }) {
+    // 소셜 로그인 제공자 ID로 사용자 찾기
+    let user = await this.userRepository.findOne({
+      where: { provider: profile.provider, providerId: profile.providerId },
+      relations: ['organization'],
+    });
+
+    // 사용자가 없으면 새로 생성
+    if (!user) {
+      // 이메일로 기존 사용자 확인 (이메일 연동)
+      const existingUser = await this.userRepository.findOne({
+        where: { email: profile.email },
+      });
+
+      if (existingUser) {
+        // 기존 사용자에 소셜 로그인 정보 추가
+        existingUser.provider = profile.provider;
+        existingUser.providerId = profile.providerId;
+        existingUser.profileImage = profile.profileImage;
+        user = await this.userRepository.save(existingUser);
+      } else {
+        // 새 사용자 생성
+        user = await this.userRepository.save({
+          email: profile.email,
+          name: profile.name,
+          provider: profile.provider,
+          providerId: profile.providerId,
+          profileImage: profile.profileImage,
+          password: null, // 소셜 로그인 사용자는 비밀번호 없음
+          gender: 'male', // 기본값
+          birthYear: 2000, // 기본값
+        });
+      }
+    }
+
+    // JWT 토큰 생성
+    const payload = {
+      userId: user.id,
+      userType: user.userType,
+      role: user.role,
+      organizationId: user.organizationId,
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    return {
+      userId: user.id,
+      userType: user.userType,
+      role: user.role,
+      organizationId: user.organizationId,
+      token,
+    };
+  }
 }

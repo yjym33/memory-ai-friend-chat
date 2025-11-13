@@ -5,9 +5,13 @@ import {
   Get,
   Request,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { KakaoOAuthGuard } from './guards/kakao-oauth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthenticatedRequest } from '../common/types/request.types';
@@ -50,5 +54,49 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async validateToken(@Request() req: AuthenticatedRequest) {
     return { userId: req.user.userId };
+  }
+
+  /**
+   * 구글 로그인을 시작합니다.
+   */
+  @Get('google')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth() {
+    // Guard가 자동으로 구글 로그인 페이지로 리다이렉트
+  }
+
+  /**
+   * 구글 로그인 콜백을 처리합니다.
+   */
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuthCallback(@Request() req: any, @Res() res: Response) {
+    const result = await this.authService.validateOAuthLogin(req.user);
+    
+    // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`);
+  }
+
+  /**
+   * 카카오 로그인을 시작합니다.
+   */
+  @Get('kakao')
+  @UseGuards(KakaoOAuthGuard)
+  async kakaoAuth() {
+    // Guard가 자동으로 카카오 로그인 페이지로 리다이렉트
+  }
+
+  /**
+   * 카카오 로그인 콜백을 처리합니다.
+   */
+  @Get('kakao/callback')
+  @UseGuards(KakaoOAuthGuard)
+  async kakaoAuthCallback(@Request() req: any, @Res() res: Response) {
+    const result = await this.authService.validateOAuthLogin(req.user);
+    
+    // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`);
   }
 }

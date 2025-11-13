@@ -93,6 +93,27 @@ export class EnvironmentVariables {
   @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
   MAX_CONVERSATIONS_PER_QUERY: number = 10;
+
+  // OAuth 설정
+  @IsString()
+  @IsOptional()
+  GOOGLE_CLIENT_ID: string = '';
+
+  @IsString()
+  @IsOptional()
+  GOOGLE_CLIENT_SECRET: string = '';
+
+  @IsString()
+  @IsOptional()
+  GOOGLE_CALLBACK_URL: string = 'http://localhost:8080/auth/google/callback';
+
+  @IsString()
+  @IsOptional()
+  KAKAO_CLIENT_ID: string = '';
+
+  @IsString()
+  @IsOptional()
+  KAKAO_CALLBACK_URL: string = 'http://localhost:8080/auth/kakao/callback';
 }
 
 /**
