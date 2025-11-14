@@ -37,7 +37,7 @@ export function useChat() {
     }
   };
 
-  // 메시지 전송 (모드별 처리 기능 추가)
+  // 메시지 전송 (스트리밍 방식)
   const sendMessage = async (
     message: string,
     file?: UploadedFile,
@@ -68,24 +68,68 @@ export function useChat() {
         )
       );
 
-      // 모드별 AI 응답 받기
-      let aiResponse: Message;
+      // AI 응답을 위한 빈 메시지 생성
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: "",
+        timestamp: new Date().toISOString(),
+      };
 
-      if (chatMode === ChatMode.BUSINESS) {
-        // 기업 모드: 문서 검색 기반 응답
-        aiResponse = await ChatService.sendBusinessQuery(activeChatId, message);
-      } else {
-        // 개인 모드: 기존 AI 친구 로직
-        aiResponse = await ChatService.sendMessage(activeChatId, message, file);
-      }
-
-      // AI 응답을 UI에 추가
+      // UI에 빈 assistant 메시지 추가 (스트리밍으로 채워질 예정)
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === activeChatId
-            ? { ...conv, messages: [...conv.messages, aiResponse] }
+            ? { ...conv, messages: [...conv.messages, assistantMessage] }
             : conv
         )
+      );
+
+      // 스트리밍 방식으로 응답 받기
+      await ChatService.sendMessageStream(
+        activeChatId,
+        message,
+        (chunk: string) => {
+          // 각 청크를 받을 때마다 UI 업데이트
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (conv.id === activeChatId) {
+                const updatedMessages = [...conv.messages];
+                const lastMessage = updatedMessages[updatedMessages.length - 1];
+                if (lastMessage && lastMessage.role === "assistant") {
+                  lastMessage.content += chunk;
+                }
+                return { ...conv, messages: updatedMessages };
+              }
+              return conv;
+            })
+          );
+        },
+        (sources?: any[]) => {
+          // 스트리밍 완료 시 출처 정보 추가
+          if (sources && sources.length > 0) {
+            setConversations((prev) =>
+              prev.map((conv) => {
+                if (conv.id === activeChatId) {
+                  const updatedMessages = [...conv.messages];
+                  const lastMessage = updatedMessages[updatedMessages.length - 1];
+                  if (lastMessage && lastMessage.role === "assistant") {
+                    lastMessage.sources = sources;
+                  }
+                  return { ...conv, messages: updatedMessages };
+                }
+                return conv;
+              })
+            );
+          }
+        },
+        (error: Error) => {
+          // 에러 처리
+          const apiError = createApiError(
+            "메시지 스트리밍 중 오류가 발생했습니다.",
+            "/chat/completion/stream"
+          );
+          handleError(apiError, { showToast: true });
+        }
       );
 
       // 대화 목록 갱신
