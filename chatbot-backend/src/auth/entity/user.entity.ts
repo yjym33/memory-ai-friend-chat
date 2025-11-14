@@ -32,20 +32,20 @@ export class User {
   email: string;
 
   @Column({ nullable: true })
-  password: string;
+  password: string | null;
 
   // 소셜 로그인 필드
   @Column({ nullable: true })
-  provider: string; // 'google', 'kakao', 'local'
+  provider?: string | null; // 'google', 'kakao', 'local'
 
   @Column({ nullable: true })
-  providerId: string; // 소셜 로그인 제공자의 사용자 ID
+  providerId?: string | null; // 소셜 로그인 제공자의 사용자 ID
 
   @Column({ nullable: true })
-  profileImage: string; // 프로필 이미지 URL
+  profileImage?: string | null; // 프로필 이미지 URL
 
   @Column({ nullable: true })
-  name: string;
+  name?: string | null;
 
   @Column({ nullable: false, default: 'male' })
   gender: string;
@@ -73,7 +73,7 @@ export class User {
   organization?: Organization;
 
   @Column({ nullable: true })
-  organizationId?: string;
+  organizationId?: string | null;
 
   @Column({ type: 'json', default: '{}' })
   businessProfile: {

@@ -155,6 +155,23 @@ export const stagingConfig = {
     },
   },
 
+  // OAuth 설정
+  oauth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      callbackUrl:
+        process.env.GOOGLE_CALLBACK_URL ||
+        'https://staging.chatbot.com/auth/google/callback',
+    },
+    kakao: {
+      clientId: process.env.KAKAO_CLIENT_ID || '',
+      callbackUrl:
+        process.env.KAKAO_CALLBACK_URL ||
+        'https://staging.chatbot.com/auth/kakao/callback',
+    },
+  },
+
   // 이메일 설정
   email: {
     enabled: true,

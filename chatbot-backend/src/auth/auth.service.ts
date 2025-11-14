@@ -66,6 +66,12 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException(
+        '소셜 로그인을 사용한 계정입니다. 비밀번호로 로그인할 수 없습니다.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -135,7 +141,9 @@ export class AuthService {
         // 기존 사용자에 소셜 로그인 정보 추가
         existingUser.provider = profile.provider;
         existingUser.providerId = profile.providerId;
-        existingUser.profileImage = profile.profileImage;
+        if (profile.profileImage) {
+          existingUser.profileImage = profile.profileImage;
+        }
         user = await this.userRepository.save(existingUser);
       } else {
         // 새 사용자 생성
@@ -144,12 +152,16 @@ export class AuthService {
           name: profile.name,
           provider: profile.provider,
           providerId: profile.providerId,
-          profileImage: profile.profileImage,
+          profileImage: profile.profileImage ?? null,
           password: null, // 소셜 로그인 사용자는 비밀번호 없음
           gender: 'male', // 기본값
           birthYear: 2000, // 기본값
         });
       }
+    }
+
+    if (!user) {
+      throw new UnauthorizedException('소셜 로그인 처리에 실패했습니다.');
     }
 
     // JWT 토큰 생성

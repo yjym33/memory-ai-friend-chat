@@ -6,9 +6,16 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   constructor(private configService: ConfigService) {
+    const clientID = configService.get<string>('oauth.kakao.clientId');
+    const callbackURL = configService.get<string>('oauth.kakao.callbackUrl');
+
+    if (!clientID || !callbackURL) {
+      throw new Error('Kakao OAuth 설정이 누락되었습니다.');
+    }
+
     super({
-      clientID: configService.get<string>('oauth.kakao.clientId'),
-      callbackURL: configService.get<string>('oauth.kakao.callbackUrl'),
+      clientID,
+      callbackURL,
     });
   }
 
