@@ -29,7 +29,7 @@ export class ChatService {
   static async sendMessage(
     conversationId: number,
     message: string,
-    file?: any
+    file?: File | null
   ): Promise<Message> {
     return apiClient.post<Message>(`/chat/completion/${conversationId}`, {
       message,
@@ -136,10 +136,16 @@ export class ChatService {
       role: "assistant",
       content: response.response,
       timestamp: new Date().toISOString(),
-      sources: (response.sources || []).map((source: any) => ({
-        ...source,
-        documentId: source.documentId || source.id || "unknown",
-      })), // 출처 정보 추가
+      sources: (response.sources || []).map(
+        (source: Record<string, unknown>) => ({
+          title: (source.title as string) || "제목 없음",
+          documentId:
+            (source.documentId as string) || (source.id as string) || "unknown",
+          type: source.type as string | undefined,
+          relevance: (source.relevance as number) || 0,
+          snippet: source.snippet as string | undefined,
+        })
+      ), // 출처 정보 추가
     };
   }
 
@@ -153,8 +159,8 @@ export class ChatService {
       limit?: number;
       threshold?: number;
     }
-  ): Promise<any[]> {
-    return apiClient.post<any[]>("/documents/search", {
+  ): Promise<unknown[]> {
+    return apiClient.post<unknown[]>("/documents/search", {
       query,
       ...options,
     });
@@ -163,7 +169,9 @@ export class ChatService {
   /**
    * AI 설정 모드 전환
    */
-  static async switchChatMode(mode: "personal" | "business"): Promise<any> {
+  static async switchChatMode(
+    mode: "personal" | "business"
+  ): Promise<{ mode: string }> {
     return apiClient.post("/ai-settings/switch-mode", { mode });
   }
 

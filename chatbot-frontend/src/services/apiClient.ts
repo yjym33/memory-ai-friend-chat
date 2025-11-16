@@ -28,7 +28,12 @@ export const apiClient = {
       let appError;
 
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as any;
+        const axiosError = error as {
+          response?: { status: number; statusText: string; data?: unknown };
+          message?: string;
+          config?: { url?: string; method?: string; data?: unknown };
+          request?: unknown;
+        };
 
         if (axiosError.response) {
           // HTTP 에러 응답

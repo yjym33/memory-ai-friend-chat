@@ -103,11 +103,12 @@ export function ChatModeSwitch({
     );
   };
 
-  const getModeDescription = (mode: ChatMode) => {
-    return mode === ChatMode.PERSONAL
-      ? "개인적인 대화와 감정 교류를 위한 AI 친구"
-      : "회사 문서 기반 질문 답변 시스템";
-  };
+  // 모드 설명을 반환하는 함수 (향후 사용 가능)
+  // const getModeDescription = (mode: ChatMode) => {
+  //   return mode === ChatMode.PERSONAL
+  //     ? "개인적인 대화와 감정 교류를 위한 AI 친구"
+  //     : "회사 문서 기반 질문 답변 시스템";
+  // };
 
   if (isInitializing) {
     return (
