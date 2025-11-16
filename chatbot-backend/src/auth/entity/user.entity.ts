@@ -31,20 +31,20 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   password: string | null;
 
   // 소셜 로그인 필드
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   provider?: string | null; // 'google', 'kakao', 'local'
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   providerId?: string | null; // 소셜 로그인 제공자의 사용자 ID
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   profileImage?: string | null; // 프로필 이미지 URL
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   name?: string | null;
 
   @Column({ nullable: false, default: 'male' })
@@ -72,7 +72,7 @@ export class User {
   })
   organization?: Organization;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   organizationId?: string | null;
 
   @Column({ type: 'json', default: '{}' })

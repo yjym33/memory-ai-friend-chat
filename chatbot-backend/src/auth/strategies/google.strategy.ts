@@ -9,16 +9,21 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private configService: ConfigService) {
-    const clientID = configService.get<string>('oauth.google.clientId');
-    const clientSecret = configService.get<string>(
-      'oauth.google.clientSecret',
-    );
-    const callbackURL = configService.get<string>('oauth.google.callbackUrl');
+  private isConfigured: boolean;
 
-    if (!clientID || !clientSecret || !callbackURL) {
-      throw new Error('Google OAuth 설정이 누락되었습니다.');
-    }
+  constructor(private configService: ConfigService) {
+    const clientID =
+      configService.get<string>('oauth.google.clientId') ||
+      process.env.GOOGLE_CLIENT_ID ||
+      'dummy-client-id';
+    const clientSecret =
+      configService.get<string>('oauth.google.clientSecret') ||
+      process.env.GOOGLE_CLIENT_SECRET ||
+      'dummy-client-secret';
+    const callbackURL =
+      configService.get<string>('oauth.google.callbackUrl') ||
+      process.env.GOOGLE_CALLBACK_URL ||
+      'http://localhost:8080/auth/google/callback';
 
     const options: StrategyOptions = {
       clientID,
@@ -28,6 +33,20 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     };
 
     super(options);
+
+    // 실제 설정이 있는지 확인 (super() 호출 후)
+    this.isConfigured = !!(
+      configService.get<string>('oauth.google.clientId') ||
+      process.env.GOOGLE_CLIENT_ID
+    );
+
+    if (!this.isConfigured) {
+      console.log(
+        '⚠️  Google OAuth 설정이 없습니다. 소셜 로그인이 비활성화됩니다.',
+      );
+    } else {
+      console.log('✅ Google OAuth 전략이 활성화되었습니다.');
+    }
   }
 
   async validate(
@@ -36,8 +55,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
+    if (!this.isConfigured) {
+      return done(new Error('Google OAuth가 설정되지 않았습니다.'), false);
+    }
+
     const { id, name, emails, photos } = profile;
-    
+
     const user = {
       providerId: id,
       provider: 'google',
@@ -45,8 +68,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       name: name.givenName + ' ' + name.familyName,
       profileImage: photos[0].value,
     };
-    
+
     done(null, user);
   }
 }
-
