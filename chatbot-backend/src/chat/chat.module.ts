@@ -8,6 +8,8 @@ import { AuthModule } from '../auth/auth.module';
 import { AiSettingsModule } from '../ai-settings/ai-settings.module';
 import { AgentModule } from '../agent/agent.module';
 import { DocumentModule } from '../document/document.module';
+import { LlmService } from '../common/services/llm.service';
+import { FileExtractionService } from '../common/services/file-extraction.service';
 
 /**
  * 채팅 기능을 위한 모듈
@@ -25,7 +27,7 @@ import { DocumentModule } from '../document/document.module';
     DocumentModule, // 문서 관리
   ],
   controllers: [ChatController],
-  providers: [ChatService],
+  providers: [ChatService, LlmService, FileExtractionService],
   exports: [ChatService], // 다른 모듈에서 ChatService 사용 가능
 })
 export class ChatModule {}

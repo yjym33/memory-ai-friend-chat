@@ -13,20 +13,22 @@ import {
   Header,
 } from '@nestjs/common';
 import { Response } from 'express';
-import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { ChatService } from './chat.service';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import pdf from 'pdf-parse';
-import * as mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
-import * as Tesseract from 'tesseract.js';
-import textract from 'textract';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
 import { AuthenticatedRequest } from '../common/types/request.types';
+import { FileExtractionService } from '../common/services/file-extraction.service';
+import {
+  SSE_EVENT_TYPES,
+  ERROR_MESSAGES,
+} from '../common/constants/llm.constants';
+import {
+  validateConversationExists,
+  createUpdatedMessages,
+  formatSseEvent,
+} from '../common/utils/conversation.utils';
 
 /**
  * 채팅 관련 API를 처리하는 컨트롤러
@@ -40,6 +42,7 @@ export class ChatController {
     private configService: ConfigService,
     private readonly aiSettingsService: AiSettingsService,
     private readonly agentService: AgentService,
+    private readonly fileExtractionService: FileExtractionService,
   ) {}
 
   /**
@@ -277,255 +280,61 @@ export class ChatController {
         conversationId,
         body.message,
         (chunk: string) => {
-          // 전체 응답 누적
           fullResponse += chunk;
-          // 각 청크를 SSE 형식으로 전송
-          res.write(`data: ${JSON.stringify({ type: 'token', content: chunk })}\n\n`);
+          res.write(formatSseEvent(SSE_EVENT_TYPES.TOKEN, chunk));
         },
         (sources: any[]) => {
-          // 출처 정보 저장
           responseSources = sources;
-          // 출처 정보 전송
-          res.write(`data: ${JSON.stringify({ type: 'sources', content: sources })}\n\n`);
+          res.write(formatSseEvent(SSE_EVENT_TYPES.SOURCES, sources));
         },
       );
 
       // 대화 내용을 데이터베이스에 저장
       const conversation =
         await this.chatService.getConversation(conversationId);
-      if (conversation) {
-        const updatedMessages = [
-          ...conversation.messages,
-          { role: 'user' as const, content: body.message },
-          {
-            role: 'assistant' as const,
-            content: fullResponse,
-            sources: responseSources,
-          },
-        ];
+      
+      const validatedConversation = validateConversationExists(
+        conversation,
+        conversationId,
+      );
 
-        await this.chatService.updateConversation(
-          conversationId,
-          updatedMessages,
-        );
-      }
+      const updatedMessages = createUpdatedMessages(
+        validatedConversation,
+        body.message,
+        fullResponse,
+        responseSources,
+      );
+
+      await this.chatService.updateConversation(
+        conversationId,
+        updatedMessages,
+      );
 
       // 스트리밍 완료
-      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.write(formatSseEvent(SSE_EVENT_TYPES.DONE, null));
       res.end();
     } catch (error) {
       console.error('Chat streaming error:', error);
       res.write(
-        `data: ${JSON.stringify({
-          type: 'error',
-          content: '죄송해요, 처리 중 오류가 발생했습니다.',
-        })}\n\n`,
+        formatSseEvent(SSE_EVENT_TYPES.ERROR, ERROR_MESSAGES.GENERAL_ERROR),
       );
       res.end();
     }
   }
 
   /**
-   * 파일 내용을 추출하는 private 메서드
-   * @param filePath - 파일 경로
-   * @returns 추출된 텍스트 내용
+   * 파일 내용을 추출하는 메서드 (FileExtractionService 위임)
+   * @deprecated FileExtractionService를 직접 사용하세요
    */
   private async extractFileContent(filePath: string): Promise<string> {
-    const extension = path.extname(filePath).toLowerCase();
-
-    try {
-      switch (extension) {
-        case '.pdf':
-          const pdfBuffer = await fs.readFile(filePath);
-          const pdfData = await pdf(pdfBuffer);
-          return pdfData.text;
-
-        case '.docx':
-          const docxBuffer = await fs.readFile(filePath);
-          const docxResult = await mammoth.extractRawText({
-            buffer: docxBuffer,
-          });
-          return docxResult.value;
-
-        case '.xlsx':
-          const xlsxBuffer = await fs.readFile(filePath);
-          const workbook = XLSX.read(xlsxBuffer, { type: 'buffer' });
-          const sheetNames = workbook.SheetNames;
-          let content = '';
-          sheetNames.forEach((sheetName) => {
-            const worksheet = workbook.Sheets[sheetName];
-            content += `\n[${sheetName}]\n`;
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            content += JSON.stringify(jsonData, null, 2);
-          });
-          return content;
-
-        case '.pptx':
-          // PPTX는 복잡하므로 간단한 처리
-          return '[PowerPoint 파일입니다. 내용을 텍스트로 추출할 수 없습니다.]';
-
-        case '.txt':
-          return await fs.readFile(filePath, 'utf8');
-
-        default:
-          return '[지원하지 않는 파일 형식입니다.]';
-      }
-    } catch (error) {
-      console.error('파일 내용 추출 중 오류:', error);
-      throw new Error('파일 내용을 읽을 수 없습니다.');
-    }
+    return this.fileExtractionService.extractContent(filePath);
   }
 
   /**
-   * 파일 내용에서 핵심 정보만 추출하는 private 메서드
-   * @param content - 전체 파일 내용
-   * @param filename - 파일명
-   * @returns 핵심 내용 요약
+   * 파일 내용에서 핵심 정보만 추출하는 메서드 (FileExtractionService 위임)
+   * @deprecated FileExtractionService를 직접 사용하세요
    */
   private extractKeyContent(content: string, filename: string): string {
-    const extension = filename.toLowerCase().split('.').pop();
-
-    try {
-      switch (extension) {
-        case 'pdf':
-          return this.extractPdfKeyContent(content);
-        case 'docx':
-        case 'doc':
-          return this.extractDocKeyContent(content);
-        case 'xlsx':
-        case 'xls':
-          return this.extractExcelKeyContent(content);
-        case 'txt':
-          return this.extractTextKeyContent(content);
-        default:
-          return this.extractTextKeyContent(content);
-      }
-    } catch (error) {
-      console.error('핵심 내용 추출 중 오류:', error);
-      return '[파일 내용을 분석할 수 없습니다.]';
-    }
-  }
-
-  /**
-   * PDF 파일의 핵심 내용 추출
-   */
-  private extractPdfKeyContent(content: string): string {
-    // 제목, 요약, 목차, 결론 등 핵심 부분만 추출
-    const lines = content.split('\n').filter((line) => line.trim());
-
-    let keyContent = '';
-    let isInKeySection = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      // 제목 부분 (보통 처음 부분)
-      if (
-        i < 20 &&
-        (line.includes('논문') ||
-          line.includes('연구') ||
-          line.includes('제목'))
-      ) {
-        keyContent += line + '\n';
-        continue;
-      }
-
-      // 요약 부분
-      if (
-        line.includes('요지') ||
-        line.includes('요약') ||
-        line.includes('Abstract') ||
-        line.includes('ABSTRACT')
-      ) {
-        isInKeySection = true;
-        keyContent += '\n📋 ' + line + '\n';
-        continue;
-      }
-
-      // 목차 부분
-      if (
-        line.includes('차례') ||
-        line.includes('목차') ||
-        line.includes('Contents')
-      ) {
-        isInKeySection = true;
-        keyContent += '\n📑 ' + line + '\n';
-        continue;
-      }
-
-      // 결론 부분
-      if (
-        line.includes('결론') ||
-        line.includes('결론 및') ||
-        line.includes('제4장')
-      ) {
-        isInKeySection = true;
-        keyContent += '\n🎯 ' + line + '\n';
-        continue;
-      }
-
-      // 핵심 섹션 내에서 중요한 내용만 추출
-      if (
-        isInKeySection &&
-        line.length > 10 &&
-        !line.includes('-') &&
-        !line.includes('_')
-      ) {
-        if (keyContent.length < 2000) {
-          // 최대 2000자로 제한
-          keyContent += line + '\n';
-        } else {
-          break;
-        }
-      }
-
-      // 섹션 구분자 만나면 핵심 섹션 종료
-      if (line.includes('제') && line.includes('장') && line.length < 20) {
-        isInKeySection = false;
-      }
-    }
-
-    if (keyContent.length === 0) {
-      // 핵심 내용을 찾지 못한 경우 앞부분 1000자만 반환
-      return (
-        content.substring(0, 1000) + '\n\n... (내용이 길어 일부만 표시됩니다)'
-      );
-    }
-
-    return keyContent + '\n\n... (핵심 내용만 표시됩니다)';
-  }
-
-  /**
-   * Word 문서의 핵심 내용 추출
-   */
-  private extractDocKeyContent(content: string): string {
-    // Word 문서도 PDF와 유사하게 처리
-    return this.extractPdfKeyContent(content);
-  }
-
-  /**
-   * Excel 파일의 핵심 내용 추출
-   */
-  private extractExcelKeyContent(content: string): string {
-    // Excel은 시트별로 데이터가 있으므로 첫 번째 시트의 주요 데이터만 반환
-    const lines = content.split('\n');
-    const keyLines = lines.slice(0, 50); // 처음 50줄만 반환
-
-    return keyLines.join('\n') + '\n\n... (데이터가 많아 일부만 표시됩니다)';
-  }
-
-  /**
-   * 텍스트 파일의 핵심 내용 추출
-   */
-  private extractTextKeyContent(content: string): string {
-    if (content.length <= 2000) {
-      return content;
-    }
-
-    // 텍스트가 길면 앞부분과 뒷부분을 조합
-    const firstPart = content.substring(0, 1000);
-    const lastPart = content.substring(content.length - 1000);
-
-    return firstPart + '\n\n... (중간 내용 생략) ...\n\n' + lastPart;
+    return this.fileExtractionService.extractKeyContent(content, filename);
   }
 }

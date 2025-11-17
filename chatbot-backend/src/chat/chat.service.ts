@@ -8,6 +8,15 @@ import { DocumentService } from '../document/document.service';
 import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
 import { ConfigService } from '@nestjs/config';
+import { LlmService } from '../common/services/llm.service';
+import {
+  LLM_CONFIG,
+  ERROR_MESSAGES,
+} from '../common/constants/llm.constants';
+import {
+  validateConversationExists,
+  createUpdatedMessages,
+} from '../common/utils/conversation.utils';
 import axios from 'axios';
 
 /**
@@ -25,6 +34,7 @@ export class ChatService {
     private aiSettingsService: AiSettingsService,
     private agentService: AgentService,
     private configService: ConfigService,
+    private llmService: LlmService,
   ) {}
 
   /**
@@ -456,76 +466,13 @@ ${context}
 
   /**
    * LLM API를 호출하여 스트리밍 방식으로 응답을 생성합니다.
+   * @deprecated LlmService.generateStreamingResponse를 사용하세요
    */
   private async generateLLMResponseStream(
     messages: Array<{ role: string; content: string }>,
     onChunk: (chunk: string) => void,
   ): Promise<void> {
-    try {
-      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
-
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: messages,
-          max_tokens: 500,
-          temperature: 0.8,
-          top_p: 0.9,
-          frequency_penalty: 0.5, // 반복 방지
-          presence_penalty: 0.3, // 새로운 주제 유도
-          stream: true, // 스트리밍 활성화
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          responseType: 'stream',
-        },
-      );
-
-      // 스트림 데이터 처리 (UTF-8 인코딩 문제 해결)
-      return new Promise((resolve, reject) => {
-        let buffer = '';
-
-        response.data.on('data', (chunk: Buffer) => {
-          // UTF-8 디코딩을 위해 버퍼에 누적
-          buffer += chunk.toString('utf8');
-          const lines = buffer.split('\n');
-
-          // 마지막 줄은 불완전할 수 있으므로 보관
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.trim() === '') continue;
-
-            if (line.includes('[DONE]')) {
-              resolve();
-              return;
-            }
-
-            if (line.startsWith('data: ')) {
-              try {
-                const jsonData = JSON.parse(line.slice(6));
-                const content = jsonData.choices[0]?.delta?.content;
-                if (content) {
-                  onChunk(content);
-                }
-              } catch (e) {
-                // JSON 파싱 오류 무시
-              }
-            }
-          }
-        });
-
-        response.data.on('end', () => resolve());
-        response.data.on('error', (error: Error) => reject(error));
-      });
-    } catch (error) {
-      console.error('LLM 스트리밍 API 호출 실패:', error);
-      throw new Error('AI 응답 생성에 실패했습니다.');
-    }
+    return this.llmService.generateStreamingResponse(messages, onChunk);
   }
 
   /**
@@ -590,37 +537,20 @@ ${context}
       // 시스템 프롬프트 생성
       const systemPrompt = this.buildPersonalSystemPrompt(aiSettings);
       
-      // 메시지 히스토리 구성 (최근 6개만 - 3턴)
-      const messages = [
-        { role: 'system', content: systemPrompt },
-      ];
-
-      // 이전 대화 추가 (최근 6개만 - 너무 많으면 반복 가능성 증가)
-      if (conversation && conversation.messages && conversation.messages.length > 0) {
-        const recentMessages = conversation.messages.slice(-6);
-        for (const msg of recentMessages) {
-          // 내용이 있는 메시지만 추가
-          if (msg.content && msg.content.trim()) {
-            messages.push({
-              role: msg.role,
-              content: msg.content.trim(),
-            });
-          }
-        }
-      }
-
-      // 현재 사용자 메시지 추가
-      messages.push({
-        role: 'user',
-        content: message.trim(),
-      });
+      // LlmService를 사용하여 메시지 히스토리 구성
+      const messages = this.llmService.buildMessageHistory(
+        systemPrompt,
+        conversation?.messages || [],
+        message,
+        LLM_CONFIG.MAX_CONTEXT_MESSAGES,
+      );
 
       console.log('📤 LLM에 전송하는 메시지:', JSON.stringify(messages, null, 2));
 
       await this.generateLLMResponseStream(messages, onChunk);
     } catch (error) {
       console.error('개인 모드 스트리밍 처리 오류:', error);
-      onChunk('죄송해요, 처리 중 오류가 발생했어요. 다시 말씀해주세요!');
+      onChunk(ERROR_MESSAGES.GENERAL_ERROR + ' ' + ERROR_MESSAGES.RETRY_MESSAGE);
     }
   }
 
