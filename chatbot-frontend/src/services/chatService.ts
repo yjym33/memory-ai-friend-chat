@@ -31,10 +31,27 @@ export class ChatService {
     message: string,
     file?: File | null
   ): Promise<Message> {
-    return apiClient.post<Message>(`/chat/completion/${conversationId}`, {
+    const response = await apiClient.post<{
+      role: "assistant";
+      content: string;
+      sources?: Array<{
+        title: string;
+        documentId: string;
+        type?: string;
+        relevance: number;
+        snippet?: string;
+      }>;
+    }>(`/chat/completion/${conversationId}`, {
       message,
       file,
     });
+
+    return {
+      role: response.role,
+      content: response.content,
+      timestamp: new Date().toISOString(),
+      sources: response.sources || [],
+    };
   }
 
   /**
@@ -180,5 +197,96 @@ export class ChatService {
    */
   static async getAvailableModes(): Promise<{ availableModes: string[] }> {
     return apiClient.get("/ai-settings/available-modes");
+  }
+
+  /**
+   * 스트리밍 방식으로 메시지 전송
+   */
+  static async sendMessageStream(
+    conversationId: number,
+    message: string,
+    onToken: (token: string) => void,
+    onSources?: (
+      sources: Array<{
+        title: string;
+        documentId: string;
+        type?: string;
+        relevance: number;
+        snippet?: string;
+      }>
+    ) => void,
+    onComplete?: () => void,
+    onError?: (error: Error) => void
+  ): Promise<void> {
+    try {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+      const token = (await import("../store/authStore")).useAuthStore.getState()
+        .token;
+
+      const response = await fetch(
+        `${API_URL}/chat/completion/${conversationId}/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("스트림을 읽을 수 없습니다.");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === "token") {
+                onToken(data.content);
+              } else if (data.type === "sources" && onSources) {
+                onSources(data.content);
+              } else if (data.type === "done") {
+                if (onComplete) onComplete();
+                return;
+              } else if (data.type === "error") {
+                throw new Error(data.content);
+              }
+            } catch (e) {
+              console.error("SSE 파싱 오류:", e);
+            }
+          }
+        }
+      }
+
+      if (onComplete) onComplete();
+    } catch (error) {
+      console.error("스트리밍 오류:", error);
+      if (onError) {
+        onError(error instanceof Error ? error : new Error("알 수 없는 오류"));
+      }
+    }
   }
 }

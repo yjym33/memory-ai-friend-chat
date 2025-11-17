@@ -84,56 +84,69 @@ export function useChat() {
         )
       );
 
-      // 스트리밍 방식으로 응답 받기
+      // 메시지 전송 (스트리밍 방식)
       await ChatService.sendMessageStream(
         activeChatId,
         message,
-        (chunk: string) => {
-          // 각 청크를 받을 때마다 UI 업데이트
+        // 각 토큰을 받을 때마다 UI 업데이트
+        (token: string) => {
           setConversations((prev) =>
             prev.map((conv) => {
               if (conv.id === activeChatId) {
-                const updatedMessages = [...conv.messages];
-                const lastMessage = updatedMessages[updatedMessages.length - 1];
-                if (lastMessage && lastMessage.role === "assistant") {
-                  lastMessage.content += chunk;
+                const messages = [...conv.messages];
+                const lastIndex = messages.length - 1;
+                
+                if (lastIndex >= 0 && messages[lastIndex].role === "assistant") {
+                  // 불변성을 유지하면서 새 객체 생성
+                  messages[lastIndex] = {
+                    ...messages[lastIndex],
+                    content: messages[lastIndex].content + token,
+                  };
                 }
-                return { ...conv, messages: updatedMessages };
+                
+                return { ...conv, messages };
               }
               return conv;
             })
           );
         },
-        (sources?: any[]) => {
-          // 스트리밍 완료 시 출처 정보 추가
-          if (sources && sources.length > 0) {
-            setConversations((prev) =>
-              prev.map((conv) => {
-                if (conv.id === activeChatId) {
-                  const updatedMessages = [...conv.messages];
-                  const lastMessage = updatedMessages[updatedMessages.length - 1];
-                  if (lastMessage && lastMessage.role === "assistant") {
-                    lastMessage.sources = sources;
-                  }
-                  return { ...conv, messages: updatedMessages };
+        // 출처 정보를 받을 때
+        (sources) => {
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (conv.id === activeChatId) {
+                const messages = [...conv.messages];
+                const lastIndex = messages.length - 1;
+                
+                if (lastIndex >= 0 && messages[lastIndex].role === "assistant") {
+                  // 불변성을 유지하면서 새 객체 생성
+                  messages[lastIndex] = {
+                    ...messages[lastIndex],
+                    sources: sources,
+                  };
                 }
-                return conv;
-              })
-            );
-          }
+                
+                return { ...conv, messages };
+              }
+              return conv;
+            })
+          );
         },
-        (error: Error) => {
-          // 에러 처리
+        // 스트리밍 완료 시
+        async () => {
+          // 스트리밍이 완료되었으므로 별도 처리 불필요
+          // 백엔드에서 이미 대화를 저장했음
+          console.log("스트리밍 완료");
+        },
+        // 에러 발생 시
+        (error) => {
           const apiError = createApiError(
-            "메시지 스트리밍 중 오류가 발생했습니다.",
-            "/chat/completion/stream"
+            error.message || "메시지 전송에 실패했습니다.",
+            "/chat/completion"
           );
           handleError(apiError, { showToast: true });
         }
       );
-
-      // 대화 목록 갱신
-      await fetchConversations();
     } catch (err) {
       const apiError = createApiError(
         "메시지 전송에 실패했습니다.",
