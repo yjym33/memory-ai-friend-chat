@@ -1189,8 +1189,8 @@ messages[lastIndex] = {
 
 - **개발자**: [YoungJin Kim]
 - **이메일**: [yjym33@naver.com]
-- **GitHub**: [https://github.com/yjym33](https://github.com/yourusername)
-- **블로그**: [https://yjym33.tistory.com/](https://yourblog.com)
+- **GitHub**: [https://github.com/yjym33](https://github.com/yjym33)
+- **블로그**: [https://yjym33.tistory.com/](https://yjym33.tistory.com/)
 
 ---
 
@@ -1210,11 +1210,11 @@ messages[lastIndex] = {
 
 프로젝트에 대한 문의사항이 있으시면 언제든지 연락주세요!
 
-- **Email**: [your.email@example.com]
-- **Issue Tracker**: [GitHub Issues](https://github.com/yourusername/ai-chatbot/issues)
+- **Email**: [yjym33@naver.com]
+- **Issue Tracker**: [GitHub Issues](https://github.com/yjym33/ai-chatbot/issues)
 - **Discord**: [커뮤니티 링크]
 
 ---
 
-**Last Updated**: 2024년 11월 17일  
+**Last Updated**: 2025년 11월 17일  
 **Version**: 0.1.0
