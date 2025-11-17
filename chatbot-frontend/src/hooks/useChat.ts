@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { ChatService } from "../services";
-import { Message, Conversation, UploadedFile } from "../types";
+import { Conversation, UploadedFile } from "../types";
 import { ChatMode } from "../components/ChatModeSwitch";
 import { useErrorHandler } from "./useErrorHandler";
+import {
+  addMessageToConversation,
+  appendTokenToLastAssistantMessage,
+  addSourcesToLastAssistantMessage,
+  createEmptyAssistantMessage,
+  createUserMessage,
+} from "../utils/conversationHelpers";
+import { ERROR_MESSAGES } from "../constants/messages";
 
 /**
  * 채팅 관리를 위한 커스텀 훅
@@ -28,9 +36,9 @@ export function useChat() {
       if (data.length > 0 && !activeChatId) {
         setActiveChatId(data[0].id);
       }
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
-        "대화 목록을 불러오는데 실패했습니다.",
+        ERROR_MESSAGES.FETCH_CONVERSATIONS_FAILED,
         "/conversations"
       );
       handleError(apiError, { showToast: true });
@@ -53,35 +61,19 @@ export function useChat() {
         messageContent = `${message}\n\n📎 첨부파일: ${file.originalName}`;
       }
 
-      const userMessage: Message = {
-        role: "user",
-        content: messageContent,
-        timestamp: new Date().toISOString(),
-      };
+      const userMessage = createUserMessage(messageContent);
 
       // UI에 사용자 메시지 즉시 반영
       setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === activeChatId
-            ? { ...conv, messages: [...conv.messages, userMessage] }
-            : conv
-        )
+        addMessageToConversation(prev, activeChatId, userMessage)
       );
 
       // AI 응답을 위한 빈 메시지 생성
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: "",
-        timestamp: new Date().toISOString(),
-      };
+      const assistantMessage = createEmptyAssistantMessage();
 
       // UI에 빈 assistant 메시지 추가 (스트리밍으로 채워질 예정)
       setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === activeChatId
-            ? { ...conv, messages: [...conv.messages, assistantMessage] }
-            : conv
-        )
+        addMessageToConversation(prev, activeChatId, assistantMessage)
       );
 
       // 메시지 전송 (스트리밍 방식)
@@ -91,45 +83,13 @@ export function useChat() {
         // 각 토큰을 받을 때마다 UI 업데이트
         (token: string) => {
           setConversations((prev) =>
-            prev.map((conv) => {
-              if (conv.id === activeChatId) {
-                const messages = [...conv.messages];
-                const lastIndex = messages.length - 1;
-                
-                if (lastIndex >= 0 && messages[lastIndex].role === "assistant") {
-                  // 불변성을 유지하면서 새 객체 생성
-                  messages[lastIndex] = {
-                    ...messages[lastIndex],
-                    content: messages[lastIndex].content + token,
-                  };
-                }
-                
-                return { ...conv, messages };
-              }
-              return conv;
-            })
+            appendTokenToLastAssistantMessage(prev, activeChatId, token)
           );
         },
         // 출처 정보를 받을 때
         (sources) => {
           setConversations((prev) =>
-            prev.map((conv) => {
-              if (conv.id === activeChatId) {
-                const messages = [...conv.messages];
-                const lastIndex = messages.length - 1;
-                
-                if (lastIndex >= 0 && messages[lastIndex].role === "assistant") {
-                  // 불변성을 유지하면서 새 객체 생성
-                  messages[lastIndex] = {
-                    ...messages[lastIndex],
-                    sources: sources,
-                  };
-                }
-                
-                return { ...conv, messages };
-              }
-              return conv;
-            })
+            addSourcesToLastAssistantMessage(prev, activeChatId, sources)
           );
         },
         // 스트리밍 완료 시
@@ -141,15 +101,15 @@ export function useChat() {
         // 에러 발생 시
         (error) => {
           const apiError = createApiError(
-            error.message || "메시지 전송에 실패했습니다.",
+            error.message || ERROR_MESSAGES.SEND_MESSAGE_FAILED,
             "/chat/completion"
           );
           handleError(apiError, { showToast: true });
         }
       );
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
-        "메시지 전송에 실패했습니다.",
+        ERROR_MESSAGES.SEND_MESSAGE_FAILED,
         "/chat/completion"
       );
       handleError(apiError, { showToast: true });
@@ -164,9 +124,9 @@ export function useChat() {
       const newChat = await ChatService.createConversation();
       setConversations((prev) => [newChat, ...prev]);
       setActiveChatId(newChat.id);
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
-        "새 대화를 시작할 수 없습니다.",
+        ERROR_MESSAGES.CREATE_CONVERSATION_FAILED,
         "/conversations"
       );
       handleError(apiError, { showToast: true });
@@ -185,9 +145,9 @@ export function useChat() {
       if (activeChatId === chatId) {
         setActiveChatId(updated.length > 0 ? updated[0].id : null);
       }
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
-        "대화방을 삭제하는데 실패했습니다.",
+        ERROR_MESSAGES.DELETE_CONVERSATION_FAILED,
         `/conversations/${chatId}`
       );
       handleError(apiError, { showToast: true });
@@ -203,7 +163,7 @@ export function useChat() {
           chat.id === chatId ? { ...chat, title: newTitle } : chat
         )
       );
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
         "대화방 이름 변경에 실패했습니다.",
         `/conversations/${chatId}`
@@ -218,7 +178,7 @@ export function useChat() {
       // 현재 대화의 pinned 상태를 찾기
       const currentConversation = conversations.find((c) => c.id === chatId);
       if (!currentConversation) {
-        throw new Error("대화를 찾을 수 없습니다.");
+        throw new Error(ERROR_MESSAGES.NOT_FOUND);
       }
 
       // 현재 상태의 반대값으로 토글
@@ -232,7 +192,7 @@ export function useChat() {
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
         "대화방 고정/해제에 실패했습니다.",
         `/conversations/${chatId}/pin`
@@ -247,7 +207,7 @@ export function useChat() {
       // 현재 대화의 archived 상태를 찾기
       const currentConversation = conversations.find((c) => c.id === chatId);
       if (!currentConversation) {
-        throw new Error("대화를 찾을 수 없습니다.");
+        throw new Error(ERROR_MESSAGES.NOT_FOUND);
       }
 
       // 현재 상태의 반대값으로 토글
@@ -261,7 +221,7 @@ export function useChat() {
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? updatedConversation : c))
       );
-    } catch (err) {
+    } catch {
       const apiError = createApiError(
         "대화방 보관/해제에 실패했습니다.",
         `/conversations/${chatId}/archive`
