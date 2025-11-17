@@ -1187,10 +1187,10 @@ messages[lastIndex] = {
 
 ## 👨‍💻 개발자 정보
 
-- **개발자**: [Your Name]
-- **이메일**: [your.email@example.com]
-- **GitHub**: [https://github.com/yourusername](https://github.com/yourusername)
-- **블로그**: [https://yourblog.com](https://yourblog.com)
+- **개발자**: [YoungJin Kim]
+- **이메일**: [yjym33@naver.com]
+- **GitHub**: [https://github.com/yjym33](https://github.com/yourusername)
+- **블로그**: [https://yjym33.tistory.com/](https://yourblog.com)
 
 ---
 
