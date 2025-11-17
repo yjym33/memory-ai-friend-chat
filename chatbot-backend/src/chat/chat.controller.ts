@@ -9,7 +9,10 @@ import {
   Put,
   Request,
   UseGuards,
+  Res,
+  Header,
 } from '@nestjs/common';
+import { Response } from 'express';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { ChatService } from './chat.service';
@@ -237,6 +240,88 @@ export class ChatController {
         role: 'assistant',
         content: '죄송해요, 처리 중 오류가 발생했습니다. 다시 말씀해 주세요.',
       };
+    }
+  }
+
+  /**
+   * AI와의 대화를 스트리밍 방식으로 처리합니다.
+   * @param conversationId - 대화 ID
+   * @param body - 사용자 메시지
+   * @param req - 요청 객체 (사용자 ID 포함)
+   * @param res - 응답 객체
+   */
+  @Post('completion/:conversationId/stream')
+  @Header('Content-Type', 'text/event-stream')
+  @Header('Cache-Control', 'no-cache')
+  @Header('Connection', 'keep-alive')
+  async chatCompletionStream(
+    @Param('conversationId') conversationId: number,
+    @Body() body: { message: string },
+    @Request() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      // SSE 헤더 설정
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no'); // Nginx 버퍼링 비활성화
+
+      // 전체 응답을 저장할 변수
+      let fullResponse = '';
+      let responseSources: any[] = [];
+
+      // 스트리밍 방식으로 메시지 처리
+      await this.chatService.processMessageStream(
+        req.user.userId,
+        conversationId,
+        body.message,
+        (chunk: string) => {
+          // 전체 응답 누적
+          fullResponse += chunk;
+          // 각 청크를 SSE 형식으로 전송
+          res.write(`data: ${JSON.stringify({ type: 'token', content: chunk })}\n\n`);
+        },
+        (sources: any[]) => {
+          // 출처 정보 저장
+          responseSources = sources;
+          // 출처 정보 전송
+          res.write(`data: ${JSON.stringify({ type: 'sources', content: sources })}\n\n`);
+        },
+      );
+
+      // 대화 내용을 데이터베이스에 저장
+      const conversation =
+        await this.chatService.getConversation(conversationId);
+      if (conversation) {
+        const updatedMessages = [
+          ...conversation.messages,
+          { role: 'user' as const, content: body.message },
+          {
+            role: 'assistant' as const,
+            content: fullResponse,
+            sources: responseSources,
+          },
+        ];
+
+        await this.chatService.updateConversation(
+          conversationId,
+          updatedMessages,
+        );
+      }
+
+      // 스트리밍 완료
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error('Chat streaming error:', error);
+      res.write(
+        `data: ${JSON.stringify({
+          type: 'error',
+          content: '죄송해요, 처리 중 오류가 발생했습니다.',
+        })}\n\n`,
+      );
+      res.end();
     }
   }
 

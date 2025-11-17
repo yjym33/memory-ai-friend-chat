@@ -455,6 +455,272 @@ ${context}
   }
 
   /**
+   * LLM API를 호출하여 스트리밍 방식으로 응답을 생성합니다.
+   */
+  private async generateLLMResponseStream(
+    messages: Array<{ role: string; content: string }>,
+    onChunk: (chunk: string) => void,
+  ): Promise<void> {
+    try {
+      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4',
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.8,
+          top_p: 0.9,
+          frequency_penalty: 0.5, // 반복 방지
+          presence_penalty: 0.3, // 새로운 주제 유도
+          stream: true, // 스트리밍 활성화
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'stream',
+        },
+      );
+
+      // 스트림 데이터 처리 (UTF-8 인코딩 문제 해결)
+      return new Promise((resolve, reject) => {
+        let buffer = '';
+
+        response.data.on('data', (chunk: Buffer) => {
+          // UTF-8 디코딩을 위해 버퍼에 누적
+          buffer += chunk.toString('utf8');
+          const lines = buffer.split('\n');
+
+          // 마지막 줄은 불완전할 수 있으므로 보관
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+
+            if (line.includes('[DONE]')) {
+              resolve();
+              return;
+            }
+
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonData = JSON.parse(line.slice(6));
+                const content = jsonData.choices[0]?.delta?.content;
+                if (content) {
+                  onChunk(content);
+                }
+              } catch (e) {
+                // JSON 파싱 오류 무시
+              }
+            }
+          }
+        });
+
+        response.data.on('end', () => resolve());
+        response.data.on('error', (error: Error) => reject(error));
+      });
+    } catch (error) {
+      console.error('LLM 스트리밍 API 호출 실패:', error);
+      throw new Error('AI 응답 생성에 실패했습니다.');
+    }
+  }
+
+  /**
+   * 메시지를 스트리밍 방식으로 처리합니다.
+   */
+  async processMessageStream(
+    userId: string,
+    conversationId: number,
+    message: string,
+    onChunk: (chunk: string) => void,
+    onSources?: (sources: any[]) => void,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['organization'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // AI 설정 조회
+    const aiSettings = await this.aiSettingsService.findByUserId(userId);
+    const mode = aiSettings?.chatMode || ChatMode.PERSONAL;
+
+    if (mode === ChatMode.BUSINESS) {
+      // 기업 모드: 문서 검색 기반 응답
+      await this.processBusinessMessageStream(
+        user,
+        conversationId,
+        message,
+        aiSettings,
+        onChunk,
+        onSources,
+      );
+    } else {
+      // 개인 모드: AI 친구 기반 응답
+      await this.processPersonalMessageStream(
+        user,
+        conversationId,
+        message,
+        aiSettings,
+        onChunk,
+      );
+    }
+  }
+
+  /**
+   * 개인 모드 메시지를 스트리밍 방식으로 처리합니다.
+   */
+  private async processPersonalMessageStream(
+    user: User,
+    conversationId: number,
+    message: string,
+    aiSettings: AiSettings,
+    onChunk: (chunk: string) => void,
+  ): Promise<void> {
+    try {
+      // 대화 기록 조회
+      const conversation = await this.getConversation(conversationId);
+      
+      // 시스템 프롬프트 생성
+      const systemPrompt = this.buildPersonalSystemPrompt(aiSettings);
+      
+      // 메시지 히스토리 구성 (최근 6개만 - 3턴)
+      const messages = [
+        { role: 'system', content: systemPrompt },
+      ];
+
+      // 이전 대화 추가 (최근 6개만 - 너무 많으면 반복 가능성 증가)
+      if (conversation && conversation.messages && conversation.messages.length > 0) {
+        const recentMessages = conversation.messages.slice(-6);
+        for (const msg of recentMessages) {
+          // 내용이 있는 메시지만 추가
+          if (msg.content && msg.content.trim()) {
+            messages.push({
+              role: msg.role,
+              content: msg.content.trim(),
+            });
+          }
+        }
+      }
+
+      // 현재 사용자 메시지 추가
+      messages.push({
+        role: 'user',
+        content: message.trim(),
+      });
+
+      console.log('📤 LLM에 전송하는 메시지:', JSON.stringify(messages, null, 2));
+
+      await this.generateLLMResponseStream(messages, onChunk);
+    } catch (error) {
+      console.error('개인 모드 스트리밍 처리 오류:', error);
+      onChunk('죄송해요, 처리 중 오류가 발생했어요. 다시 말씀해주세요!');
+    }
+  }
+
+  /**
+   * 개인 모드 시스템 프롬프트 생성
+   */
+  private buildPersonalSystemPrompt(aiSettings: AiSettings): string {
+    const personality = aiSettings.personalityType || '친근함';
+    const speechStyle = aiSettings.speechStyle || '반말';
+    const emojiLevel = aiSettings.emojiUsage || 3;
+    const nickname = aiSettings.nickname || '친구';
+
+    let prompt = `You are a friendly AI companion. Follow these guidelines strictly:
+
+1. Personality: Be warm and friendly
+2. Language: Respond in Korean using casual speech (반말)
+3. Emoji: Use ${emojiLevel >= 4 ? 'many' : emojiLevel >= 2 ? 'some' : 'few'} emojis naturally
+4. Call the user: "${nickname}"
+
+IMPORTANT RULES:
+- Give ONE clear, concise answer
+- Do NOT repeat the same words or phrases
+- Do NOT use special characters like ◆ or �
+- Keep responses natural and conversational
+- Vary your language and expressions
+- Answer directly without unnecessary elaboration`;
+
+    return prompt;
+  }
+
+  /**
+   * 기업 모드 메시지를 스트리밍 방식으로 처리합니다.
+   */
+  private async processBusinessMessageStream(
+    user: User,
+    conversationId: number,
+    message: string,
+    aiSettings: AiSettings,
+    onChunk: (chunk: string) => void,
+    onSources?: (sources: any[]) => void,
+  ): Promise<void> {
+    if (!user.organizationId) {
+      onChunk('기업 모드를 사용하려면 조직에 속해야 합니다.');
+      return;
+    }
+
+    try {
+      // 1. 관련 문서 검색
+      const searchResults = await this.documentService.searchDocuments(
+        user.organizationId,
+        message,
+        {
+          documentTypes: aiSettings.businessSettings?.enabledDocumentTypes,
+          limit: aiSettings.businessSettings?.maxSearchResults || 5,
+          threshold: aiSettings.businessSettings?.confidenceThreshold || 0.7,
+        },
+      );
+
+      // 2. 검색 결과가 없는 경우
+      if (searchResults.length === 0) {
+        const noResultResponse = this.generateNoResultsResponse(
+          message,
+          aiSettings,
+        );
+        for (let i = 0; i < noResultResponse.length; i += 5) {
+          onChunk(noResultResponse.slice(i, i + 5));
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        return;
+      }
+
+      // 3. 검색 결과를 컨텍스트로 활용하여 LLM 스트리밍 응답 생성
+      const context = this.buildContextFromSearchResults(searchResults);
+      const systemPrompt = this.buildBusinessPrompt(message, context, aiSettings);
+
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message },
+      ];
+
+      await this.generateLLMResponseStream(messages, onChunk);
+
+      // 4. 출처 정보 전송
+      if (onSources) {
+        const sources = searchResults.slice(0, 5).map((result) => ({
+          title: result.document.title,
+          documentId: result.document.id,
+          type: result.document.type,
+          relevance: result.score,
+          snippet: result.chunk.content.substring(0, 200),
+        }));
+        onSources(sources);
+      }
+    } catch (error) {
+      console.error('기업 모드 스트리밍 처리 오류:', error);
+      onChunk('죄송합니다. 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  /**
    * 검색 결과가 없을 때의 응답을 생성합니다.
    */
   private generateNoResultsResponse(
