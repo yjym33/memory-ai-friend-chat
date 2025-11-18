@@ -11,6 +11,7 @@ import ChatInput from "./ChatInput";
 import AiSettingsModal from "./AiSettingsModal";
 import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
+import TTSControlBar from "./TTSControlBar";
 import { ChatMode } from "./ChatModeSwitch";
 import { UploadedFile, Message } from "../types";
 import { Menu, FileText, BookOpen } from "lucide-react";
@@ -351,6 +352,9 @@ export default function Chatbot() {
         isOpen={isGoalManagerOpen}
         onClose={() => setIsGoalManagerOpen(false)}
       />
+
+      {/* TTS 컨트롤 바 */}
+      <TTSControlBar />
     </div>
   );
 }

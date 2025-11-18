@@ -5,6 +5,7 @@ import { useAiSettingsTest } from "../hooks/useAiSettingsTest";
 import SettingsTabs from "./ai-settings/SettingsTabs";
 import PersonalitySettings from "./ai-settings/PersonalitySettings";
 import MemorySettings from "./ai-settings/MemorySettings";
+import TTSSettings from "./ai-settings/TTSSettings";
 import SettingsTestSection from "./ai-settings/SettingsTestSection";
 
 interface AiSettingsModalProps {
@@ -16,9 +17,19 @@ export default function AiSettingsModal({
   isOpen,
   onClose,
 }: AiSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<"personality" | "memory">(
+  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "tts">(
     "personality"
   );
+
+  // TTS 설정 상태
+  const [ttsSettings, setTtsSettings] = useState({
+    ttsEnabled: true,
+    ttsAutoPlay: false,
+    ttsRate: 1.0,
+    ttsPitch: 1.0,
+    ttsVolume: 1.0,
+    ttsVoice: null as string | null,
+  });
 
   // AI 설정 관리 훅
   const {
@@ -116,6 +127,15 @@ export default function AiSettingsModal({
               onMemoryPriorityChange={updateMemoryPriority}
               onAddInterest={addInterest}
               onRemoveInterest={removeInterest}
+            />
+          )}
+
+          {activeTab === "tts" && (
+            <TTSSettings
+              settings={ttsSettings}
+              onSettingsChange={(newSettings) =>
+                setTtsSettings((prev) => ({ ...prev, ...newSettings }))
+              }
             />
           )}
         </div>

@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { Volume2, VolumeX, Square } from "lucide-react";
 import { Message } from "../types";
+import { useTTS } from "../hooks/useTTS";
 
 interface MessageBubbleProps {
   message: Message;
@@ -9,6 +11,24 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const { speak, stop, isSpeaking, isSupported } = useTTS();
+  const [isThisMessageSpeaking, setIsThisMessageSpeaking] = useState(false);
+
+  /**
+   * TTS 버튼 클릭 핸들러
+   */
+  const handleTTSClick = () => {
+    if (isThisMessageSpeaking) {
+      stop();
+      setIsThisMessageSpeaking(false);
+    } else {
+      setIsThisMessageSpeaking(true);
+      speak(message.content, undefined, () => {
+        // 재생 완료 시 상태 초기화
+        setIsThisMessageSpeaking(false);
+      });
+    }
+  };
 
   return (
     <div className={`flex ${isUser ? "justify-start" : "justify-end"} mb-4`}>
@@ -17,6 +37,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           isUser ? "bg-gray-100 text-gray-800" : "bg-blue-500 text-white"
         }`}
       >
+        {/* 메시지 내용 */}
         <ReactMarkdown
           components={{
             code(props) {
@@ -45,6 +66,42 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         >
           {message.content}
         </ReactMarkdown>
+
+        {/* TTS 버튼 (AI 메시지에만 표시) */}
+        {!isUser && isSupported && (
+          <div className="mt-2 flex justify-end items-center gap-2">
+            {/* 재생/일시정지 버튼 */}
+            <button
+              onClick={handleTTSClick}
+              className="p-1.5 rounded-full hover:bg-blue-600 transition-colors duration-200 
+                         focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+              title={isThisMessageSpeaking ? "음성 일시정지" : "음성으로 듣기"}
+              aria-label={isThisMessageSpeaking ? "음성 일시정지" : "음성으로 듣기"}
+            >
+              {isThisMessageSpeaking ? (
+                <VolumeX className="w-4 h-4 text-white" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-white" />
+              )}
+            </button>
+
+            {/* 정지 버튼 (재생 중일 때만 표시) */}
+            {isThisMessageSpeaking && (
+              <button
+                onClick={() => {
+                  stop();
+                  setIsThisMessageSpeaking(false);
+                }}
+                className="p-1.5 rounded-full hover:bg-red-600 transition-colors duration-200 
+                           focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                title="음성 정지"
+                aria-label="음성 정지"
+              >
+                <Square className="w-4 h-4 text-white fill-current" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

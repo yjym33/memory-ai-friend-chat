@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -7,7 +7,8 @@ import { Message } from "../types";
 import ThemeSelector from "./theme/ThemeSelector";
 import { ChatTheme } from "../types/theme";
 import { ChatMode } from "./ChatModeSwitch";
-import { FileText, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink, Volume2, VolumeX, Square } from "lucide-react";
+import { useTTS } from "../hooks/useTTS";
 
 interface ChatWindowProps {
   messages: Message[];
@@ -25,10 +26,28 @@ const ChatWindow = React.memo(function ChatWindow({
   chatMode = ChatMode.PERSONAL,
 }: ChatWindowProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const { speak, stop, isSpeaking, isSupported } = useTTS();
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  /**
+   * TTS 버튼 클릭 핸들러
+   */
+  const handleTTSClick = (messageContent: string, messageIndex: number) => {
+    if (speakingMessageIndex === messageIndex && isSpeaking) {
+      stop();
+      setSpeakingMessageIndex(null);
+    } else {
+      setSpeakingMessageIndex(messageIndex);
+      speak(messageContent, undefined, () => {
+        // 재생 완료 시 상태 초기화
+        setSpeakingMessageIndex(null);
+      });
+    }
+  };
 
   // 스타일 최적화
   const sectionStyle = useMemo(
@@ -187,6 +206,42 @@ const ChatWindow = React.memo(function ChatWindow({
                           </div>
                         </div>
                       )}
+
+                    {/* TTS 버튼 (AI 메시지에만 표시) */}
+                    {msg.role === "assistant" && isSupported && (
+                      <div className="mt-3 flex justify-end items-center gap-2">
+                        {/* 재생/일시정지 버튼 */}
+                        <button
+                          onClick={() => handleTTSClick(msg.content, idx)}
+                          className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 
+                                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                          title={speakingMessageIndex === idx && isSpeaking ? "음성 일시정지" : "음성으로 듣기"}
+                          aria-label={speakingMessageIndex === idx && isSpeaking ? "음성 일시정지" : "음성으로 듣기"}
+                        >
+                          {speakingMessageIndex === idx && isSpeaking ? (
+                            <VolumeX className="w-5 h-5 text-purple-600" />
+                          ) : (
+                            <Volume2 className="w-5 h-5 text-gray-600 hover:text-purple-600" />
+                          )}
+                        </button>
+
+                        {/* 정지 버튼 (재생 중일 때만 표시) */}
+                        {speakingMessageIndex === idx && isSpeaking && (
+                          <button
+                            onClick={() => {
+                              stop();
+                              setSpeakingMessageIndex(null);
+                            }}
+                            className="p-2 rounded-full hover:bg-red-100 transition-colors duration-200 
+                                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                            title="음성 정지"
+                            aria-label="음성 정지"
+                          >
+                            <Square className="w-5 h-5 text-red-600 hover:text-red-700 fill-current" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
