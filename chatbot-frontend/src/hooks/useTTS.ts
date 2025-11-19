@@ -146,7 +146,16 @@ export function useTTS() {
       };
 
       utterance.onerror = (event) => {
-        console.error("TTS Error:", event);
+        // SpeechSynthesisErrorEvent의 속성을 명시적으로 추출
+        const errorInfo = {
+          error: (event as SpeechSynthesisErrorEvent).error || "unknown",
+          type: event.type || "error",
+          charIndex: (event as SpeechSynthesisErrorEvent).charIndex,
+          elapsedTime: (event as SpeechSynthesisErrorEvent).elapsedTime,
+          name: (event as SpeechSynthesisErrorEvent).name,
+        };
+        
+        console.error("TTS Error:", errorInfo);
         setState((prev) => ({ ...prev, isSpeaking: false, isPaused: false }));
         if (onEnd) {
           onEnd();

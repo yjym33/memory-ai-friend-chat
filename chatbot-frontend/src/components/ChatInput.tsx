@@ -1,8 +1,9 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { UploadedFile } from "../services/uploadService";
 import EnhancedFileUpload from "./upload/EnhancedFileUpload";
 import { ChatMode } from "./ChatModeSwitch";
-import { Send, Plus, X, FileText } from "lucide-react";
+import { Send, Plus, X, FileText, Mic, MicOff } from "lucide-react";
+import { useSTT } from "../hooks/useSTT";
 
 interface ChatInputProps {
   input: string;
@@ -22,6 +23,17 @@ const ChatInput = React.memo(function ChatInput({
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // STT 훅
+  const {
+    start: startListening,
+    stop: stopListening,
+    isListening,
+    transcript,
+    interimTranscript,
+    isSupported: sttSupported,
+    error: sttError,
+  } = useSTT();
 
   const handleFileUploaded = useCallback((file: UploadedFile) => {
     setUploadedFile(file);
@@ -57,6 +69,31 @@ const ChatInput = React.memo(function ChatInput({
     },
     [handleSendMessage]
   );
+
+  // STT 결과를 input에 반영
+  useEffect(() => {
+    if (transcript) {
+      setInput(input + transcript);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript]);
+
+  // STT 버튼 클릭 핸들러
+  const handleSTTClick = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+
+  // STT 에러 표시
+  useEffect(() => {
+    if (sttError) {
+      console.error("STT Error:", sttError);
+      // 에러 메시지를 사용자에게 표시할 수 있음 (선택사항)
+    }
+  }, [sttError]);
 
   return (
     <div className="p-2 sm:p-4 bg-white border-t">
@@ -126,19 +163,54 @@ const ChatInput = React.memo(function ChatInput({
           )}
         </button>
 
+        {/* STT 버튼 */}
+        {sttSupported && (
+          <button
+            onClick={handleSTTClick}
+            disabled={loading}
+            className={`
+              p-2 sm:p-3 rounded-lg transition-all duration-200 
+              disabled:opacity-50 disabled:cursor-not-allowed
+              ${
+                isListening
+                  ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              }
+            `}
+            title={isListening ? "음성 인식 중지" : "음성으로 입력"}
+          >
+            {isListening ? (
+              <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />
+            ) : (
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+            )}
+          </button>
+        )}
+
         {/* 메시지 입력 */}
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
-            value={input}
+            value={input + (isListening ? interimTranscript : "")}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              chatMode === ChatMode.PERSONAL
+              isListening
+                ? "🎤 음성을 인식하고 있습니다..."
+                : chatMode === ChatMode.PERSONAL
                 ? "AI 친구 루나와 대화해보세요... 무엇이든 편하게 말씀해 주세요!"
                 : "업로드된 문서에 대해 질문해보세요... (예: 회사 정책, 업무 절차 등)"
             }
-            className="w-full p-2 sm:p-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900"
+            className={`
+              w-full p-2 sm:p-3 pr-10 sm:pr-12 border rounded-lg 
+              resize-none focus:outline-none focus:ring-2 
+              ${
+                isListening
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              }
+              text-sm sm:text-base text-gray-900
+            `}
             rows={1}
             style={{
               minHeight: "40px",
@@ -147,6 +219,22 @@ const ChatInput = React.memo(function ChatInput({
             }}
             disabled={loading}
           />
+          
+          {/* 중간 인식 결과 표시 */}
+          {isListening && interimTranscript && (
+            <div className="absolute bottom-full left-0 mb-1 px-2 py-1 
+                          bg-gray-800 text-white text-xs rounded shadow-lg">
+              인식 중: {interimTranscript}
+            </div>
+          )}
+
+          {/* STT 에러 표시 */}
+          {sttError && (
+            <div className="absolute bottom-full left-0 mb-1 px-2 py-1 
+                          bg-red-500 text-white text-xs rounded shadow-lg">
+              {sttError}
+            </div>
+          )}
         </div>
 
         {/* 전송 버튼 */}

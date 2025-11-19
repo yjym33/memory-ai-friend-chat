@@ -6,6 +6,7 @@ import SettingsTabs from "./ai-settings/SettingsTabs";
 import PersonalitySettings from "./ai-settings/PersonalitySettings";
 import MemorySettings from "./ai-settings/MemorySettings";
 import TTSSettings from "./ai-settings/TTSSettings";
+import STTSettings from "./ai-settings/STTSettings";
 import SettingsTestSection from "./ai-settings/SettingsTestSection";
 
 interface AiSettingsModalProps {
@@ -17,7 +18,7 @@ export default function AiSettingsModal({
   isOpen,
   onClose,
 }: AiSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "tts">(
+  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "tts" | "stt">(
     "personality"
   );
 
@@ -29,6 +30,14 @@ export default function AiSettingsModal({
     ttsPitch: 1.0,
     ttsVolume: 1.0,
     ttsVoice: null as string | null,
+  });
+
+  // STT 설정 상태
+  const [sttSettings, setSttSettings] = useState({
+    sttEnabled: true,
+    sttLanguage: "ko-KR",
+    sttContinuous: true,
+    sttAutoSend: false,
   });
 
   // AI 설정 관리 훅
@@ -135,6 +144,15 @@ export default function AiSettingsModal({
               settings={ttsSettings}
               onSettingsChange={(newSettings) =>
                 setTtsSettings((prev) => ({ ...prev, ...newSettings }))
+              }
+            />
+          )}
+
+          {activeTab === "stt" && (
+            <STTSettings
+              settings={sttSettings}
+              onSettingsChange={(newSettings) =>
+                setSttSettings((prev) => ({ ...prev, ...newSettings }))
               }
             />
           )}
