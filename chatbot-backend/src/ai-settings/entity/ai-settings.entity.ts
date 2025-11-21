@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../auth/entity/user.entity';
 import { DocumentType } from '../../document/entity/document.entity';
+import { LLMProvider } from '../../llm/types/llm.types';
 
 export enum ChatMode {
   PERSONAL = 'personal', // 개인 AI 친구 모드
@@ -82,6 +83,29 @@ export class AiSettings {
     includeSourceCitations?: boolean;
     maxSearchResults?: number;
     confidenceThreshold?: number;
+  };
+
+  // LLM 설정
+  @Column({
+    type: 'enum',
+    enum: LLMProvider,
+    default: LLMProvider.OPENAI,
+  })
+  llmProvider: LLMProvider;
+
+  @Column({ type: 'varchar', default: 'gpt-5.1' })
+  llmModel: string;
+
+  @Column({ type: 'json', nullable: true })
+  llmConfig: {
+    temperature?: number;
+    maxTokens?: number;
+    topP?: number;
+    topK?: number;
+    frequencyPenalty?: number;
+    presencePenalty?: number;
+    reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
+    [key: string]: any; // 모델별 추가 파라미터
   };
 
   @CreateDateColumn()

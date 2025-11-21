@@ -10,6 +10,7 @@ import { UsersModule } from '../users/user.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
+import { EncryptionService } from '../common/services/encryption.service';
 
 /**
  * 인증 관련 기능을 제공하는 전역 모듈
@@ -46,6 +47,7 @@ import { KakaoStrategy } from './strategies/kakao.strategy';
     JwtAuthGuard,
     GoogleStrategy,
     KakaoStrategy,
+    EncryptionService,
   ],
   exports: [AuthService, JwtAuthGuard], // 다른 모듈에서 사용 가능하도록 내보내기
 })

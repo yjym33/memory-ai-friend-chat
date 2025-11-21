@@ -9,10 +9,10 @@ import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
 import { ConfigService } from '@nestjs/config';
 import { LlmService } from '../common/services/llm.service';
-import {
-  LLM_CONFIG,
-  ERROR_MESSAGES,
-} from '../common/constants/llm.constants';
+import { LLMAdapterService } from '../llm/services/llm-adapter.service';
+import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service'; // chatbot-llm 서비스 추가
+import { LLMStreamChunk } from '../llm/types/llm.types'; // LLMStreamChunk 타입 import
+import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
 import {
   validateConversationExists,
   createUpdatedMessages,
@@ -35,6 +35,8 @@ export class ChatService {
     private agentService: AgentService,
     private configService: ConfigService,
     private llmService: LlmService,
+    private llmAdapterService: LLMAdapterService,
+    private chatbotLlmService: ChatbotLlmService, // chatbot-llm 서비스 주입
   ) {}
 
   /**
@@ -313,7 +315,7 @@ export class ChatService {
       const prompt = this.buildBusinessPrompt(message, context, aiSettings);
 
       console.log('🤖 AI 응답 생성 중...');
-      const response = await this.generateLLMResponse(prompt);
+      const response = await this.generateLLMResponse(user.id, prompt);
 
       // 4. 출처 정보 생성
       const extractedSources = searchResults.slice(0, 5).map((r) => ({
@@ -431,33 +433,30 @@ ${context}
 
   /**
    * LLM API를 호출하여 응답을 생성합니다.
+   * @param userId - 사용자 ID
+   * @param prompt - 시스템 프롬프트
+   * @returns AI 응답 텍스트
    */
-  private async generateLLMResponse(prompt: string): Promise<string> {
+  private async generateLLMResponse(
+    userId: string,
+    prompt: string,
+  ): Promise<string> {
     try {
-      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
-
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: prompt,
-            },
-          ],
-          max_tokens: 1000,
-          temperature: 0.3, // 기업 모드에서는 일관성 있는 답변을 위해 낮은 temperature
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
+      const response = await this.llmAdapterService.generateResponse(
+        userId,
+        [
+          {
+            role: 'system',
+            content: prompt,
           },
+        ],
+        {
+          temperature: 0.3, // 기업 모드에서는 일관성 있는 답변을 위해 낮은 temperature
+          maxTokens: 1000,
         },
       );
 
-      return response.data.choices[0].message.content;
+      return response.content;
     } catch (error) {
       console.error('LLM API 호출 실패:', error);
       throw new Error('AI 응답 생성에 실패했습니다.');
@@ -466,13 +465,41 @@ ${context}
 
   /**
    * LLM API를 호출하여 스트리밍 방식으로 응답을 생성합니다.
-   * @deprecated LlmService.generateStreamingResponse를 사용하세요
+   * @param userId - 사용자 ID
+   * @param messages - 대화 메시지 배열
+   * @param onChunk - 각 청크를 받을 때 호출되는 콜백
    */
   private async generateLLMResponseStream(
+    userId: string,
     messages: Array<{ role: string; content: string }>,
     onChunk: (chunk: string) => void,
   ): Promise<void> {
-    return this.llmService.generateStreamingResponse(messages, onChunk);
+    try {
+      // LLMAdapterService를 사용하여 스트리밍 응답 생성
+      await this.llmAdapterService.generateStreamingResponse(
+        userId,
+        messages,
+        (chunk: LLMStreamChunk) => {
+          // chunk.content가 있으면 전송 (빈 문자열도 전송 가능)
+          if (chunk.content !== undefined) {
+            onChunk(chunk.content);
+          }
+          // done이 true이면 완료 신호로 처리 (빈 문자열 전송)
+          if (chunk.done && chunk.content === '') {
+            // 완료 신호는 이미 onChunk('')로 전달됨
+          }
+        },
+      );
+    } catch (error) {
+      console.error('LLM 스트리밍 응답 생성 실패:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      // 에러를 상위로 전파하여 ChatController에서 처리할 수 있도록 함
+      throw error;
+    }
   }
 
   /**
@@ -522,6 +549,17 @@ ${context}
 
   /**
    * 개인 모드 메시지를 스트리밍 방식으로 처리합니다.
+   *
+   * 새로운 아키텍처에 따라 다음과 같이 처리합니다:
+   * 1. chatbot-llm 서비스에서 개인화된 프롬프트 생성 (AI 설정 + 메모리 통합)
+   * 2. LLMAdapterService로 LLM 호출 (다중 Provider 지원)
+   * 3. chatbot-llm 서비스에 메모리 저장 (비동기, 실패해도 계속 진행)
+   *
+   * @param user - 사용자 엔티티
+   * @param conversationId - 대화 ID
+   * @param message - 사용자 메시지
+   * @param aiSettings - AI 설정
+   * @param onChunk - 스트리밍 청크 콜백 함수
    */
   private async processPersonalMessageStream(
     user: User,
@@ -531,26 +569,70 @@ ${context}
     onChunk: (chunk: string) => void,
   ): Promise<void> {
     try {
-      // 대화 기록 조회
-      const conversation = await this.getConversation(conversationId);
-      
-      // 시스템 프롬프트 생성
-      const systemPrompt = this.buildPersonalSystemPrompt(aiSettings);
-      
-      // LlmService를 사용하여 메시지 히스토리 구성
-      const messages = this.llmService.buildMessageHistory(
-        systemPrompt,
-        conversation?.messages || [],
+      // 1. chatbot-llm 서비스에서 개인화된 프롬프트 생성
+      // AI 설정, 메모리, 대화 컨텍스트를 통합하여 최적화된 프롬프트 생성
+      const { messages } = await this.chatbotLlmService.generatePrompt(
+        user.id,
+        conversationId.toString(),
         message,
-        LLM_CONFIG.MAX_CONTEXT_MESSAGES,
+        aiSettings,
+        LLM_CONFIG.MAX_CONTEXT_MESSAGES, // 최대 컨텍스트 메시지 수
       );
 
-      console.log('📤 LLM에 전송하는 메시지:', JSON.stringify(messages, null, 2));
+      console.log(
+        '📤 LLM에 전송하는 메시지:',
+        JSON.stringify(messages, null, 2),
+      );
 
-      await this.generateLLMResponseStream(messages, onChunk);
+      // 2. LLMAdapterService로 LLM 호출 (스트리밍)
+      // 다중 Provider 지원 (OpenAI, Google, Anthropic)
+      let fullResponse = '';
+      await this.generateLLMResponseStream(user.id, messages, (chunk) => {
+        // 각 청크를 누적하여 전체 응답 저장
+        fullResponse += chunk;
+        // 클라이언트에 청크 전송
+        onChunk(chunk);
+      });
+
+      // 3. chatbot-llm 서비스에 메모리 저장 (비동기, 실패해도 계속 진행)
+      // 메모리 저장 실패는 치명적이지 않으므로 에러를 던지지 않음
+      // catch에서 에러를 무시하고 계속 진행
+      this.chatbotLlmService
+        .saveMemory(
+          user.id,
+          conversationId.toString(),
+          message,
+          fullResponse,
+          3, // 기본 중요도 (일반 대화)
+          'conversation', // 메모리 타입
+        )
+        .catch((error) => {
+          // 메모리 저장 실패는 로깅만 하고 무시
+          console.error('메모리 저장 실패 (무시됨):', error);
+        });
+
+      // 4. 목표 추출 및 저장 (비동기, 백그라운드에서 실행)
+      // AgentService를 사용하여 목표 추출 및 저장 수행
+      // 이 과정에서 메시지에서 목표 키워드를 추출하고 데이터베이스에 저장합니다
+      this.agentService.processMessage(user.id, message).catch((error) => {
+        // 목표 추출 실패는 치명적이지 않으므로 에러를 무시
+        // 대화는 정상적으로 진행되며, 목표만 기록되지 않음
+        console.error('목표 추출 실패 (무시됨):', error);
+      });
     } catch (error) {
       console.error('개인 모드 스트리밍 처리 오류:', error);
-      onChunk(ERROR_MESSAGES.GENERAL_ERROR + ' ' + ERROR_MESSAGES.RETRY_MESSAGE);
+      console.error('에러 상세:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+
+      // 에러 메시지를 사용자에게 전달
+      const errorMessage = error.message || ERROR_MESSAGES.GENERAL_ERROR;
+      onChunk(errorMessage + ' ' + ERROR_MESSAGES.RETRY_MESSAGE);
+
+      // 에러를 다시 던져서 ChatController에서도 처리할 수 있도록 함
+      throw error;
     }
   }
 
@@ -624,14 +706,18 @@ IMPORTANT RULES:
 
       // 3. 검색 결과를 컨텍스트로 활용하여 LLM 스트리밍 응답 생성
       const context = this.buildContextFromSearchResults(searchResults);
-      const systemPrompt = this.buildBusinessPrompt(message, context, aiSettings);
+      const systemPrompt = this.buildBusinessPrompt(
+        message,
+        context,
+        aiSettings,
+      );
 
       const messages = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message },
       ];
 
-      await this.generateLLMResponseStream(messages, onChunk);
+      await this.generateLLMResponseStream(user.id, messages, onChunk);
 
       // 4. 출처 정보 전송
       if (onSources) {

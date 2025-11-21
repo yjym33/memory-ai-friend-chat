@@ -25,6 +25,8 @@
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/scripts/typeorm.config.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@google/generative-ai": "^0.24.1",
     "@langchain/community": "^0.3.45",
     "@langchain/core": "^0.3.57",
     "@langchain/langgraph": "^0.3.0",

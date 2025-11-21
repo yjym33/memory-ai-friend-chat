@@ -93,6 +93,14 @@ export class User {
     statusChangeReason?: string; // 상태 변경 사유
   };
 
+  // LLM API 키 저장 (암호화되어 저장됨)
+  @Column({ type: 'json', nullable: true })
+  llmApiKeys?: {
+    openai?: string; // 암호화된 OpenAI API 키
+    google?: string; // 암호화된 Google API 키
+    anthropic?: string; // 암호화된 Anthropic API 키
+  };
+
   @OneToMany(() => Conversation, (conversation) => conversation.user)
   conversations: Conversation[];
 

@@ -114,6 +114,11 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   KAKAO_CALLBACK_URL: string = 'http://localhost:8080/auth/kakao/callback';
+
+  // chatbot-llm 서비스 설정
+  @IsString()
+  @IsOptional()
+  CHATBOT_LLM_URL: string = 'http://localhost:3002';
 }
 
 /**

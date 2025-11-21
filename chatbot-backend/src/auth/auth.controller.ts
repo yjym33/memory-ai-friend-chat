@@ -1,11 +1,13 @@
 import {
   Controller,
   Post,
+  Put,
   Body,
   Get,
   Request,
   UseGuards,
   Res,
+  NotFoundException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -15,6 +17,7 @@ import { KakaoOAuthGuard } from './guards/kakao-oauth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthenticatedRequest } from '../common/types/request.types';
+import { LLMProvider } from '../llm/types/llm.types';
 
 /**
  * 인증 관련 API를 처리하는 컨트롤러
@@ -72,10 +75,12 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   async googleAuthCallback(@Request() req: any, @Res() res: Response) {
     const result = await this.authService.validateOAuthLogin(req.user);
-    
+
     // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`);
+    res.redirect(
+      `${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`,
+    );
   }
 
   /**
@@ -94,9 +99,74 @@ export class AuthController {
   @UseGuards(KakaoOAuthGuard)
   async kakaoAuthCallback(@Request() req: any, @Res() res: Response) {
     const result = await this.authService.validateOAuthLogin(req.user);
-    
+
     // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`);
+    res.redirect(
+      `${frontendUrl}/auth/callback?token=${result.token}&userId=${result.userId}`,
+    );
+  }
+
+  /**
+   * 사용자의 LLM API 키를 업데이트합니다.
+   * @param req - 요청 객체 (JWT 토큰 포함)
+   * @param body - API 키 정보 (provider, apiKey)
+   * @returns 업데이트 성공 메시지
+   */
+  @Put('api-keys')
+  @UseGuards(JwtAuthGuard)
+  async updateApiKey(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { provider: LLMProvider; apiKey: string },
+  ) {
+    await this.authService.updateApiKey(
+      req.user.userId,
+      body.provider,
+      body.apiKey,
+    );
+    return { message: 'API 키가 성공적으로 저장되었습니다.' };
+  }
+
+  /**
+   * 사용자의 모든 LLM API 키를 업데이트합니다.
+   * @param req - 요청 객체 (JWT 토큰 포함)
+   * @param body - API 키 객체 (openai, google, anthropic)
+   * @returns 업데이트 성공 메시지
+   */
+  @Put('api-keys/all')
+  @UseGuards(JwtAuthGuard)
+  async updateApiKeys(
+    @Request() req: AuthenticatedRequest,
+    @Body()
+    body: { apiKeys: { openai?: string; google?: string; anthropic?: string } },
+  ) {
+    console.log('📥 API 키 저장 요청:', {
+      userId: req.user.userId,
+      providers: Object.keys(body.apiKeys),
+      hasAnthropic: !!body.apiKeys.anthropic,
+    });
+
+    await this.authService.updateApiKeys(req.user.userId, body.apiKeys);
+    return { message: 'API 키들이 성공적으로 저장되었습니다.' };
+  }
+
+  /**
+   * 사용자의 API 키 저장 여부를 확인합니다.
+   * @param req - 요청 객체 (JWT 토큰 포함)
+   * @returns API 키 저장 여부
+   */
+  @Get('api-keys/status')
+  @UseGuards(JwtAuthGuard)
+  async getApiKeysStatus(@Request() req: AuthenticatedRequest) {
+    const user = await this.authService.getUserById(req.user.userId);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return {
+      hasOpenAI: !!user.llmApiKeys?.openai,
+      hasGoogle: !!user.llmApiKeys?.google,
+      hasAnthropic: !!user.llmApiKeys?.anthropic,
+    };
   }
 }

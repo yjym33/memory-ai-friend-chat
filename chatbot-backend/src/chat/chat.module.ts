@@ -8,6 +8,8 @@ import { AuthModule } from '../auth/auth.module';
 import { AiSettingsModule } from '../ai-settings/ai-settings.module';
 import { AgentModule } from '../agent/agent.module';
 import { DocumentModule } from '../document/document.module';
+import { LLMModule } from '../llm/llm.module';
+import { ChatbotLlmModule } from '../chatbot-llm/chatbot-llm.module'; // chatbot-llm 모듈 추가
 import { LlmService } from '../common/services/llm.service';
 import { FileExtractionService } from '../common/services/file-extraction.service';
 
@@ -23,9 +25,11 @@ import { FileExtractionService } from '../common/services/file-extraction.servic
     // 의존성 모듈
     AuthModule,
     AiSettingsModule, // AI 설정 관리
-    AgentModule, // AI 에이전트 처리
-    DocumentModule, // 문서 관리
-  ],
+        AgentModule, // AI 에이전트 처리
+        DocumentModule, // 문서 관리
+        LLMModule, // LLM 통합 모듈
+        ChatbotLlmModule, // chatbot-llm 서비스 모듈 (프롬프트 생성 + 메모리 관리)
+      ],
   controllers: [ChatController],
   providers: [ChatService, LlmService, FileExtractionService],
   exports: [ChatService], // 다른 모듈에서 ChatService 사용 가능

@@ -18,6 +18,7 @@ import { ConversationAnalyticsModule } from './conversation-analytics/conversati
 import { AgentModule } from './agent/agent.module';
 import { DocumentModule } from './document/document.module';
 import { AdminModule } from './admin/admin.module';
+import { LLMModule } from './llm/llm.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -64,6 +65,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     AgentModule, // AI 에이전트
     DocumentModule, // 문서 관리
     AdminModule, // 관리자
+    LLMModule, // LLM 통합 모듈
   ],
   controllers: [AppController],
   providers: [

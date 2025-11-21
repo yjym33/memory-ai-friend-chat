@@ -7,6 +7,7 @@ import {
   UpdateAiSettingsDto,
 } from './dto/ai-settings.dto';
 import { User, UserType, UserRole } from '../auth/entity/user.entity';
+import { LLMProvider } from '../llm/types/llm.types';
 import axios from 'axios';
 
 /**
@@ -44,6 +45,15 @@ export class AiSettingsService {
         memoryPriorities: { personal: 5, hobby: 4, work: 3, emotion: 5 },
         userProfile: { interests: [], currentGoals: [], importantDates: [] },
         avoidTopics: [],
+        llmProvider: LLMProvider.OPENAI,
+        llmModel: 'gpt-5.1',
+        llmConfig: {
+          temperature: 0.7,
+          maxTokens: 1000,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.3,
+        },
       });
     } else {
       console.log(`✅ 사용자 ${userId}의 현재 설정:`, {

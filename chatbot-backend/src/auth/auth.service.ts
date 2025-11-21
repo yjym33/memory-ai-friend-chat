@@ -2,11 +2,14 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
+import { EncryptionService } from '../common/services/encryption.service';
+import { LLMProvider } from '../llm/types/llm.types';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -15,6 +18,7 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private encryptionService: EncryptionService,
   ) {}
 
   async register(
@@ -181,5 +185,135 @@ export class AuthService {
       organizationId: user.organizationId,
       token,
     };
+  }
+
+  /**
+   * 사용자의 LLM API 키를 업데이트합니다.
+   * @param userId - 사용자 ID
+   * @param provider - LLM Provider (openai, google, anthropic)
+   * @param apiKey - API 키 (암호화하여 저장됨)
+   * @returns 업데이트된 사용자 정보
+   */
+  async updateApiKey(
+    userId: string,
+    provider: LLMProvider,
+    apiKey: string,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // API 키가 비어있으면 해당 Provider 키 삭제
+    if (!apiKey || apiKey.trim() === '') {
+      const currentKeys = user.llmApiKeys || {};
+      const keys = currentKeys as any;
+      delete keys[provider];
+      user.llmApiKeys = keys;
+    } else {
+      // API 키를 암호화하여 저장
+      const encryptedKey = this.encryptionService.encryptApiKey(apiKey);
+
+      // 기존 API 키 객체 가져오기 (없으면 새로 생성)
+      const currentKeys = user.llmApiKeys || {};
+      const keys = currentKeys as any;
+      keys[provider] = encryptedKey;
+
+      user.llmApiKeys = keys;
+
+      console.log(
+        `✅ API 키 저장 완료 - Provider: ${provider}, 암호화된 키 길이: ${encryptedKey.length}`,
+      );
+
+      // 복호화 테스트
+      try {
+        const testDecrypt = this.encryptionService.decryptApiKey(encryptedKey);
+        console.log(
+          `✅ 복호화 테스트 성공 - 키 시작: ${testDecrypt.substring(0, Math.min(10, testDecrypt.length))}...`,
+        );
+      } catch (error) {
+        console.error(`❌ 복호화 테스트 실패:`, error);
+      }
+    }
+
+    const savedUser = await this.userRepository.save(user);
+    console.log(
+      `💾 User 저장 완료 - llmApiKeys: ${JSON.stringify(Object.keys(savedUser.llmApiKeys || {}))}`,
+    );
+    return savedUser;
+  }
+
+  /**
+   * 사용자의 모든 LLM API 키를 업데이트합니다.
+   * @param userId - 사용자 ID
+   * @param apiKeys - API 키 객체 (provider별 키)
+   * @returns 업데이트된 사용자 정보
+   */
+  async updateApiKeys(
+    userId: string,
+    apiKeys: { openai?: string; google?: string; anthropic?: string },
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 기존 API 키 객체 가져오기 (없으면 새로 생성)
+    const currentKeys = user.llmApiKeys || {};
+    const keys = currentKeys as any;
+
+    // 각 Provider별로 API 키 업데이트
+    for (const [provider, apiKey] of Object.entries(apiKeys)) {
+      if (apiKey !== undefined) {
+        if (!apiKey || apiKey.trim() === '') {
+          // 빈 값이면 해당 키 삭제
+          console.log(`🗑️ ${provider} API 키 삭제`);
+          delete keys[provider];
+        } else {
+          // API 키를 암호화하여 저장
+          const encryptedKey = this.encryptionService.encryptApiKey(apiKey);
+          keys[provider] = encryptedKey;
+          console.log(
+            `✅ ${provider} API 키 저장 완료 - 암호화된 키 길이: ${encryptedKey.length}`,
+          );
+
+          // 복호화 테스트
+          try {
+            const testDecrypt =
+              this.encryptionService.decryptApiKey(encryptedKey);
+            console.log(
+              `✅ ${provider} 복호화 테스트 성공 - 키 시작: ${testDecrypt.substring(0, Math.min(10, testDecrypt.length))}...`,
+            );
+          } catch (error) {
+            console.error(`❌ ${provider} 복호화 테스트 실패:`, error);
+          }
+        }
+      }
+    }
+
+    user.llmApiKeys = keys;
+    const savedUser = await this.userRepository.save(user);
+    console.log(
+      `💾 모든 API 키 저장 완료 - 저장된 Provider: ${JSON.stringify(Object.keys(savedUser.llmApiKeys || {}))}`,
+    );
+    return savedUser;
+  }
+
+  /**
+   * 사용자 ID로 사용자 정보를 조회합니다.
+   * @param userId - 사용자 ID
+   * @returns 사용자 정보
+   */
+  async getUserById(userId: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'email', 'llmApiKeys'],
+    });
   }
 }
