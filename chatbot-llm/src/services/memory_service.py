@@ -195,8 +195,110 @@ class ConversationMemory:
         unique_string = f"{content}:{memory_type}:{self.user_id}:{time.time()}"
         return hashlib.md5(unique_string.encode()).hexdigest()
     
+    def get_relevant_memories(self, query: str, limit: int = 5) -> List[str]:
+        """
+        쿼리와 관련된 메모리 추출
+        
+        현재는 간단한 키워드 매칭을 사용하지만, 향후 임베딩 기반 유사도 검색으로 개선 가능
+        
+        Args:
+            query: 검색 쿼리 (메시지 내용 또는 빈 문자열)
+            limit: 반환할 최대 메모리 수
+        
+        Returns:
+            관련 메모리 내용 목록
+        """
+        relevant = []
+        
+        # 쿼리가 없으면 빈 목록 반환
+        if not query or not query.strip():
+            # 중요도가 높은 장기 메모리 반환
+            sorted_memories = sorted(
+                self.long_term_memory.items(),
+                key=lambda x: x[1].importance,
+                reverse=True
+            )
+            for memory_id, memory_item in sorted_memories[:limit]:
+                relevant.append(memory_item.content)
+            return relevant
+        
+        query_lower = query.lower()
+        
+        # 장기 메모리에서 검색 (중요도가 높은 것부터)
+        # 중요도와 관련성 점수를 결합하여 정렬
+        scored_memories = []
+        for memory_id, memory_item in self.long_term_memory.items():
+            relevance_score = self._calculate_relevance(query_lower, memory_item.content.lower())
+            if relevance_score > 0.1:  # 임계값
+                # 중요도와 관련성 점수를 결합 (중요도 0.7, 관련성 0.3)
+                combined_score = (memory_item.importance / 10) * 0.7 + relevance_score * 0.3
+                scored_memories.append((combined_score, memory_item.content))
+        
+        # 점수로 정렬
+        scored_memories.sort(reverse=True)
+        
+        # 상위 N개만 반환
+        for _, content in scored_memories[:limit]:
+            relevant.append(content)
+            if len(relevant) >= limit:
+                break
+        
+        # 단기 메모리에서도 검색 (장기 메모리가 부족한 경우)
+        if len(relevant) < limit:
+            for memory_item in self.short_term_memory:
+                if query_lower in memory_item.content.lower():
+                    relevant.append(memory_item.content)
+                    if len(relevant) >= limit:
+                        break
+        
+        return relevant
+    
+    def get_memory_summary(self) -> str:
+        """
+        메모리 요약 생성
+        
+        사용자의 중요한 메모리를 요약하여 반환합니다.
+        
+        Returns:
+            메모리 요약 문자열
+        """
+        # 장기 메모리 중 중요도가 높은 메모리 추출
+        important_memories = [
+            memory_item for memory_item in self.long_term_memory.values()
+            if memory_item.importance >= 7
+        ]
+        
+        if not important_memories:
+            return "저장된 중요한 기억이 없습니다."
+        
+        # 중요도 순으로 정렬
+        important_memories.sort(key=lambda x: x.importance, reverse=True)
+        
+        # 상위 3개만 요약
+        summary_parts = []
+        for memory_item in important_memories[:3]:
+            # 메모리 내용의 첫 50자만 포함
+            content_preview = memory_item.content[:50]
+            if len(memory_item.content) > 50:
+                content_preview += "..."
+            summary_parts.append(f"- {content_preview} (중요도: {memory_item.importance})")
+        
+        summary = f"중요한 기억 {len(important_memories)}개:\n" + "\n".join(summary_parts)
+        return summary
+    
     def _calculate_relevance(self, context: str, memory_content: str) -> float:
-        """관련성 점수 계산 (간단한 키워드 매칭)"""
+        """
+        관련성 점수 계산 (간단한 키워드 매칭)
+        
+        향후 임베딩 기반 유사도 검색으로 개선 가능
+        
+        Args:
+            context: 검색 컨텍스트 (쿼리)
+            memory_content: 메모리 내용
+        
+        Returns:
+            관련성 점수 (0.0 ~ 1.0)
+        """
         context_words = set(context.lower().split())
         memory_words = set(memory_content.lower().split())
         

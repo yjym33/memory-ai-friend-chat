@@ -11,6 +11,8 @@ from contextlib import asynccontextmanager
 from .config.settings import settings
 from .config.logging import setup_logging, get_logger
 from .api.chat_routes import router as chat_router
+from .api.prompt_routes import router as prompt_router  # 프롬프트 생성 API 추가
+from .api.memory_routes import router as memory_router  # 메모리 관리 API 추가
 from .middleware.logging_middleware import LoggingMiddleware
 from .services.llm_service import llm_service
 
@@ -48,9 +50,9 @@ def create_app() -> FastAPI:
     """FastAPI 애플리케이션 생성"""
     
     app = FastAPI(
-        title="LLM Chat Server",
-        description="개인화된 AI 친구 채팅 서버",
-        version="1.0.0",
+        title="Chatbot LLM Service",
+        description="메모리 관리 및 프롬프트 생성 서비스 (LLM 호출은 백엔드에서 처리)",
+        version="2.0.0",
         lifespan=lifespan
     )
     
@@ -67,7 +69,12 @@ def create_app() -> FastAPI:
     app.add_middleware(LoggingMiddleware)
     
     # 라우터 등록
+    # 기존 채팅 API (선택사항, 하위 호환성을 위해 유지)
     app.include_router(chat_router, prefix="/api")
+    # 새로운 프롬프트 생성 API
+    app.include_router(prompt_router)  # /api/v1/prompt
+    # 새로운 메모리 관리 API
+    app.include_router(memory_router)  # /api/v1/memory, /api/v1/context
     
     return app
 
