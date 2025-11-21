@@ -3,3 +3,4 @@ export { apiClient } from "./apiClient";
 export { AuthService } from "./authService";
 export { ChatService } from "./chatService";
 export { AiSettingsService } from "./aiSettingsService";
+export { ApiKeyService } from "./apiKeyService";

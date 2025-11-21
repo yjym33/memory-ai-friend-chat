@@ -51,10 +51,20 @@ export function useChat() {
     file?: UploadedFile,
     chatMode: ChatMode = ChatMode.PERSONAL
   ) => {
-    if (!activeChatId || (!message.trim() && !file)) return;
+    // 메시지가 없으면 전송하지 않음
+    if (!message.trim() && !file) return;
 
     setLoading(true);
     try {
+      // activeChatId가 없으면 새 대화방 자동 생성
+      let currentChatId = activeChatId;
+      if (!currentChatId) {
+        const newChat = await ChatService.createConversation();
+        setConversations((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+        currentChatId = newChat.id;
+      }
+
       // 파일이 첨부된 경우 메시지 내용 구성
       let messageContent = message;
       if (file) {
@@ -65,7 +75,7 @@ export function useChat() {
 
       // UI에 사용자 메시지 즉시 반영
       setConversations((prev) =>
-        addMessageToConversation(prev, activeChatId, userMessage)
+        addMessageToConversation(prev, currentChatId!, userMessage)
       );
 
       // AI 응답을 위한 빈 메시지 생성
@@ -73,23 +83,23 @@ export function useChat() {
 
       // UI에 빈 assistant 메시지 추가 (스트리밍으로 채워질 예정)
       setConversations((prev) =>
-        addMessageToConversation(prev, activeChatId, assistantMessage)
+        addMessageToConversation(prev, currentChatId!, assistantMessage)
       );
 
       // 메시지 전송 (스트리밍 방식)
       await ChatService.sendMessageStream(
-        activeChatId,
+        currentChatId!,
         message,
         // 각 토큰을 받을 때마다 UI 업데이트
         (token: string) => {
           setConversations((prev) =>
-            appendTokenToLastAssistantMessage(prev, activeChatId, token)
+            appendTokenToLastAssistantMessage(prev, currentChatId!, token)
           );
         },
         // 출처 정보를 받을 때
         (sources) => {
           setConversations((prev) =>
-            addSourcesToLastAssistantMessage(prev, activeChatId, sources)
+            addSourcesToLastAssistantMessage(prev, currentChatId!, sources)
           );
         },
         // 스트리밍 완료 시
@@ -107,9 +117,12 @@ export function useChat() {
           handleError(apiError, { showToast: true });
         }
       );
-    } catch {
+    } catch (error) {
+      console.error('메시지 전송 오류:', error);
       const apiError = createApiError(
-        ERROR_MESSAGES.SEND_MESSAGE_FAILED,
+        error instanceof Error && error.message
+          ? error.message
+          : ERROR_MESSAGES.SEND_MESSAGE_FAILED,
         "/chat/completion"
       );
       handleError(apiError, { showToast: true });

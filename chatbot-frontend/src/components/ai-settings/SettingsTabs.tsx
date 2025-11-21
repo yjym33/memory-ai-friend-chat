@@ -1,8 +1,8 @@
 import React from "react";
 
 interface SettingsTabsProps {
-  activeTab: "personality" | "memory" | "tts" | "stt";
-  onTabChange: (tab: "personality" | "memory" | "tts" | "stt") => void;
+  activeTab: "personality" | "memory" | "model" | "tts" | "stt";
+  onTabChange: (tab: "personality" | "memory" | "model" | "tts" | "stt") => void;
 }
 
 export default function SettingsTabs({
@@ -30,6 +30,16 @@ export default function SettingsTabs({
         }`}
       >
         🧠 기억 관리
+      </button>
+      <button
+        onClick={() => onTabChange("model")}
+        className={`flex-1 py-3 px-4 text-center transition whitespace-nowrap ${
+          activeTab === "model"
+            ? "bg-purple-50 text-purple-600 border-b-2 border-purple-500"
+            : "text-gray-800 hover:bg-gray-50"
+        }`}
+      >
+        🤖 AI 모델
       </button>
       <button
         onClick={() => onTabChange("tts")}

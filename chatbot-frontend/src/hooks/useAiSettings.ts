@@ -35,6 +35,9 @@ export function useAiSettings(isOpen: boolean) {
         memoryPriorities,
         userProfile,
         avoidTopics,
+        llmProvider,
+        llmModel,
+        llmConfig,
       } = data;
 
       setSettings({
@@ -47,6 +50,9 @@ export function useAiSettings(isOpen: boolean) {
         memoryPriorities,
         userProfile,
         avoidTopics,
+        llmProvider,
+        llmModel,
+        llmConfig,
       });
     } catch (error) {
       console.error("설정 불러오기 실패:", error);

@@ -80,6 +80,46 @@ export interface AuthResponse {
 }
 
 // =====================================
+// LLM Provider 타입
+export enum LLMProvider {
+  OPENAI = 'openai',
+  GOOGLE = 'google',
+  ANTHROPIC = 'anthropic',
+}
+
+// LLM 모델 타입
+export enum LLMModel {
+  // OpenAI
+  GPT_4 = 'gpt-4',
+  GPT_4O = 'gpt-4o',
+  GPT_4_TURBO = 'gpt-4-turbo',
+  GPT_5_1 = 'gpt-5.1',
+  
+  // Google Gemini
+  GEMINI_PRO = 'gemini-pro',
+  GEMINI_ULTRA = 'gemini-ultra',
+  GEMINI_1_5_PRO = 'gemini-1.5-pro',
+  GEMINI_1_5_FLASH = 'gemini-1.5-flash',
+  
+  // Anthropic Claude
+  CLAUDE_3_OPUS = 'claude-3-opus-20240229',
+  CLAUDE_3_SONNET = 'claude-3-sonnet-20240229',
+  CLAUDE_3_HAIKU = 'claude-3-haiku-20240307',
+  CLAUDE_3_5_SONNET = 'claude-3-5-sonnet-20241022',
+}
+
+// LLM 설정 타입
+export interface LLMConfig {
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  topK?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
+  [key: string]: any;
+}
+
 // AI 설정 관련 타입 (백엔드 AiSettings 엔티티 기반)
 // =====================================
 export interface AiSettings {
@@ -103,6 +143,9 @@ export interface AiSettings {
     importantDates: { name: string; date: string }[];
   };
   avoidTopics: string[];
+  llmProvider?: LLMProvider;
+  llmModel?: string;
+  llmConfig?: LLMConfig;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -127,6 +170,9 @@ export interface CreateAiSettingsDto {
     importantDates: { name: string; date: string }[];
   };
   avoidTopics: string[];
+  llmProvider?: LLMProvider;
+  llmModel?: string;
+  llmConfig?: LLMConfig;
 }
 
 export type UpdateAiSettingsDto = CreateAiSettingsDto;

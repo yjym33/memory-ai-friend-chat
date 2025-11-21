@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useAiSettings } from "../hooks/useAiSettings";
 import { useAiSettingsTest } from "../hooks/useAiSettingsTest";
 import SettingsTabs from "./ai-settings/SettingsTabs";
 import PersonalitySettings from "./ai-settings/PersonalitySettings";
 import MemorySettings from "./ai-settings/MemorySettings";
+import ModelSettings from "./ai-settings/ModelSettings";
 import TTSSettings from "./ai-settings/TTSSettings";
 import STTSettings from "./ai-settings/STTSettings";
 import SettingsTestSection from "./ai-settings/SettingsTestSection";
+import { LLMProvider } from "../types";
+import { ApiKeyService } from "../services";
+import { success as toastSuccess, error as toastError } from "../lib/toast";
 
 interface AiSettingsModalProps {
   isOpen: boolean;
@@ -18,9 +22,23 @@ export default function AiSettingsModal({
   isOpen,
   onClose,
 }: AiSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "tts" | "stt">(
+  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "model" | "tts" | "stt">(
     "personality"
   );
+
+  // 모델 설정 상태
+  const [modelSettings, setModelSettings] = useState({
+    provider: LLMProvider.OPENAI,
+    model: "gpt-5.1",
+    config: {
+      temperature: 0.7,
+      maxTokens: 1000,
+      topP: 0.9,
+      frequencyPenalty: 0.5,
+      presencePenalty: 0.3,
+    },
+    apiKeys: {} as { openai?: string; google?: string; anthropic?: string },
+  });
 
   // TTS 설정 상태
   const [ttsSettings, setTtsSettings] = useState({
@@ -56,6 +74,24 @@ export default function AiSettingsModal({
     removeInterest,
   } = useAiSettings(isOpen);
 
+  // 모델 설정을 AI 설정에서 불러오기
+  useEffect(() => {
+    if (settings && isOpen) {
+      setModelSettings({
+        provider: (settings.llmProvider as LLMProvider) || LLMProvider.OPENAI,
+        model: settings.llmModel || "gpt-5.1",
+        config: settings.llmConfig || {
+          temperature: 0.7,
+          maxTokens: 1000,
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+          presencePenalty: 0.3,
+        },
+        apiKeys: {},
+      });
+    }
+  }, [settings, isOpen]);
+
   // AI 설정 테스트 훅
   const {
     selectedTestMessage,
@@ -69,9 +105,50 @@ export default function AiSettingsModal({
 
   // 저장 및 닫기
   const handleSave = async () => {
-    const success = await saveSettings();
-    if (success) {
+    try {
+      // 모델 설정을 AI 설정에 반영
+      Object.assign(settings, {
+        llmProvider: modelSettings.provider,
+        llmModel: modelSettings.model,
+        llmConfig: modelSettings.config,
+      });
+
+      // 1. AI 설정 저장 (모델 설정 포함)
+      const settingsSuccess = await saveSettings();
+      if (!settingsSuccess) {
+        return; // 설정 저장 실패 시 중단
+      }
+
+      // 2. API 키 저장 (백엔드에서 암호화하여 저장)
+      const apiKeysToSave: { openai?: string; google?: string; anthropic?: string } = {};
+      
+      // 입력된 API 키만 저장 (빈 값은 저장하지 않음)
+      if (modelSettings.apiKeys.openai && modelSettings.apiKeys.openai.trim() !== "") {
+        apiKeysToSave.openai = modelSettings.apiKeys.openai;
+      }
+      if (modelSettings.apiKeys.google && modelSettings.apiKeys.google.trim() !== "") {
+        apiKeysToSave.google = modelSettings.apiKeys.google;
+      }
+      if (modelSettings.apiKeys.anthropic && modelSettings.apiKeys.anthropic.trim() !== "") {
+        apiKeysToSave.anthropic = modelSettings.apiKeys.anthropic;
+      }
+
+      // API 키가 하나라도 있으면 저장
+      if (Object.keys(apiKeysToSave).length > 0) {
+        try {
+          await ApiKeyService.updateApiKeys(apiKeysToSave);
+          toastSuccess("API 키가 저장되었습니다!");
+        } catch (error) {
+          console.error("API 키 저장 실패:", error);
+          toastError("API 키 저장에 실패했습니다.");
+          // API 키 저장 실패해도 설정 저장은 성공했으므로 계속 진행
+        }
+      }
+
       onClose();
+    } catch (error) {
+      console.error("설정 저장 중 오류:", error);
+      toastError("설정 저장에 실패했습니다.");
     }
   };
 
@@ -136,6 +213,33 @@ export default function AiSettingsModal({
               onMemoryPriorityChange={updateMemoryPriority}
               onAddInterest={addInterest}
               onRemoveInterest={removeInterest}
+            />
+          )}
+
+          {activeTab === "model" && (
+            <ModelSettings
+              provider={modelSettings.provider}
+              model={modelSettings.model}
+              config={modelSettings.config}
+              apiKeys={modelSettings.apiKeys}
+              onProviderChange={(provider) =>
+                setModelSettings((prev) => ({ ...prev, provider }))
+              }
+              onModelChange={(model) =>
+                setModelSettings((prev) => ({ ...prev, model }))
+              }
+              onConfigChange={(config) =>
+                setModelSettings((prev) => ({
+                  ...prev,
+                  config: { ...prev.config, ...config },
+                }))
+              }
+              onApiKeyChange={(provider, apiKey) =>
+                setModelSettings((prev) => ({
+                  ...prev,
+                  apiKeys: { ...prev.apiKeys, [provider]: apiKey },
+                }))
+              }
             />
           )}
 
