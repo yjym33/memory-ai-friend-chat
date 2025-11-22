@@ -43,10 +43,15 @@ const AVAILABLE_MODELS: Record<LLMProvider, string[]> = {
     LLMModel.GEMINI_1_5_FLASH,
   ],
   [LLMProvider.ANTHROPIC]: [
-    LLMModel.CLAUDE_3_OPUS,
-    LLMModel.CLAUDE_3_SONNET,
-    LLMModel.CLAUDE_3_HAIKU,
-    LLMModel.CLAUDE_3_5_SONNET,
+    // 확실히 작동하는 모델들 (우선 배치)
+    LLMModel.CLAUDE_3_HAIKU, // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
+    // 주의: claude-3-opus-20240229는 일부 API 환경에서 404 오류 발생 가능 (비활성화)
+    // 실제 API에서 지원하는지 확인 후 주석 해제
+    // LLMModel.CLAUDE_3_OPUS, // Claude 3 Opus (일부 환경에서 404 발생)
+    // 주의: claude-3-5-sonnet-20241022는 일부 API 환경에서 404 오류 발생 가능
+    // LLMModel.CLAUDE_3_5_SONNET, // Claude 3.5 Sonnet (일부 환경에서 404 발생)
+    // 주의: claude-3-sonnet-20240229는 일부 Anthropic API 환경에서 지원되지 않을 수 있음
+    // LLMModel.CLAUDE_3_SONNET, // 필요시 주석 해제
   ],
 };
 
