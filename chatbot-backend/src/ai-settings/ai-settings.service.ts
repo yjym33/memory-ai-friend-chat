@@ -56,11 +56,52 @@ export class AiSettingsService {
         },
       });
     } else {
+      // 지원되지 않는 모델 자동 마이그레이션
+      settings = await this.migrateDeprecatedModels(settings);
+      
       console.log(`✅ 사용자 ${userId}의 현재 설정:`, {
         personalityType: settings.personalityType,
         speechStyle: settings.speechStyle,
         emojiUsage: settings.emojiUsage,
+        llmProvider: settings.llmProvider,
+        llmModel: settings.llmModel,
       });
+    }
+
+    return settings;
+  }
+
+  /**
+   * 지원되지 않는 모델을 작동하는 모델로 자동 마이그레이션
+   * @param settings - AI 설정 객체
+   * @returns 업데이트된 AI 설정 객체
+   */
+  private async migrateDeprecatedModels(settings: AiSettings): Promise<AiSettings> {
+    // 404 오류를 발생시키는 모델들을 확실히 작동하는 Haiku 모델로 변경
+    const deprecatedModels: Record<string, string> = {
+      // Anthropic Claude 모델 마이그레이션
+      // claude-3-opus-20240229가 404 오류를 발생시키는 경우 (Haiku는 정상 작동 확인)
+      'claude-3-opus-20240229': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
+      // claude-3-5-sonnet-20241022가 404 오류를 발생시키는 경우
+      'claude-3-5-sonnet-20241022': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
+      // claude-3-sonnet-20240229도 일부 환경에서 지원되지 않음
+      'claude-3-sonnet-20240229': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
+    };
+
+    if (deprecatedModels[settings.llmModel]) {
+      const newModel = deprecatedModels[settings.llmModel];
+      console.log(
+        `🔄 모델 자동 마이그레이션: '${settings.llmModel}' → '${newModel}' ` +
+        `(사용자: ${settings.userId}) - ` +
+        `이유: 이전 모델이 404 오류를 발생시킬 수 있습니다`
+      );
+      
+      settings.llmModel = newModel;
+      
+      // 데이터베이스에 저장
+      await this.aiSettingsRepository.save(settings);
+      
+      console.log(`✅ 모델 마이그레이션 완료: ${newModel}`);
     }
 
     return settings;

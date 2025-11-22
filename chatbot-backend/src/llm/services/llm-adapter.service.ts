@@ -78,9 +78,13 @@ export class LLMAdapterService {
 
     // 모델 검증
     if (!provider.validateModel(request.model)) {
-      throw new Error(
-        `모델 '${request.model}'은 Provider '${aiSettings.llmProvider}'에서 지원하지 않습니다.`,
-      );
+      const availableModels = provider.getAvailableModels();
+      const errorMsg =
+        `모델 '${request.model}'은 Provider '${aiSettings.llmProvider}'에서 지원하지 않습니다. ` +
+        `사용 가능한 모델: ${availableModels.join(', ')}. ` +
+        `AI 설정에서 올바른 모델을 선택해주세요.`;
+      this.logger.error(`❌ ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
     // Provider 호출
@@ -136,9 +140,13 @@ export class LLMAdapterService {
 
     // 모델 검증
     if (!provider.validateModel(request.model)) {
-      throw new Error(
-        `모델 '${request.model}'은 Provider '${aiSettings.llmProvider}'에서 지원하지 않습니다.`,
-      );
+      const availableModels = provider.getAvailableModels();
+      const errorMsg =
+        `모델 '${request.model}'은 Provider '${aiSettings.llmProvider}'에서 지원하지 않습니다. ` +
+        `사용 가능한 모델: ${availableModels.join(', ')}. ` +
+        `AI 설정에서 올바른 모델을 선택해주세요.`;
+      this.logger.error(`❌ ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
     // Provider 호출

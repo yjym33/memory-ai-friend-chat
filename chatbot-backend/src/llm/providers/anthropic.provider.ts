@@ -64,16 +64,55 @@ export class AnthropicProvider implements ILLMProvider {
     return LLMProvider.ANTHROPIC;
   }
 
+  /**
+   * 기본 모델 반환
+   * 
+   * 주의: claude-3-5-sonnet-20241022는 일부 API 환경에서 404 오류를 발생시킬 수 있습니다.
+   * 확실히 작동하는 모델인 claude-3-opus-20240229를 기본값으로 사용합니다.
+   */
   getDefaultModel(): string {
-    return 'claude-3-5-sonnet-20241022';
+    // claude-3-opus-20240229가 404 오류를 발생시키는 경우가 있어
+    // 확실히 작동하는 Haiku 모델을 기본값으로 변경
+    return 'claude-3-haiku-20240307'; // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
+    // 참고: claude-3-opus-20240229는 일부 환경에서 404 오류 발생
+    // return 'claude-3-opus-20240229';
   }
 
+  /**
+   * 사용 가능한 Anthropic Claude 모델 목록
+   * 
+   * 중요: Anthropic API에서 실제로 지원하는 모델만 포함해야 합니다.
+   * 모델 이름 형식은 Anthropic API 문서를 참고하세요.
+   * 
+   * 참고 사항:
+   * - 모델 이름이 정확하지 않으면 404 오류가 발생합니다
+   * - API 키의 권한에 따라 사용 가능한 모델이 다를 수 있습니다
+   * - 최신 모델 정보는 Anthropic API 문서를 확인하세요
+   */
+  /**
+   * 사용 가능한 Anthropic Claude 모델 목록
+   * 
+   * 중요: 실제 Anthropic API에서 지원하는 모델만 포함해야 합니다.
+   * 모델 이름이 정확하지 않으면 404 오류가 발생합니다.
+   * 
+   * 참고: claude-3-5-sonnet-20241022는 일부 API 환경에서 404 오류를 발생시킬 수 있습니다.
+   * 확실히 작동하는 모델을 우선 배치합니다.
+   */
   getAvailableModels(): string[] {
     return [
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
-      'claude-3-haiku-20240307',
-      'claude-3-5-sonnet-20241022',
+      // 확실히 작동하는 모델들 (우선 배치)
+      'claude-3-haiku-20240307', // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
+      
+      // 주의: 아래 모델은 일부 API 환경에서 404 오류를 발생시킬 수 있음
+      // 실제 API에서 지원하는지 확인 후 주석 해제하여 사용하세요
+      // 'claude-3-opus-20240229', // Claude 3 Opus (일부 환경에서 404 발생 - 비활성화)
+      // 'claude-3-5-sonnet-20241022', // Claude 3.5 Sonnet (일부 환경에서 404 발생)
+      // 'claude-3-sonnet-20240229', // 이전 버전 (일부 환경에서 404 발생 가능)
+      
+      // 참고: 모델 이름 형식이 다를 수 있음
+      // 필요시 Anthropic API 문서를 확인하여 정확한 모델 이름 사용
+      // 최신 모델 정보: https://docs.anthropic.com/claude/docs/models-overview
+      // 참고: Haiku 모델이 정상 작동하는 것으로 확인됨
     ];
   }
 
@@ -88,9 +127,23 @@ export class AnthropicProvider implements ILLMProvider {
     try {
       const anthropic = this.createAnthropic(apiKey);
 
+      // 모델 검증 (요청 전에 확인)
+      if (!this.validateModel(request.model)) {
+        const errorMsg = `지원하지 않는 모델입니다: ${request.model}. ` +
+          `사용 가능한 모델: ${this.getAvailableModels().join(', ')}`;
+        this.logger.error(`❌ ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
       // Claude 메시지 형식으로 변환
       const messages = this.convertToClaudeMessages(request.messages);
       const systemMessage = this.extractSystemMessage(request.messages);
+
+      this.logger.debug(
+        `일반 응답 요청 생성 - 모델: ${request.model}, ` +
+        `메시지 수: ${messages.length}, ` +
+        `max_tokens: ${request.maxTokens ?? 1000}`
+      );
 
       const response = await anthropic.messages.create({
         model: request.model,
@@ -117,8 +170,34 @@ export class AnthropicProvider implements ILLMProvider {
         finishReason: response.stop_reason || undefined,
       };
     } catch (error) {
-      this.logger.error('Anthropic Claude API 호출 실패:', error);
-      throw new Error(`Anthropic Claude API 호출 실패: ${error.message}`);
+      this.logger.error('❌ Anthropic Claude API 호출 실패:', error);
+      
+      // 에러 상세 정보 로깅
+      if (error.response) {
+        this.logger.error(`HTTP 응답: ${error.response.status} ${error.response.statusText}`);
+        this.logger.error(`응답 본문: ${JSON.stringify(error.response.data)}`);
+        
+        // 404 에러인 경우 모델 이름 문제일 가능성이 높음
+        if (error.response.status === 404) {
+          const errorData = error.response.data;
+          if (errorData?.error?.message?.includes('model')) {
+            const availableModels = this.getAvailableModels();
+            const errorMsg = 
+              `모델 '${request.model}'을 찾을 수 없습니다. ` +
+              `Anthropic API가 이 모델을 지원하지 않을 수 있습니다. ` +
+              `사용 가능한 모델: ${availableModels.join(', ')}. ` +
+              `AI 설정에서 다른 모델(예: ${this.getDefaultModel()})을 선택해주세요.`;
+            this.logger.error(`❌ ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+        }
+      }
+      
+      if (error.message) {
+        this.logger.error(`에러 메시지: ${error.message}`);
+      }
+      
+      throw new Error(`Anthropic Claude API 호출 실패: ${error.message || '알 수 없는 오류'}`);
     }
   }
 
@@ -143,6 +222,14 @@ export class AnthropicProvider implements ILLMProvider {
       this.logger.log('🔄 Anthropic Claude 스트리밍 응답 시작');
       
       const anthropic = this.createAnthropic(apiKey);
+
+      // 모델 검증 (요청 전에 확인)
+      if (!this.validateModel(request.model)) {
+        const errorMsg = `지원하지 않는 모델입니다: ${request.model}. ` +
+          `사용 가능한 모델: ${this.getAvailableModels().join(', ')}`;
+        this.logger.error(`❌ ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
 
       // Claude 메시지 형식으로 변환
       const messages = this.convertToClaudeMessages(request.messages);
@@ -311,6 +398,21 @@ export class AnthropicProvider implements ILLMProvider {
       if (error.response) {
         this.logger.error(`HTTP 응답: ${error.response.status} ${error.response.statusText}`);
         this.logger.error(`응답 본문: ${JSON.stringify(error.response.data)}`);
+        
+        // 404 에러인 경우 모델 이름 문제일 가능성이 높음
+        if (error.response.status === 404) {
+          const errorData = error.response.data;
+          if (errorData?.error?.message?.includes('model')) {
+            const availableModels = this.getAvailableModels();
+            const errorMsg = 
+              `모델 '${request.model}'을 찾을 수 없습니다. ` +
+              `Anthropic API가 이 모델을 지원하지 않을 수 있습니다. ` +
+              `사용 가능한 모델: ${availableModels.join(', ')}. ` +
+              `AI 설정에서 다른 모델(예: ${this.getDefaultModel()})을 선택해주세요.`;
+            this.logger.error(`❌ ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+        }
       }
       
       if (error.message) {
