@@ -58,7 +58,7 @@ export class AiSettingsService {
     } else {
       // 지원되지 않는 모델 자동 마이그레이션
       settings = await this.migrateDeprecatedModels(settings);
-      
+
       console.log(`✅ 사용자 ${userId}의 현재 설정:`, {
         personalityType: settings.personalityType,
         speechStyle: settings.speechStyle,
@@ -76,7 +76,9 @@ export class AiSettingsService {
    * @param settings - AI 설정 객체
    * @returns 업데이트된 AI 설정 객체
    */
-  private async migrateDeprecatedModels(settings: AiSettings): Promise<AiSettings> {
+  private async migrateDeprecatedModels(
+    settings: AiSettings,
+  ): Promise<AiSettings> {
     // 404 오류를 발생시키는 모델들을 확실히 작동하는 Haiku 모델로 변경
     const deprecatedModels: Record<string, string> = {
       // Anthropic Claude 모델 마이그레이션
@@ -92,15 +94,15 @@ export class AiSettingsService {
       const newModel = deprecatedModels[settings.llmModel];
       console.log(
         `🔄 모델 자동 마이그레이션: '${settings.llmModel}' → '${newModel}' ` +
-        `(사용자: ${settings.userId}) - ` +
-        `이유: 이전 모델이 404 오류를 발생시킬 수 있습니다`
+          `(사용자: ${settings.userId}) - ` +
+          `이유: 이전 모델이 404 오류를 발생시킬 수 있습니다`,
       );
-      
+
       settings.llmModel = newModel;
-      
+
       // 데이터베이스에 저장
       await this.aiSettingsRepository.save(settings);
-      
+
       console.log(`✅ 모델 마이그레이션 완료: ${newModel}`);
     }
 
