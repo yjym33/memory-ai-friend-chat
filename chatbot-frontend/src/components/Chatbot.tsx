@@ -13,8 +13,10 @@ import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
 import TTSControlBar from "./TTSControlBar";
 import { ChatMode } from "./ChatModeSwitch";
-import { UploadedFile, Message } from "../types";
+import { UploadedFile, Message, AiSettings } from "../types";
 import { Menu, FileText, BookOpen } from "lucide-react";
+import { getModelDisplayName } from "../utils/modelNames";
+import { AiSettingsService } from "../services";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");
@@ -52,6 +54,30 @@ export default function Chatbot() {
 
   // 사용자 유형에 따른 자동 모드 설정
   const { userType } = useAuthStore();
+
+  // AI 설정 상태 (모델 정보 표시용)
+  const [aiSettings, setAiSettings] = useState<AiSettings | null>(null);
+
+  // 현재 사용 중인 모델 이름
+  const currentModelName = aiSettings?.llmModel
+    ? getModelDisplayName(aiSettings.llmModel)
+    : "GPT-5.1";
+
+  // AI 설정 가져오기 (컴포넌트 마운트 시 및 설정 변경 시)
+  useEffect(() => {
+    const fetchAiSettings = async () => {
+      try {
+        const settings = await AiSettingsService.getSettings();
+        setAiSettings(settings);
+      } catch (error) {
+        console.error("AI 설정 불러오기 실패:", error);
+        // 에러 발생 시 기본값 사용
+        setAiSettings(null);
+      }
+    };
+
+    fetchAiSettings();
+  }, [isSettingsOpen]); // 설정 모달이 열렸다가 닫힐 때 다시 가져오기
 
   useEffect(() => {
     const autoMode =
@@ -208,6 +234,11 @@ export default function Chatbot() {
               {currentChatMode === ChatMode.BUSINESS
                 ? "🏢 기업 쿼리"
                 : "💬 AI 친구"}
+            </span>
+            <span className="text-sm text-gray-400">|</span>
+            <span className="text-sm text-gray-600">AI 모델:</span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+              {currentModelName}
             </span>
           </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Brain, Key, Settings } from "lucide-react";
 import { LLMProvider, LLMModel } from "../../types";
+import { MODEL_NAMES as SHARED_MODEL_NAMES } from "../../utils/modelNames";
 
 interface ModelSettingsProps {
   provider: LLMProvider;
@@ -65,22 +66,9 @@ const PROVIDER_NAMES: Record<LLMProvider, string> = {
 };
 
 /**
- * 모델 이름
+ * 모델 이름 (공유 유틸리티에서 가져옴)
  */
-const MODEL_NAMES: Record<string, string> = {
-  [LLMModel.GPT_4]: "GPT-4",
-  [LLMModel.GPT_4O]: "GPT-4o",
-  [LLMModel.GPT_4_TURBO]: "GPT-4 Turbo",
-  [LLMModel.GPT_5_1]: "GPT-5.1",
-  [LLMModel.GEMINI_PRO]: "Gemini Pro",
-  [LLMModel.GEMINI_ULTRA]: "Gemini Ultra",
-  [LLMModel.GEMINI_1_5_PRO]: "Gemini 1.5 Pro",
-  [LLMModel.GEMINI_1_5_FLASH]: "Gemini 1.5 Flash",
-  [LLMModel.CLAUDE_3_OPUS]: "Claude 3 Opus",
-  [LLMModel.CLAUDE_3_SONNET]: "Claude 3 Sonnet",
-  [LLMModel.CLAUDE_3_HAIKU]: "Claude 3 Haiku",
-  [LLMModel.CLAUDE_3_5_SONNET]: "Claude 3.5 Sonnet",
-};
+const MODEL_NAMES = SHARED_MODEL_NAMES;
 
 export default function ModelSettings({
   provider,
