@@ -7,6 +7,7 @@ import {
   addMessageToConversation,
   appendTokenToLastAssistantMessage,
   addSourcesToLastAssistantMessage,
+  addImagesToLastAssistantMessage,
   createEmptyAssistantMessage,
   createUserMessage,
 } from "../utils/conversationHelpers";
@@ -115,6 +116,18 @@ export function useChat() {
             "/chat/completion"
           );
           handleError(apiError, { showToast: true });
+        },
+        // 이미지 생성 이벤트를 받을 때
+        (imageData) => {
+          console.log("🎨 이미지 생성 완료:", imageData);
+          setConversations((prev) =>
+            addImagesToLastAssistantMessage(
+              prev,
+              currentChatId!,
+              imageData.images,
+              imageData.imageMetadata
+            )
+          );
         }
       );
     } catch (error) {

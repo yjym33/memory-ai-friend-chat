@@ -117,6 +117,35 @@ export function addSourcesToLastAssistantMessage(
 }
 
 /**
+ * 대화의 마지막 assistant 메시지에 이미지를 추가합니다.
+ * @param conversations - 현재 대화 목록
+ * @param conversationId - 대화 ID
+ * @param images - 이미지 URL 배열
+ * @param imageMetadata - 이미지 메타데이터
+ * @returns 업데이트된 대화 목록
+ */
+export function addImagesToLastAssistantMessage(
+  conversations: Conversation[],
+  conversationId: number,
+  images: string[],
+  imageMetadata?: {
+    model: string;
+    provider: string;
+    prompt?: string;
+  }
+): Conversation[] {
+  return updateLastMessage(conversations, conversationId, (message) => {
+    if (message.role !== "assistant") return message;
+    return {
+      ...message,
+      images,
+      imageMetadata,
+      messageType: "image" as const,
+    };
+  });
+}
+
+/**
  * 빈 assistant 메시지를 생성합니다.
  * @returns 빈 assistant 메시지
  */

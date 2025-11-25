@@ -15,7 +15,7 @@ import TTSControlBar from "./TTSControlBar";
 import { ChatMode } from "./ChatModeSwitch";
 import { UploadedFile, Message, AiSettings } from "../types";
 import { Menu, FileText, BookOpen } from "lucide-react";
-import { getModelDisplayName } from "../utils/modelNames";
+import { getModelDisplayName, getImageModelDisplayName } from "../utils/modelNames";
 import { AiSettingsService } from "../services";
 
 export default function Chatbot() {
@@ -58,10 +58,15 @@ export default function Chatbot() {
   // AI 설정 상태 (모델 정보 표시용)
   const [aiSettings, setAiSettings] = useState<AiSettings | null>(null);
 
-  // 현재 사용 중인 모델 이름
+  // 현재 사용 중인 LLM 모델 이름
   const currentModelName = aiSettings?.llmModel
     ? getModelDisplayName(aiSettings.llmModel)
     : "GPT-5.1";
+
+  // 현재 사용 중인 이미지 생성 모델 이름
+  const currentImageModelName = aiSettings?.imageModel
+    ? getImageModelDisplayName(aiSettings.imageModel)
+    : "DALL-E 3";
 
   // AI 설정 가져오기 (컴포넌트 마운트 시 및 설정 변경 시)
   useEffect(() => {
@@ -236,9 +241,14 @@ export default function Chatbot() {
                 : "💬 AI 친구"}
             </span>
             <span className="text-sm text-gray-400">|</span>
-            <span className="text-sm text-gray-600">AI 모델:</span>
+            <span className="text-sm text-gray-600">LLM:</span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-              {currentModelName}
+              🤖 {currentModelName}
+            </span>
+            <span className="text-sm text-gray-400">|</span>
+            <span className="text-sm text-gray-600">이미지:</span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-700">
+              🎨 {currentImageModelName}
             </span>
           </div>
 

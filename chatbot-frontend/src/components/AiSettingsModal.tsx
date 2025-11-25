@@ -6,10 +6,11 @@ import SettingsTabs from "./ai-settings/SettingsTabs";
 import PersonalitySettings from "./ai-settings/PersonalitySettings";
 import MemorySettings from "./ai-settings/MemorySettings";
 import ModelSettings from "./ai-settings/ModelSettings";
+import ImageSettings from "./ai-settings/ImageSettings";
 import TTSSettings from "./ai-settings/TTSSettings";
 import STTSettings from "./ai-settings/STTSettings";
 import SettingsTestSection from "./ai-settings/SettingsTestSection";
-import { LLMProvider } from "../types";
+import { LLMProvider, ImageProvider, ImageModel } from "../types";
 import { ApiKeyService } from "../services";
 import { success as toastSuccess, error as toastError } from "../lib/toast";
 
@@ -22,7 +23,7 @@ export default function AiSettingsModal({
   isOpen,
   onClose,
 }: AiSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "model" | "tts" | "stt">(
+  const [activeTab, setActiveTab] = useState<"personality" | "memory" | "model" | "image" | "tts" | "stt">(
     "personality"
   );
 
@@ -58,6 +59,15 @@ export default function AiSettingsModal({
     sttAutoSend: false,
   });
 
+  // 이미지 생성 설정 상태
+  const [imageSettings, setImageSettings] = useState({
+    provider: ImageProvider.DALLE,
+    model: ImageModel.DALLE_3 as string,
+    defaultSize: "1024x1024",
+    defaultQuality: "standard",
+    defaultStyle: "vivid",
+  });
+
   // AI 설정 관리 훅
   const {
     settings,
@@ -77,18 +87,34 @@ export default function AiSettingsModal({
   // 모델 설정을 AI 설정에서 불러오기
   useEffect(() => {
     if (settings && isOpen) {
+      const defaultConfig = {
+        temperature: 0.7,
+        maxTokens: 1000,
+        topP: 0.9,
+        frequencyPenalty: 0.5,
+        presencePenalty: 0.3,
+      };
+      
       setModelSettings({
         provider: (settings.llmProvider as LLMProvider) || LLMProvider.OPENAI,
         model: settings.llmModel || "gpt-5.1",
-        config: settings.llmConfig || {
-          temperature: 0.7,
-          maxTokens: 1000,
-          topP: 0.9,
-          frequencyPenalty: 0.5,
-          presencePenalty: 0.3,
+        config: {
+          ...defaultConfig,
+          ...(settings.llmConfig || {}),
         },
         apiKeys: {},
       });
+
+      // 이미지 설정 불러오기
+      if (settings.imageProvider || settings.imageModel) {
+        setImageSettings({
+          provider: (settings.imageProvider as ImageProvider) || ImageProvider.DALLE,
+          model: settings.imageModel || ImageModel.DALLE_3,
+          defaultSize: settings.imageConfig?.defaultSize || "1024x1024",
+          defaultQuality: settings.imageConfig?.defaultQuality || "standard",
+          defaultStyle: settings.imageConfig?.defaultStyle || "vivid",
+        });
+      }
     }
   }, [settings, isOpen]);
 
@@ -111,6 +137,14 @@ export default function AiSettingsModal({
         llmProvider: modelSettings.provider,
         llmModel: modelSettings.model,
         llmConfig: modelSettings.config,
+        // 이미지 설정 추가
+        imageProvider: imageSettings.provider,
+        imageModel: imageSettings.model,
+        imageConfig: {
+          defaultSize: imageSettings.defaultSize,
+          defaultQuality: imageSettings.defaultQuality,
+          defaultStyle: imageSettings.defaultStyle,
+        },
       });
 
       // 1. AI 설정 저장 (모델 설정 포함)
@@ -240,6 +274,13 @@ export default function AiSettingsModal({
                   apiKeys: { ...prev.apiKeys, [provider]: apiKey },
                 }))
               }
+            />
+          )}
+
+          {activeTab === "image" && (
+            <ImageSettings
+              imageSettings={imageSettings}
+              onSettingsChange={setImageSettings}
             />
           )}
 

@@ -200,7 +200,7 @@ export class ChatService {
   }
 
   /**
-   * 스트리밍 방식으로 메시지 전송
+   * 스트리밍 방식으로 메시지 전송 (이미지 생성 지원)
    */
   static async sendMessageStream(
     conversationId: number,
@@ -216,7 +216,15 @@ export class ChatService {
       }>
     ) => void,
     onComplete?: () => void,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    onImages?: (data: {
+      images: string[];
+      imageMetadata?: {
+        model: string;
+        provider: string;
+        prompt?: string;
+      };
+    }) => void
   ): Promise<void> {
     try {
       const API_URL =
@@ -268,6 +276,9 @@ export class ChatService {
                 onToken(data.content);
               } else if (data.type === "sources" && onSources) {
                 onSources(data.content);
+              } else if (data.type === "images" && onImages) {
+                // 이미지 생성 이벤트 처리
+                onImages(data.content);
               } else if (data.type === "done") {
                 if (onComplete) onComplete();
                 return;

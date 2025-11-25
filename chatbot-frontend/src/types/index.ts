@@ -27,6 +27,14 @@ export interface Message {
     relevance: number;
     snippet?: string;
   }>;
+  // 이미지 생성 지원
+  messageType?: 'text' | 'image' | 'mixed';
+  images?: string[];
+  imageMetadata?: {
+    model: string;
+    provider: string;
+    prompt?: string;
+  };
 }
 
 // =====================================
@@ -120,6 +128,71 @@ export interface LLMConfig {
   [key: string]: any;
 }
 
+// =====================================
+// 이미지 생성 관련 타입
+// =====================================
+export enum ImageProvider {
+  DALLE = 'dalle',
+  STABILITY = 'stability',
+  GOOGLE_IMAGEN = 'google-imagen',
+}
+
+export enum ImageModel {
+  // OpenAI DALL-E
+  DALLE_3 = 'dall-e-3',
+  DALLE_2 = 'dall-e-2',
+  // Stability AI
+  SDXL_1_0 = 'stable-diffusion-xl-1024-v1-0',
+  SD_1_6 = 'stable-diffusion-v1-6',
+  // Google Imagen (Nano Banana)
+  GEMINI_FLASH_IMAGE = 'gemini-2.0-flash-exp',
+  GEMINI_FLASH_IMAGE_PREVIEW = 'gemini-2.0-flash-preview-image-generation',
+}
+
+export type ImageSize =
+  | '256x256'
+  | '512x512'
+  | '768x768'
+  | '1024x1024'
+  | '1792x1024'
+  | '1024x1792';
+
+export type ImageQuality = 'standard' | 'hd';
+export type ImageStyle = 'vivid' | 'natural';
+
+export interface ImageGenerationConfig {
+  defaultSize?: ImageSize;
+  defaultQuality?: ImageQuality;
+  defaultStyle?: ImageStyle;
+  maxImagesPerRequest?: number;
+}
+
+export interface ImageGenerationRequest {
+  prompt: string;
+  negativePrompt?: string;
+  size?: ImageSize;
+  quality?: ImageQuality;
+  style?: ImageStyle;
+  n?: number;
+}
+
+export interface GeneratedImage {
+  url: string;
+  base64?: string;
+  revisedPrompt?: string;
+  width: number;
+  height: number;
+}
+
+export interface ImageGenerationResponse {
+  images: GeneratedImage[];
+  model: string;
+  provider: ImageProvider;
+  usage?: {
+    cost?: number;
+  };
+}
+
 // AI 설정 관련 타입 (백엔드 AiSettings 엔티티 기반)
 // =====================================
 export interface AiSettings {
@@ -146,6 +219,10 @@ export interface AiSettings {
   llmProvider?: LLMProvider;
   llmModel?: string;
   llmConfig?: LLMConfig;
+  // 이미지 생성 설정
+  imageProvider?: ImageProvider;
+  imageModel?: string;
+  imageConfig?: ImageGenerationConfig;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -173,6 +250,10 @@ export interface CreateAiSettingsDto {
   llmProvider?: LLMProvider;
   llmModel?: string;
   llmConfig?: LLMConfig;
+  // 이미지 생성 설정
+  imageProvider?: ImageProvider;
+  imageModel?: string;
+  imageConfig?: ImageGenerationConfig;
 }
 
 export type UpdateAiSettingsDto = CreateAiSettingsDto;

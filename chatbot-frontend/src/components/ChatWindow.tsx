@@ -7,7 +7,7 @@ import { Message } from "../types";
 import ThemeSelector from "./theme/ThemeSelector";
 import { ChatTheme } from "../types/theme";
 import { ChatMode } from "./ChatModeSwitch";
-import { FileText, ExternalLink, Volume2, VolumeX, Square } from "lucide-react";
+import { FileText, ExternalLink, Volume2, VolumeX, Square, Image as ImageIcon, Download, ZoomIn } from "lucide-react";
 import { useTTS } from "../hooks/useTTS";
 
 interface ChatWindowProps {
@@ -173,6 +173,76 @@ const ChatWindow = React.memo(function ChatWindow({
                     >
                       {msg.content}
                     </ReactMarkdown>
+
+                    {/* 이미지 표시 */}
+                    {msg.images && msg.images.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        {/* 이미지 헤더 */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>생성된 이미지 ({msg.images.length}개)</span>
+                        </div>
+                        
+                        {/* 이미지 그리드 */}
+                        <div className={`grid gap-3 ${
+                          msg.images.length === 1 
+                            ? 'grid-cols-1' 
+                            : msg.images.length === 2 
+                              ? 'grid-cols-2' 
+                              : 'grid-cols-2 lg:grid-cols-3'
+                        }`}>
+                          {msg.images.map((imageUrl, imgIdx) => (
+                            <div 
+                              key={imgIdx} 
+                              className="relative group rounded-lg overflow-hidden border border-gray-200 bg-gray-50"
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={`생성된 이미지 ${imgIdx + 1}`}
+                                className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                                loading="lazy"
+                              />
+                              
+                              {/* 이미지 오버레이 (호버 시 표시) */}
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                                {/* 확대 버튼 */}
+                                <button
+                                  onClick={() => window.open(imageUrl, '_blank')}
+                                  className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                  title="이미지 크게 보기"
+                                >
+                                  <ZoomIn className="w-5 h-5 text-gray-700" />
+                                </button>
+                                
+                                {/* 다운로드 버튼 */}
+                                <a
+                                  href={imageUrl}
+                                  download={`generated-image-${imgIdx + 1}.png`}
+                                  className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                  title="이미지 다운로드"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Download className="w-5 h-5 text-gray-700" />
+                                </a>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* 이미지 메타데이터 표시 */}
+                        {msg.imageMetadata && (
+                          <div className="text-xs text-gray-500 flex items-center gap-2 mt-2">
+                            <span className="bg-gray-100 px-2 py-1 rounded">
+                              모델: {msg.imageMetadata.model}
+                            </span>
+                            <span className="bg-gray-100 px-2 py-1 rounded">
+                              Provider: {msg.imageMetadata.provider}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* 기업 모드 출처 정보 표시 */}
                     {chatMode === ChatMode.BUSINESS &&
