@@ -10,8 +10,9 @@ import { AgentService } from '../agent/agent.service';
 import { ConfigService } from '@nestjs/config';
 import { LlmService } from '../common/services/llm.service';
 import { LLMAdapterService } from '../llm/services/llm-adapter.service';
-import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service'; // chatbot-llm 서비스 추가
-import { LLMStreamChunk } from '../llm/types/llm.types'; // LLMStreamChunk 타입 import
+import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
+import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
+import { LLMStreamChunk } from '../llm/types/llm.types';
 import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
 import {
   validateConversationExists,
@@ -36,7 +37,8 @@ export class ChatService {
     private configService: ConfigService,
     private llmService: LlmService,
     private llmAdapterService: LLMAdapterService,
-    private chatbotLlmService: ChatbotLlmService, // chatbot-llm 서비스 주입
+    private chatbotLlmService: ChatbotLlmService,
+    private imageAdapterService: ImageAdapterService, // 이미지 생성 서비스 주입
   ) {}
 
   /**
@@ -504,6 +506,7 @@ ${context}
 
   /**
    * 메시지를 스트리밍 방식으로 처리합니다.
+   * 이미지 생성 요청인 경우 이미지를 생성하고, 그렇지 않으면 텍스트 응답을 생성합니다.
    */
   async processMessageStream(
     userId: string,
@@ -511,7 +514,7 @@ ${context}
     message: string,
     onChunk: (chunk: string) => void,
     onSources?: (sources: any[]) => void,
-  ): Promise<void> {
+  ): Promise<{ images?: string[]; imageMetadata?: any }> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['organization'],
@@ -519,6 +522,31 @@ ${context}
 
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 🎨 이미지 생성 요청 감지
+    if (this.isImageGenerationRequest(message)) {
+      console.log('🎨 이미지 생성 요청 감지됨:', message);
+      try {
+        const result = await this.processImageGenerationRequest(
+          userId,
+          conversationId,
+          message,
+        );
+
+        // 이미지 생성 응답을 스트리밍으로 전송
+        onChunk(result.response);
+
+        // 이미지 정보 반환 (컨트롤러에서 처리)
+        return {
+          images: result.images,
+          imageMetadata: result.imageMetadata,
+        };
+      } catch (error) {
+        console.error('❌ 이미지 생성 실패:', error);
+        onChunk(`이미지 생성 중 오류가 발생했습니다: ${error.message}`);
+        return {};
+      }
     }
 
     // AI 설정 조회
@@ -545,6 +573,8 @@ ${context}
         onChunk,
       );
     }
+
+    return {};
   }
 
   /**
@@ -770,5 +800,203 @@ IMPORTANT RULES:
       .join('\n');
 
     return `${response}\n\n📚 **참고 문서:**\n${citations}`;
+  }
+
+  // ============================================
+  // 이미지 생성 관련 메서드
+  // ============================================
+
+  /**
+   * 이미지 생성 요청인지 감지합니다.
+   * @param message - 사용자 메시지
+   * @returns 이미지 생성 요청 여부
+   */
+  isImageGenerationRequest(message: string): boolean {
+    const imageKeywords = [
+      // 한국어 키워드
+      '그림 그려',
+      '그림그려',
+      '이미지 생성',
+      '이미지생성',
+      '이미지 만들어',
+      '이미지만들어',
+      '그림 만들어',
+      '그림만들어',
+      '그려줘',
+      '그려 줘',
+      '이미지 그려',
+      '이미지그려',
+      '그림을 그려',
+      '이미지를 생성',
+      '이미지를 만들어',
+      '사진 만들어',
+      '사진만들어',
+      '사진 생성',
+      '사진생성',
+      // 명령어
+      '/image',
+      '/이미지',
+      '/그림',
+      '/사진',
+      // 영어 키워드
+      'draw',
+      'generate image',
+      'create image',
+      'make image',
+      'draw me',
+      'generate a',
+      'create a picture',
+      'make a picture',
+    ];
+
+    const lowerMessage = message.toLowerCase();
+    return imageKeywords.some((keyword) =>
+      lowerMessage.includes(keyword.toLowerCase()),
+    );
+  }
+
+  /**
+   * 이미지 생성 프롬프트를 추출합니다.
+   * @param message - 사용자 메시지
+   * @returns 추출된 프롬프트
+   */
+  extractImagePrompt(message: string): string {
+    // 명령어 제거
+    let cleanedMessage = message
+      .replace(/^\/image\s*/i, '')
+      .replace(/^\/이미지\s*/, '')
+      .replace(/^\/그림\s*/, '')
+      .replace(/^\/사진\s*/, '');
+
+    // 한국어 요청 패턴 제거
+    const patternsToRemove = [
+      /그림\s*(그려|만들어)\s*(줘|주세요|줄래|줄래요)?/g,
+      /이미지\s*(생성|만들어|그려)\s*(줘|주세요|줄래|줄래요)?/g,
+      /사진\s*(생성|만들어)\s*(줘|주세요|줄래|줄래요)?/g,
+      /(을|를)\s*그려\s*(줘|주세요)?/g,
+      /(을|를)\s*만들어\s*(줘|주세요)?/g,
+    ];
+
+    for (const pattern of patternsToRemove) {
+      cleanedMessage = cleanedMessage.replace(pattern, '');
+    }
+
+    // 영어 요청 패턴 제거
+    cleanedMessage = cleanedMessage
+      .replace(/draw\s*(me\s*)?(a\s*)?/gi, '')
+      .replace(/generate\s*(a\s*)?(image\s*of\s*)?/gi, '')
+      .replace(/create\s*(a\s*)?(picture\s*of\s*)?/gi, '')
+      .replace(/make\s*(me\s*)?(a\s*)?(image\s*of\s*)?/gi, '');
+
+    return cleanedMessage.trim() || message;
+  }
+
+  /**
+   * 이미지 생성 요청을 처리합니다.
+   * @param userId - 사용자 ID
+   * @param conversationId - 대화 ID
+   * @param message - 사용자 메시지
+   * @returns 이미지 생성 결과
+   */
+  async processImageGenerationRequest(
+    userId: string,
+    conversationId: number,
+    message: string,
+  ): Promise<{
+    response: string;
+    images: string[];
+    messageType: 'image';
+    imageMetadata?: {
+      model: string;
+      provider: string;
+      prompt: string;
+    };
+  }> {
+    const prompt = this.extractImagePrompt(message);
+
+    console.log(`🎨 이미지 생성 요청 감지 - 프롬프트: ${prompt}`);
+
+    try {
+      const result = await this.imageAdapterService.generateImage(
+        userId,
+        prompt,
+        {
+          n: 1,
+        },
+      );
+
+      const images = result.images.map((img) => img.url);
+
+      return {
+        response: `🎨 "${prompt}"에 대한 이미지를 생성했습니다.`,
+        images,
+        messageType: 'image',
+        imageMetadata: {
+          model: result.model,
+          provider: result.provider,
+          prompt,
+        },
+      };
+    } catch (error) {
+      console.error('❌ 이미지 생성 실패:', error);
+      throw new Error(`이미지 생성 중 오류가 발생했습니다: ${error.message}`);
+    }
+  }
+
+  /**
+   * 메시지 처리 (이미지 생성 통합)
+   * 이미지 생성 요청이면 이미지를 생성하고, 아니면 기존 텍스트 처리를 수행합니다.
+   */
+  async processMessageWithImageSupport(
+    userId: string,
+    conversationId: number,
+    message: string,
+  ): Promise<{
+    response: string;
+    images?: string[];
+    messageType: 'text' | 'image';
+    sources?: Array<{
+      title: string;
+      documentId: string;
+      type?: string;
+      relevance: number;
+      snippet: string;
+    }>;
+    imageMetadata?: {
+      model: string;
+      provider: string;
+      prompt: string;
+    };
+  }> {
+    // 이미지 생성 요청 감지
+    if (this.isImageGenerationRequest(message)) {
+      try {
+        const imageResult = await this.processImageGenerationRequest(
+          userId,
+          conversationId,
+          message,
+        );
+        return imageResult;
+      } catch (error) {
+        // 이미지 생성 실패 시 오류 메시지 반환
+        return {
+          response: error.message || '이미지 생성 중 오류가 발생했습니다.',
+          messageType: 'text',
+        };
+      }
+    }
+
+    // 기존 텍스트 처리 로직
+    const { response, sources } = await this.processMessage(
+      userId,
+      conversationId,
+      message,
+    );
+
+    return {
+      response,
+      messageType: 'text',
+      sources,
+    };
   }
 }

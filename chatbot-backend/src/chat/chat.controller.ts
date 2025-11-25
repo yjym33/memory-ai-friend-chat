@@ -273,9 +273,11 @@ export class ChatController {
       // 전체 응답을 저장할 변수
       let fullResponse = '';
       let responseSources: any[] = [];
+      let responseImages: string[] = [];
+      let responseImageMetadata: any = null;
 
       // 스트리밍 방식으로 메시지 처리
-      await this.chatService.processMessageStream(
+      const result = await this.chatService.processMessageStream(
         req.user.userId,
         conversationId,
         body.message,
@@ -289,6 +291,17 @@ export class ChatController {
         },
       );
 
+      // 이미지 생성 결과가 있으면 처리
+      if (result?.images && result.images.length > 0) {
+        responseImages = result.images;
+        responseImageMetadata = result.imageMetadata;
+        // 이미지 정보를 SSE로 전송
+        res.write(formatSseEvent(SSE_EVENT_TYPES.IMAGES, {
+          images: responseImages,
+          imageMetadata: responseImageMetadata,
+        }));
+      }
+
       // 대화 내용을 데이터베이스에 저장
       const conversation =
         await this.chatService.getConversation(conversationId);
@@ -298,12 +311,21 @@ export class ChatController {
         conversationId,
       );
 
-      const updatedMessages = createUpdatedMessages(
-        validatedConversation,
-        body.message,
-        fullResponse,
-        responseSources,
-      );
+      // 메시지 업데이트 (이미지 정보 포함)
+      const updatedMessages = [
+        ...validatedConversation.messages,
+        { role: 'user' as const, content: body.message },
+        {
+          role: 'assistant' as const,
+          content: fullResponse,
+          sources: responseSources,
+          ...(responseImages.length > 0 && {
+            images: responseImages,
+            imageMetadata: responseImageMetadata,
+            messageType: 'image' as const,
+          }),
+        },
+      ];
 
       await this.chatService.updateConversation(
         conversationId,

@@ -19,6 +19,7 @@ import { AgentModule } from './agent/agent.module';
 import { DocumentModule } from './document/document.module';
 import { AdminModule } from './admin/admin.module';
 import { LLMModule } from './llm/llm.module';
+import { ImageGenerationModule } from './image-generation/image-generation.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -66,6 +67,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     DocumentModule, // 문서 관리
     AdminModule, // 관리자
     LLMModule, // LLM 통합 모듈
+    ImageGenerationModule, // 이미지 생성 모듈
   ],
   controllers: [AppController],
   providers: [

@@ -108,6 +108,21 @@ export class AiSettings {
     [key: string]: any; // 모델별 추가 파라미터
   };
 
+  // 이미지 생성 설정
+  @Column({ type: 'varchar', default: 'dalle', nullable: true })
+  imageProvider: string; // 'dalle' | 'stability'
+
+  @Column({ type: 'varchar', default: 'dall-e-3', nullable: true })
+  imageModel: string;
+
+  @Column({ type: 'json', nullable: true })
+  imageConfig: {
+    defaultSize?: string; // '256x256' | '512x512' | '1024x1024' 등
+    defaultQuality?: string; // 'standard' | 'hd'
+    defaultStyle?: string; // 'vivid' | 'natural'
+    maxImagesPerRequest?: number;
+  };
+
   @CreateDateColumn()
   createdAt: Date;
 

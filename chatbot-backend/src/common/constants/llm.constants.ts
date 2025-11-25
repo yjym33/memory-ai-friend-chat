@@ -52,6 +52,7 @@ export const SUCCESS_MESSAGES = {
 export const SSE_EVENT_TYPES = {
   TOKEN: 'token',
   SOURCES: 'sources',
+  IMAGES: 'images', // 이미지 생성 이벤트
   DONE: 'done',
   ERROR: 'error',
 } as const;
