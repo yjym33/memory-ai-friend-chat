@@ -193,6 +193,63 @@ export interface ImageGenerationResponse {
   };
 }
 
+// =====================================
+// Multi-Image Orchestrator 타입
+// =====================================
+
+/**
+ * 개별 이미지 Provider 응답
+ */
+export interface ProviderImageResponse {
+  provider: ImageProvider;
+  model: string;
+  success: boolean;
+  images: GeneratedImage[];
+  error?: string;
+  latency: number;
+}
+
+/**
+ * Multi-Image 응답
+ */
+export interface MultiImageResponse {
+  success: boolean;
+  isImageGeneration: boolean;
+  isMultiImage: boolean;
+  response: string;
+  prompt: string;
+  images: string[];
+  imageMetadata: Array<{
+    provider: string;
+    model: string;
+    url: string;
+  }>;
+  multiImageResponses: ProviderImageResponse[];
+  totalLatency: number;
+  successCount: number;
+  failCount: number;
+  error?: string;
+}
+
+/**
+ * 이미지 Provider 정보
+ */
+export interface ImageProviderInfo {
+  provider: ImageProvider;
+  name: string;
+  defaultModel: string;
+  available: boolean;
+}
+
+/**
+ * 사용 가능한 이미지 Provider 목록 응답
+ */
+export interface AvailableImageProvidersResponse {
+  success: boolean;
+  providers: ImageProviderInfo[];
+  available: ImageProvider[];
+}
+
 // AI 설정 관련 타입 (백엔드 AiSettings 엔티티 기반)
 // =====================================
 export interface AiSettings {
@@ -511,6 +568,113 @@ export type ApiResponseType<T = unknown> =
   | ListResponse<T>;
 
 // =====================================
+// Multi-Model Orchestrator 타입
+// =====================================
+
+/**
+ * 개별 Provider 응답
+ */
+export interface ProviderResponse {
+  provider: LLMProvider;
+  model: string;
+  content: string;
+  success: boolean;
+  error?: string;
+  latency: number;
+}
+
+/**
+ * Multi-Model 응답
+ */
+export interface MultiModelResponse {
+  success: boolean;
+  responses: ProviderResponse[];
+  totalLatency: number;
+  successCount: number;
+  failCount: number;
+  error?: string;
+  // 이미지 생성 관련 필드
+  isImageGeneration?: boolean;
+  response?: string;
+  images?: string[];
+  imageMetadata?: {
+    model: string;
+    provider: string;
+    prompt?: string;
+  };
+}
+
+/**
+ * Provider 정보
+ */
+export interface ProviderInfo {
+  provider: LLMProvider;
+  name: string;
+  defaultModel: string;
+  available: boolean;
+}
+
+/**
+ * 사용 가능한 Provider 목록 응답
+ */
+export interface AvailableProvidersResponse {
+  providers: ProviderInfo[];
+  available: LLMProvider[];
+}
+
+/**
+ * Multi-Model 스트리밍 청크
+ */
+export interface MultiModelStreamChunk {
+  provider: LLMProvider;
+  model: string;
+  chunk: string;
+}
+
+/**
+ * Multi-Model 완료 이벤트
+ */
+export interface MultiModelCompleteEvent {
+  provider: LLMProvider;
+  model: string;
+  content: string;
+}
+
+/**
+ * Multi-Model 에러 이벤트
+ */
+export interface MultiModelErrorEvent {
+  provider: LLMProvider;
+  error: string;
+}
+
+/**
+ * 합의 응답
+ */
+export interface ConsensusResponse {
+  success: boolean;
+  consensus?: string;
+  sources?: ProviderResponse[];
+  error?: string;
+}
+
+/**
+ * 선택된 응답 저장 요청
+ */
+export interface SelectResponseRequest {
+  userMessage: string;
+  selectedProvider: string;
+  selectedModel: string;
+  selectedContent: string;
+  allResponses: Array<{
+    provider: string;
+    model: string;
+    content: string;
+    latency: number;
+  }>;
+}
+
+// =====================================
 // 프론트엔드 전용 타입
 // =====================================
 export interface Toast {
@@ -564,8 +728,3 @@ export const isUser = (obj: unknown): obj is User => {
   );
 };
 
-// =====================================
-// 레거시 타입 (호환성을 위해 유지)
-// =====================================
-/** @deprecated Use AiSettings instead */
-export type AiSettingsData = AiSettings;

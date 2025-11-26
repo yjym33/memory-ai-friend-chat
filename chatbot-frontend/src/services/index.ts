@@ -5,3 +5,5 @@ export { ChatService } from "./chatService";
 export { AiSettingsService } from "./aiSettingsService";
 export { ApiKeyService } from "./apiKeyService";
 export { default as ImageService } from "./imageService";
+export { multiModelService } from "./multiModelService";
+export { multiImageService } from "./multiImageService";

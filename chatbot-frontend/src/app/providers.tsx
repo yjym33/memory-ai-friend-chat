@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { AuthGuard } from "../auth/AuthGuard";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import { ErrorBoundary } from "../components/error/ErrorBoundary";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

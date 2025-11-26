@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useChat } from "../hooks/useChat";
 import { useTheme } from "../hooks/useTheme";
 import { useAuthStore } from "../store/authStore";
@@ -13,10 +13,27 @@ import AgentStatusModal from "./AgentStatusModal";
 import GoalManagerModal from "./goal-management/GoalManagerModal";
 import TTSControlBar from "./TTSControlBar";
 import { ChatMode } from "./ChatModeSwitch";
-import { UploadedFile, Message, AiSettings } from "../types";
+import {
+  MultiModelResponseSelector,
+  MultiModelProviderSelector,
+  MultiModelModeToggle,
+  MultiImageSelector,
+  MultiImageProviderSelector,
+} from "./multi-model";
+import {
+  UploadedFile,
+  Message,
+  AiSettings,
+  LLMProvider,
+  ImageProvider,
+  ProviderInfo,
+  ProviderResponse,
+  ImageProviderInfo,
+  ProviderImageResponse,
+} from "../types";
 import { Menu, FileText, BookOpen } from "lucide-react";
 import { getModelDisplayName, getImageModelDisplayName } from "../utils/modelNames";
-import { AiSettingsService } from "../services";
+import { AiSettingsService, multiModelService, multiImageService } from "../services";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");
@@ -31,6 +48,22 @@ export default function Chatbot() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAgentStatusOpen, setIsAgentStatusOpen] = useState(false);
   const [isGoalManagerOpen, setIsGoalManagerOpen] = useState(false);
+
+  // Multi-Model 모드 상태 (텍스트)
+  const [isMultiModelMode, setIsMultiModelMode] = useState(false);
+  const [showMultiModelSelector, setShowMultiModelSelector] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<ProviderInfo[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<LLMProvider[]>([]);
+  const [multiModelResponses, setMultiModelResponses] = useState<ProviderResponse[]>([]);
+  const [multiModelLoading, setMultiModelLoading] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string>("");
+
+  // Multi-Image 모드 상태 (이미지)
+  const [showMultiImageSelector, setShowMultiImageSelector] = useState(false);
+  const [availableImageProviders, setAvailableImageProviders] = useState<ImageProviderInfo[]>([]);
+  const [selectedImageProviders, setSelectedImageProviders] = useState<ImageProvider[]>([]);
+  const [multiImageResponses, setMultiImageResponses] = useState<ProviderImageResponse[]>([]);
+  const [pendingImagePrompt, setPendingImagePrompt] = useState<string>("");
 
   // 모바일 환경에서만 사이드바 상태 관리
   // 웹 환경에서는 별도의 컴포넌트로 항상 표시
@@ -90,6 +123,196 @@ export default function Chatbot() {
     setCurrentChatMode(autoMode);
   }, [userType]);
 
+  // Multi-Model: 사용 가능한 LLM Provider 목록 가져오기
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await multiModelService.getAvailableProviders();
+        setAvailableProviders(response.providers);
+        // 기본적으로 사용 가능한 모든 Provider 선택
+        setSelectedProviders(response.available);
+      } catch (error) {
+        console.error("LLM Provider 목록 불러오기 실패:", error);
+      }
+    };
+
+    if (isMultiModelMode) {
+      fetchProviders();
+    }
+  }, [isMultiModelMode]);
+
+  // Multi-Image: 사용 가능한 이미지 Provider 목록 가져오기
+  useEffect(() => {
+    const fetchImageProviders = async () => {
+      try {
+        const response = await multiImageService.getAvailableProviders();
+        setAvailableImageProviders(response.providers);
+        // 기본적으로 사용 가능한 모든 이미지 Provider 선택
+        setSelectedImageProviders(response.available);
+      } catch (error) {
+        console.error("이미지 Provider 목록 불러오기 실패:", error);
+      }
+    };
+
+    if (isMultiModelMode) {
+      fetchImageProviders();
+    }
+  }, [isMultiModelMode]);
+
+  // Multi-Model 응답 생성 (텍스트 + 이미지)
+  const generateMultiModelResponses = useCallback(
+    async (message: string) => {
+      if (!activeChatId || selectedProviders.length === 0) return;
+
+      setMultiModelLoading(true);
+      setPendingMessage(message);
+
+      try {
+        // 이미지 Provider도 함께 전송
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/completion/${activeChatId}/multi`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              message,
+              providers: selectedProviders,
+              imageProviders: selectedImageProviders,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 이미지 생성 응답인 경우 (Multi-Image)
+          if (data.isImageGeneration && data.isMultiImage) {
+            console.log("🎨 Multi-Image 생성 완료:", data.multiImageResponses);
+            setPendingImagePrompt(data.prompt);
+            setMultiImageResponses(data.multiImageResponses);
+            setShowMultiImageSelector(true);
+            setMultiModelLoading(false);
+            return;
+          }
+
+          // 단일 이미지 생성 응답인 경우 (fallback)
+          if (data.isImageGeneration) {
+            console.log("🎨 이미지 생성 완료:", data.images);
+            setMultiModelLoading(false);
+            setPendingMessage("");
+            window.location.reload();
+            return;
+          }
+
+          // 일반 Multi-Model 텍스트 응답
+          setMultiModelResponses(data.responses);
+          setShowMultiModelSelector(true);
+        } else {
+          console.error("Multi-Model 응답 생성 실패:", data.error);
+        }
+      } catch (error) {
+        console.error("Multi-Model 요청 실패:", error);
+      } finally {
+        setMultiModelLoading(false);
+      }
+    },
+    [activeChatId, selectedProviders, selectedImageProviders]
+  );
+
+  // Multi-Model: 응답 선택 처리
+  const handleMultiModelSelect = useCallback(
+    async (response: ProviderResponse) => {
+      if (!activeChatId) return;
+
+      try {
+        await multiModelService.selectResponse(activeChatId, {
+          userMessage: pendingMessage,
+          selectedProvider: response.provider,
+          selectedModel: response.model,
+          selectedContent: response.content,
+          allResponses: multiModelResponses.map((r) => ({
+            provider: r.provider,
+            model: r.model,
+            content: r.content,
+            latency: r.latency,
+          })),
+        });
+
+        // 채팅 목록 새로고침을 위해 페이지 리프레시 대신 상태 업데이트
+        setShowMultiModelSelector(false);
+        setMultiModelResponses([]);
+        setPendingMessage("");
+        
+        // 대화 새로고침
+        window.location.reload();
+      } catch (error) {
+        console.error("응답 저장 실패:", error);
+      }
+    },
+    [activeChatId, pendingMessage, multiModelResponses]
+  );
+
+  // Multi-Model: 취소 처리
+  const handleMultiModelCancel = useCallback(() => {
+    setShowMultiModelSelector(false);
+    setMultiModelResponses([]);
+    setPendingMessage("");
+  }, []);
+
+  // Multi-Image: 이미지 선택 처리
+  const handleMultiImageSelect = useCallback(
+    async (response: ProviderImageResponse, imageUrl: string) => {
+      if (!activeChatId) return;
+
+      try {
+        // 선택된 이미지를 대화에 저장
+        const saveResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/completion/${activeChatId}/multi/select`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              userMessage: `이미지 생성: ${pendingImagePrompt}`,
+              selectedProvider: response.provider,
+              selectedModel: response.model,
+              selectedContent: `🎨 선택한 이미지 (${response.provider} - ${response.model})`,
+              allResponses: multiImageResponses.map((r) => ({
+                provider: r.provider,
+                model: r.model,
+                content: r.images[0]?.url || "",
+                latency: r.latency,
+              })),
+            }),
+          }
+        );
+
+        if (saveResponse.ok) {
+          setShowMultiImageSelector(false);
+          setMultiImageResponses([]);
+          setPendingMessage("");
+          setPendingImagePrompt("");
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("이미지 저장 실패:", error);
+      }
+    },
+    [activeChatId, pendingImagePrompt, multiImageResponses]
+  );
+
+  // Multi-Image: 취소 처리
+  const handleMultiImageCancel = useCallback(() => {
+    setShowMultiImageSelector(false);
+    setMultiImageResponses([]);
+    setPendingImagePrompt("");
+  }, []);
+
   // 최신 AI 응답의 참고 문서 수집 (기업 모드용)
   const latestAssistantWithSources = [...(activeConversation?.messages || [])]
     .reverse()
@@ -101,11 +324,17 @@ export default function Chatbot() {
   const handleSendMessage = async (message?: string, file?: UploadedFile) => {
     const messageToSend = message || input;
 
-    if ((!messageToSend.trim() && !file) || loading) return;
+    if ((!messageToSend.trim() && !file) || loading || multiModelLoading) return;
 
     setInput(""); // 입력 필드 즉시 클리어
 
-    await sendMessage(messageToSend, file, currentChatMode);
+    // Multi-Model 모드인 경우
+    if (isMultiModelMode && selectedProviders.length >= 2) {
+      await generateMultiModelResponses(messageToSend);
+    } else {
+      // 일반 모드
+      await sendMessage(messageToSend, file, currentChatMode);
+    }
   };
 
   // 모바일에서 사이드바 닫기
@@ -250,6 +479,13 @@ export default function Chatbot() {
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-700">
               🎨 {currentImageModelName}
             </span>
+            <span className="text-sm text-gray-400">|</span>
+            {/* Multi-Model 모드 토글 */}
+            <MultiModelModeToggle
+              isEnabled={isMultiModelMode}
+              onToggle={setIsMultiModelMode}
+              disabled={loading || multiModelLoading}
+            />
           </div>
 
           {/* 기업 모드에서만 참고 문서 버튼 표시 */}
@@ -283,8 +519,58 @@ export default function Chatbot() {
           )}
         </div>
 
+        {/* Multi-Model Provider 선택 (Multi-Model 모드일 때만 표시) */}
+        {isMultiModelMode && (
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-200 px-4 py-3 space-y-3">
+            {/* 텍스트 LLM Provider 선택 */}
+            <MultiModelProviderSelector
+              providers={availableProviders}
+              selectedProviders={selectedProviders}
+              onSelectionChange={setSelectedProviders}
+              minSelection={2}
+              maxSelection={3}
+            />
+            {/* 이미지 Provider 선택 */}
+            <div className="border-t border-purple-200 pt-3">
+              <MultiImageProviderSelector
+                providers={availableImageProviders}
+                selectedProviders={selectedImageProviders}
+                onSelectionChange={setSelectedImageProviders}
+                minSelection={1}
+                maxSelection={3}
+              />
+            </div>
+          </div>
+        )}
+
         {/* 메인 채팅 영역 + 참고 문서 패널 */}
         <div className="flex-1 flex min-h-0">
+          {/* Multi-Model 응답 선택 UI (텍스트) */}
+          {showMultiModelSelector && (
+            <div className="absolute inset-0 z-50 bg-white overflow-auto">
+              <MultiModelResponseSelector
+                responses={multiModelResponses}
+                userMessage={pendingMessage}
+                onSelect={handleMultiModelSelect}
+                onCancel={handleMultiModelCancel}
+                isLoading={multiModelLoading}
+              />
+            </div>
+          )}
+
+          {/* Multi-Image 선택 UI (이미지) */}
+          {showMultiImageSelector && (
+            <div className="absolute inset-0 z-50 bg-white overflow-auto">
+              <MultiImageSelector
+                responses={multiImageResponses}
+                prompt={pendingImagePrompt}
+                onSelect={handleMultiImageSelect}
+                onCancel={handleMultiImageCancel}
+                isLoading={multiModelLoading}
+              />
+            </div>
+          )}
+
           {/* 채팅 윈도우 */}
           <div className="flex-1 min-w-0">
             <ChatWindow
@@ -375,7 +661,7 @@ export default function Chatbot() {
           input={input}
           setInput={setInput}
           sendMessage={handleSendMessage}
-          loading={loading}
+          loading={loading || multiModelLoading}
           chatMode={currentChatMode}
         />
       </div>
