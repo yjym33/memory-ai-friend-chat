@@ -87,3 +87,48 @@ export interface LLMConfig {
   [key: string]: any; // 모델별 추가 파라미터
 }
 
+// =====================================
+// Multi-Model Orchestrator 타입
+// =====================================
+
+/**
+ * Multi-Model 요청 타입
+ */
+export interface MultiModelRequest {
+  providers: LLMProvider[];
+  messages: Array<{ role: string; content: string }>;
+  options?: Partial<LLMRequest>;
+}
+
+/**
+ * 개별 Provider 응답 타입
+ */
+export interface ProviderResponse {
+  provider: LLMProvider;
+  model: string;
+  content: string;
+  success: boolean;
+  error?: string;
+  latency: number;
+}
+
+/**
+ * Multi-Model 응답 타입
+ */
+export interface MultiModelResponse {
+  responses: ProviderResponse[];
+  totalLatency: number;
+  successCount: number;
+  failCount: number;
+}
+
+/**
+ * Provider 정보 타입
+ */
+export interface ProviderInfo {
+  provider: LLMProvider;
+  name: string;
+  defaultModel: string;
+  available: boolean;
+}
+

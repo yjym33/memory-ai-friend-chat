@@ -7,18 +7,11 @@ import { AiSettings, ChatMode } from '../ai-settings/entity/ai-settings.entity';
 import { DocumentService } from '../document/document.service';
 import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
-import { ConfigService } from '@nestjs/config';
-import { LlmService } from '../common/services/llm.service';
 import { LLMAdapterService } from '../llm/services/llm-adapter.service';
 import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
 import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
 import { LLMStreamChunk } from '../llm/types/llm.types';
 import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
-import {
-  validateConversationExists,
-  createUpdatedMessages,
-} from '../common/utils/conversation.utils';
-import axios from 'axios';
 
 /**
  * 채팅 관련 비즈니스 로직을 처리하는 서비스
@@ -34,11 +27,9 @@ export class ChatService {
     private documentService: DocumentService,
     private aiSettingsService: AiSettingsService,
     private agentService: AgentService,
-    private configService: ConfigService,
-    private llmService: LlmService,
     private llmAdapterService: LLMAdapterService,
     private chatbotLlmService: ChatbotLlmService,
-    private imageAdapterService: ImageAdapterService, // 이미지 생성 서비스 주입
+    private imageAdapterService: ImageAdapterService,
   ) {}
 
   /**
@@ -493,13 +484,7 @@ ${context}
         },
       );
     } catch (error) {
-      console.error('LLM 스트리밍 응답 생성 실패:', error);
-      console.error('에러 상세:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-      // 에러를 상위로 전파하여 ChatController에서 처리할 수 있도록 함
+      console.error('LLM 스트리밍 응답 생성 실패:', error.message);
       throw error;
     }
   }
@@ -650,18 +635,12 @@ ${context}
         console.error('목표 추출 실패 (무시됨):', error);
       });
     } catch (error) {
-      console.error('개인 모드 스트리밍 처리 오류:', error);
-      console.error('에러 상세:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
+      console.error('개인 모드 스트리밍 처리 오류:', error.message);
 
       // 에러 메시지를 사용자에게 전달
       const errorMessage = error.message || ERROR_MESSAGES.GENERAL_ERROR;
       onChunk(errorMessage + ' ' + ERROR_MESSAGES.RETRY_MESSAGE);
 
-      // 에러를 다시 던져서 ChatController에서도 처리할 수 있도록 함
       throw error;
     }
   }

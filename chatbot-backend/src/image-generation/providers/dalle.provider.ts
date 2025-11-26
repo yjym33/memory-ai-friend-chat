@@ -161,6 +161,13 @@ export class DalleProvider implements IImageProvider {
   }
 
   /**
+   * Provider 타입(enum 값)을 반환합니다.
+   */
+  getProviderType(): ImageProvider {
+    return ImageProvider.DALLE;
+  }
+
+  /**
    * Provider 이름을 반환합니다.
    */
   getName(): string {

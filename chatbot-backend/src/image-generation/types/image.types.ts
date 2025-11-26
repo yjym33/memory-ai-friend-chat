@@ -94,3 +94,51 @@ export interface ImageGenerationConfig {
   maxImagesPerRequest?: number;
 }
 
+// =====================================
+// Multi-Image Orchestrator 타입
+// =====================================
+
+/**
+ * Multi-Image 요청 타입
+ */
+export interface MultiImageRequest {
+  providers: ImageProvider[];
+  prompt: string;
+  negativePrompt?: string;
+  size?: ImageSize;
+  quality?: ImageQuality;
+  style?: ImageStyle;
+}
+
+/**
+ * 개별 Provider 이미지 응답 타입
+ */
+export interface ProviderImageResponse {
+  provider: ImageProvider;
+  model: string;
+  success: boolean;
+  images: GeneratedImage[];
+  error?: string;
+  latency: number;
+}
+
+/**
+ * Multi-Image 응답 타입
+ */
+export interface MultiImageResponse {
+  responses: ProviderImageResponse[];
+  totalLatency: number;
+  successCount: number;
+  failCount: number;
+}
+
+/**
+ * 이미지 Provider 정보 타입
+ */
+export interface ImageProviderInfo {
+  provider: ImageProvider;
+  name: string;
+  defaultModel: string;
+  available: boolean;
+}
+

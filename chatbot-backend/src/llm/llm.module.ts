@@ -6,6 +6,7 @@ import { OpenAIProvider } from './providers/openai.provider';
 import { GoogleProvider } from './providers/google.provider';
 import { AnthropicProvider } from './providers/anthropic.provider';
 import { LLMAdapterService } from './services/llm-adapter.service';
+import { LLMOrchestratorService } from './services/llm-orchestrator.service';
 import { EncryptionService } from '../common/services/encryption.service';
 import { User } from '../auth/entity/user.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
@@ -23,7 +24,13 @@ import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
     AnthropicProvider,
     LLMProviderFactory,
     LLMAdapterService,
+    LLMOrchestratorService,
   ],
-  exports: [LLMAdapterService, LLMProviderFactory, EncryptionService],
+  exports: [
+    LLMAdapterService,
+    LLMProviderFactory,
+    LLMOrchestratorService,
+    EncryptionService,
+  ],
 })
 export class LLMModule {}

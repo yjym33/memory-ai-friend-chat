@@ -1,6 +1,7 @@
 import {
   ImageGenerationRequest,
   ImageGenerationResponse,
+  ImageProvider,
 } from '../types/image.types';
 
 /**
@@ -8,6 +9,11 @@ import {
  * 모든 이미지 생성 Provider는 이 인터페이스를 구현해야 합니다.
  */
 export interface IImageProvider {
+  /**
+   * Provider 타입(enum 값)을 반환합니다.
+   * @returns ImageProvider enum 값
+   */
+  getProviderType(): ImageProvider;
   /**
    * 이미지를 생성합니다.
    * @param request - 이미지 생성 요청 정보

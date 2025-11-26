@@ -6,6 +6,7 @@ import { StabilityProvider } from './providers/stability.provider';
 import { GoogleImagenProvider } from './providers/google-imagen.provider';
 import { ImageProviderFactory } from './providers/image-provider.factory';
 import { ImageAdapterService } from './services/image-adapter.service';
+import { ImageOrchestratorService } from './services/image-orchestrator.service';
 import { ImageGenerationController } from './image-generation.controller';
 import { EncryptionService } from '../common/services/encryption.service';
 import { User } from '../auth/entity/user.entity';
@@ -25,8 +26,9 @@ import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
     GoogleImagenProvider,
     ImageProviderFactory,
     ImageAdapterService,
+    ImageOrchestratorService,
   ],
-  exports: [ImageAdapterService, ImageProviderFactory],
+  exports: [ImageAdapterService, ImageProviderFactory, ImageOrchestratorService],
 })
 export class ImageGenerationModule {}
 

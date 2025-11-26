@@ -20,6 +20,10 @@ import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
 import { AuthenticatedRequest } from '../common/types/request.types';
 import { FileExtractionService } from '../common/services/file-extraction.service';
+import { LLMOrchestratorService } from '../llm/services/llm-orchestrator.service';
+import { ImageOrchestratorService } from '../image-generation/services/image-orchestrator.service';
+import { LLMProvider } from '../llm/types/llm.types';
+import { ImageProvider } from '../image-generation/types/image.types';
 import {
   SSE_EVENT_TYPES,
   ERROR_MESSAGES,
@@ -43,6 +47,8 @@ export class ChatController {
     private readonly aiSettingsService: AiSettingsService,
     private readonly agentService: AgentService,
     private readonly fileExtractionService: FileExtractionService,
+    private readonly orchestratorService: LLMOrchestratorService,
+    private readonly imageOrchestratorService: ImageOrchestratorService,
   ) {}
 
   /**
@@ -358,5 +364,411 @@ export class ChatController {
    */
   private extractKeyContent(content: string, filename: string): string {
     return this.fileExtractionService.extractKeyContent(content, filename);
+  }
+
+  // =====================================
+  // Multi-Model Orchestrator 엔드포인트
+  // =====================================
+
+  /**
+   * 사용 가능한 Provider 목록을 조회합니다.
+   */
+  @Get('multi-model/providers')
+  async getAvailableProviders() {
+    return {
+      providers: this.orchestratorService.getProviderInfo(),
+      available: this.orchestratorService.getAvailableProviders(),
+    };
+  }
+
+  /**
+   * 여러 AI 모델을 동시에 호출하여 복수의 응답을 받습니다.
+   * 이미지 생성 요청인 경우 여러 이미지 Provider를 사용하여 복수의 이미지를 생성합니다.
+   * @param conversationId - 대화 ID
+   * @param body - 메시지와 사용할 Provider 목록
+   * @param req - 요청 객체 (사용자 ID 포함)
+   */
+  @Post('completion/:conversationId/multi')
+  async multiModelCompletion(
+    @Param('conversationId') conversationId: number,
+    @Body()
+    body: {
+      message: string;
+      providers: string[]; // LLM: ['openai', 'anthropic', 'google']
+      imageProviders?: string[]; // Image: ['dalle', 'stability', 'google-imagen']
+    },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    try {
+      // 이미지 생성 요청인지 확인
+      if (this.chatService.isImageGenerationRequest(body.message)) {
+        console.log('🎨 Multi-Model 모드에서 이미지 생성 요청 감지');
+
+        // 이미지 Provider 파싱
+        const imageProviders = body.imageProviders
+          ? body.imageProviders
+              .map((p) => this.parseImageProvider(p))
+              .filter((p): p is ImageProvider => p !== null)
+          : this.imageOrchestratorService.getAvailableProviders();
+
+        if (imageProviders.length === 0) {
+          return {
+            success: false,
+            error: '사용 가능한 이미지 Provider가 없습니다.',
+          };
+        }
+
+        // 프롬프트 추출
+        const prompt = this.chatService.extractImagePrompt(body.message);
+
+        console.log(`🖼️ ${imageProviders.length}개 이미지 Provider로 생성 시작: ${prompt}`);
+
+        // 여러 이미지 Provider로 동시 생성
+        const multiImageResult =
+          await this.imageOrchestratorService.generateMultiImages({
+            providers: imageProviders,
+            prompt,
+          });
+
+        // 성공한 이미지들 수집
+        const allImages: string[] = [];
+        const imageMetadata: Array<{
+          provider: string;
+          model: string;
+          url: string;
+        }> = [];
+
+        multiImageResult.responses.forEach((response) => {
+          if (response.success && response.images.length > 0) {
+            response.images.forEach((img) => {
+              allImages.push(img.url);
+              imageMetadata.push({
+                provider: response.provider,
+                model: response.model,
+                url: img.url,
+              });
+            });
+          }
+        });
+
+        const responseText =
+          multiImageResult.successCount > 0
+            ? `🎨 ${multiImageResult.successCount}개의 AI가 "${prompt}" 이미지를 생성했습니다! 마음에 드는 것을 선택해주세요.`
+            : '이미지 생성에 실패했습니다. 다시 시도해주세요.';
+
+        return {
+          success: true,
+          isImageGeneration: true,
+          isMultiImage: true,
+          response: responseText,
+          prompt,
+          images: allImages,
+          imageMetadata,
+          multiImageResponses: multiImageResult.responses,
+          totalLatency: multiImageResult.totalLatency,
+          successCount: multiImageResult.successCount,
+          failCount: multiImageResult.failCount,
+        };
+      }
+
+      // Provider 문자열을 enum으로 변환
+      const providers = body.providers
+        .map((p) => this.parseProvider(p))
+        .filter((p): p is LLMProvider => p !== null);
+
+      if (providers.length === 0) {
+        return {
+          success: false,
+          error: '유효한 Provider가 없습니다.',
+        };
+      }
+
+      // Multi-Model 응답 생성
+      const result = await this.orchestratorService.generateMultiModelResponses(
+        {
+          providers,
+          messages: [{ role: 'user', content: body.message }],
+        },
+      );
+
+      return {
+        success: true,
+        isImageGeneration: false,
+        ...result,
+      };
+    } catch (error) {
+      console.error('Multi-model completion error:', error);
+      return {
+        success: false,
+        error: error.message || '처리 중 오류가 발생했습니다.',
+      };
+    }
+  }
+
+  /**
+   * 이미지 Provider 문자열을 ImageProvider enum으로 변환합니다.
+   */
+  private parseImageProvider(provider: string): ImageProvider | null {
+    const normalized = provider.toLowerCase();
+    switch (normalized) {
+      case 'dalle':
+      case 'dall-e':
+      case 'openai':
+        return ImageProvider.DALLE;
+      case 'stability':
+      case 'stable-diffusion':
+      case 'sd':
+        return ImageProvider.STABILITY;
+      case 'google-imagen':
+      case 'gemini':
+      case 'imagen':
+        return ImageProvider.GOOGLE_IMAGEN;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * 여러 AI 모델의 응답을 스트리밍 방식으로 받습니다.
+   * 각 Provider별로 개별 스트림이 전송됩니다.
+   */
+  @Post('completion/:conversationId/multi/stream')
+  @Header('Content-Type', 'text/event-stream')
+  @Header('Cache-Control', 'no-cache')
+  @Header('Connection', 'keep-alive')
+  async multiModelCompletionStream(
+    @Param('conversationId') conversationId: number,
+    @Body()
+    body: {
+      message: string;
+      providers: string[];
+    },
+    @Request() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      const providers = body.providers
+        .map((p) => this.parseProvider(p))
+        .filter((p): p is LLMProvider => p !== null);
+
+      if (providers.length === 0) {
+        res.write(
+          formatSseEvent(SSE_EVENT_TYPES.ERROR, '유효한 Provider가 없습니다.'),
+        );
+        res.end();
+        return;
+      }
+
+      // 각 Provider별 응답을 저장
+      const providerResponses: Record<string, string> = {};
+
+      await this.orchestratorService.generateMultiModelStreams(
+        {
+          providers,
+          messages: [{ role: 'user', content: body.message }],
+        },
+        // onChunk
+        (provider: LLMProvider, chunk: string, model: string) => {
+          if (!providerResponses[provider]) {
+            providerResponses[provider] = '';
+          }
+          providerResponses[provider] += chunk;
+
+          res.write(
+            formatSseEvent('multi_token', {
+              provider,
+              model,
+              chunk,
+            }),
+          );
+        },
+        // onComplete
+        (provider: LLMProvider, model: string) => {
+          res.write(
+            formatSseEvent('multi_complete', {
+              provider,
+              model,
+              content: providerResponses[provider] || '',
+            }),
+          );
+        },
+        // onError
+        (provider: LLMProvider, error: string) => {
+          res.write(
+            formatSseEvent('multi_error', {
+              provider,
+              error,
+            }),
+          );
+        },
+      );
+
+      res.write(formatSseEvent(SSE_EVENT_TYPES.DONE, null));
+      res.end();
+    } catch (error) {
+      console.error('Multi-model streaming error:', error);
+      res.write(
+        formatSseEvent(SSE_EVENT_TYPES.ERROR, ERROR_MESSAGES.GENERAL_ERROR),
+      );
+      res.end();
+    }
+  }
+
+  /**
+   * 여러 AI 모델의 응답을 종합하여 합의 기반 응답을 생성합니다.
+   */
+  @Post('completion/:conversationId/consensus')
+  async consensusCompletion(
+    @Param('conversationId') conversationId: number,
+    @Body()
+    body: {
+      message: string;
+      providers?: string[];
+    },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    try {
+      // 기본값: 모든 사용 가능한 Provider 사용
+      const providers = body.providers
+        ? body.providers
+            .map((p) => this.parseProvider(p))
+            .filter((p): p is LLMProvider => p !== null)
+        : this.orchestratorService.getAvailableProviders();
+
+      if (providers.length < 2) {
+        return {
+          success: false,
+          error: '합의 응답을 생성하려면 최소 2개의 Provider가 필요합니다.',
+        };
+      }
+
+      const result = await this.orchestratorService.generateConsensusResponse({
+        providers,
+        messages: [{ role: 'user', content: body.message }],
+      });
+
+      // 대화 저장
+      const conversation =
+        await this.chatService.getConversation(conversationId);
+      if (conversation) {
+        const updatedMessages = [
+          ...conversation.messages,
+          { role: 'user' as const, content: body.message },
+          {
+            role: 'assistant' as const,
+            content: result.consensus,
+            multiModelSources: result.sources.map((s) => ({
+              provider: s.provider,
+              model: s.model,
+              latency: s.latency,
+            })),
+          },
+        ];
+        await this.chatService.updateConversation(
+          conversationId,
+          updatedMessages,
+        );
+      }
+
+      return {
+        success: true,
+        consensus: result.consensus,
+        sources: result.sources,
+      };
+    } catch (error) {
+      console.error('Consensus completion error:', error);
+      return {
+        success: false,
+        error: error.message || '처리 중 오류가 발생했습니다.',
+      };
+    }
+  }
+
+  /**
+   * 선택된 응답을 대화에 저장합니다.
+   */
+  @Post('completion/:conversationId/multi/select')
+  async selectMultiModelResponse(
+    @Param('conversationId') conversationId: number,
+    @Body()
+    body: {
+      userMessage: string;
+      selectedProvider: string;
+      selectedModel: string;
+      selectedContent: string;
+      allResponses: Array<{
+        provider: string;
+        model: string;
+        content: string;
+        latency: number;
+      }>;
+    },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    try {
+      const conversation =
+        await this.chatService.getConversation(conversationId);
+
+      if (!conversation) {
+        throw new NotFoundException('대화를 찾을 수 없습니다.');
+      }
+
+      // 선택된 응답을 대화에 저장
+      const updatedMessages = [
+        ...conversation.messages,
+        { role: 'user' as const, content: body.userMessage },
+        {
+          role: 'assistant' as const,
+          content: body.selectedContent,
+          selectedFrom: {
+            provider: body.selectedProvider,
+            model: body.selectedModel,
+          },
+          alternativeResponses: body.allResponses.filter(
+            (r) => r.provider !== body.selectedProvider,
+          ),
+        },
+      ];
+
+      await this.chatService.updateConversation(
+        conversationId,
+        updatedMessages,
+      );
+
+      return {
+        success: true,
+        message: '응답이 저장되었습니다.',
+      };
+    } catch (error) {
+      console.error('Select response error:', error);
+      return {
+        success: false,
+        error: error.message || '저장 중 오류가 발생했습니다.',
+      };
+    }
+  }
+
+  /**
+   * Provider 문자열을 LLMProvider enum으로 변환합니다.
+   */
+  private parseProvider(provider: string): LLMProvider | null {
+    const normalized = provider.toLowerCase();
+    switch (normalized) {
+      case 'openai':
+        return LLMProvider.OPENAI;
+      case 'google':
+      case 'gemini':
+        return LLMProvider.GOOGLE;
+      case 'anthropic':
+      case 'claude':
+        return LLMProvider.ANTHROPIC;
+      default:
+        return null;
+    }
   }
 }

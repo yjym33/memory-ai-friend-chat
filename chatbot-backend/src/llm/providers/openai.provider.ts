@@ -21,7 +21,8 @@ export class OpenAIProvider implements ILLMProvider {
 
   constructor(private configService: ConfigService) {
     // 기본 API 키는 환경 변수에서 가져옴 (사용자별 키는 나중에 주입)
-    const defaultApiKey = this.configService.get<string>('OPENAI_API_KEY') || '';
+    const defaultApiKey =
+      this.configService.get<string>('OPENAI_API_KEY') || '';
     this.openai = new OpenAI({
       apiKey: defaultApiKey,
     });
@@ -31,7 +32,8 @@ export class OpenAIProvider implements ILLMProvider {
    * 사용자별 API 키로 OpenAI 클라이언트를 생성합니다.
    */
   private createClient(apiKey?: string): OpenAI {
-    const key = apiKey || this.configService.get<string>('OPENAI_API_KEY') || '';
+    const key =
+      apiKey || this.configService.get<string>('OPENAI_API_KEY') || '';
     return new OpenAI({
       apiKey: key,
     });
@@ -42,21 +44,24 @@ export class OpenAIProvider implements ILLMProvider {
   }
 
   getDefaultModel(): string {
-    return 'gpt-5.1';
+    return 'gpt-4o';
   }
 
   getAvailableModels(): string[] {
-    return [
-      'gpt-4',
-      'gpt-4o',
-      'gpt-4-turbo',
-      'gpt-5.1',
-      'gpt-3.5-turbo',
-    ];
+    return ['gpt-4', 'gpt-4o', 'gpt-4-turbo', 'gpt-5.1', 'gpt-3.5-turbo'];
   }
 
   validateModel(model: string): boolean {
     return this.getAvailableModels().includes(model);
+  }
+
+  /**
+   * 모델이 max_completion_tokens를 사용해야 하는지 확인합니다.
+   * 최신 모델(gpt-4o, gpt-4-turbo, o1, gpt-5 등)은 max_completion_tokens를 사용합니다.
+   */
+  private usesMaxCompletionTokens(model: string): boolean {
+    const modernModels = ['gpt-4o', 'gpt-4-turbo', 'gpt-5', 'o1', 'o3'];
+    return modernModels.some((m) => model.toLowerCase().includes(m));
   }
 
   async generateResponse(
@@ -65,7 +70,8 @@ export class OpenAIProvider implements ILLMProvider {
   ): Promise<LLMResponse> {
     try {
       const client = this.createClient(apiKey);
-      
+      const useNewTokenParam = this.usesMaxCompletionTokens(request.model);
+
       const response = await client.chat.completions.create({
         model: request.model,
         messages: request.messages.map((msg) => ({
@@ -73,14 +79,17 @@ export class OpenAIProvider implements ILLMProvider {
           content: msg.content,
         })),
         temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens ?? 1000,
+        // 최신 모델은 max_completion_tokens 사용, 이전 모델은 max_tokens 사용
+        ...(useNewTokenParam
+          ? { max_completion_tokens: request.maxTokens ?? 1000 }
+          : { max_tokens: request.maxTokens ?? 1000 }),
         top_p: request.topP,
         frequency_penalty: request.frequencyPenalty,
         presence_penalty: request.presencePenalty,
         ...(request.model.includes('gpt-5') && {
           reasoning_effort: request.reasoningEffort || 'none',
         }),
-      });
+      } as any);
 
       return {
         content: response.choices[0]?.message?.content || '',
@@ -105,7 +114,14 @@ export class OpenAIProvider implements ILLMProvider {
   ): Promise<void> {
     try {
       const client = this.createClient(apiKey);
-      
+      const useNewTokenParam = this.usesMaxCompletionTokens(request.model);
+
+      // 토큰 파라미터 설정
+      const tokenParam = useNewTokenParam
+        ? { max_completion_tokens: request.maxTokens ?? 1000 }
+        : { max_tokens: request.maxTokens ?? 1000 };
+
+      // 스트리밍 요청 생성
       const stream = await client.chat.completions.create({
         model: request.model,
         messages: request.messages.map((msg) => ({
@@ -113,17 +129,17 @@ export class OpenAIProvider implements ILLMProvider {
           content: msg.content,
         })),
         temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens ?? 1000,
+        ...tokenParam,
         top_p: request.topP,
         frequency_penalty: request.frequencyPenalty,
         presence_penalty: request.presencePenalty,
-        stream: true,
+        stream: true as const,
         ...(request.model.includes('gpt-5') && {
           reasoning_effort: request.reasoningEffort || 'none',
         }),
-      });
+      } as Parameters<typeof client.chat.completions.create>[0]);
 
-      for await (const chunk of stream) {
+      for await (const chunk of stream as AsyncIterable<any>) {
         const content = chunk.choices[0]?.delta?.content || '';
         if (content) {
           onChunk({
@@ -162,15 +178,20 @@ export class OpenAIProvider implements ILLMProvider {
     apiKey?: string,
   ): Promise<void> {
     try {
-      const key = apiKey || this.configService.get<string>('OPENAI_API_KEY') || '';
-      
+      const key =
+        apiKey || this.configService.get<string>('OPENAI_API_KEY') || '';
+      const useNewTokenParam = this.usesMaxCompletionTokens(request.model);
+
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
           model: request.model,
           messages: request.messages,
           temperature: request.temperature ?? 0.7,
-          max_tokens: request.maxTokens ?? 1000,
+          // 최신 모델은 max_completion_tokens 사용, 이전 모델은 max_tokens 사용
+          ...(useNewTokenParam
+            ? { max_completion_tokens: request.maxTokens ?? 1000 }
+            : { max_tokens: request.maxTokens ?? 1000 }),
           top_p: request.topP,
           frequency_penalty: request.frequencyPenalty,
           presence_penalty: request.presencePenalty,
@@ -259,4 +280,3 @@ export class OpenAIProvider implements ILLMProvider {
     }
   }
 }
-

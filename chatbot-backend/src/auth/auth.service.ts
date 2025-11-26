@@ -21,6 +21,7 @@ export class AuthService {
     private encryptionService: EncryptionService,
   ) {}
 
+  // 회원가입
   async register(
     email: string,
     password: string,
@@ -60,6 +61,7 @@ export class AuthService {
     };
   }
 
+  // 로그인
   async login(email: string, password: string) {
     const user = await this.userRepository.findOne({
       where: { email },
@@ -100,6 +102,7 @@ export class AuthService {
     };
   }
 
+  // 토큰 검증
   async validateToken(token: string) {
     try {
       const payload = this.jwtService.verify(token);
@@ -121,6 +124,7 @@ export class AuthService {
     }
   }
 
+  // 소셜 로그인 검증
   async validateOAuthLogin(profile: {
     provider: string;
     providerId: string;
@@ -194,6 +198,8 @@ export class AuthService {
    * @param apiKey - API 키 (암호화하여 저장됨)
    * @returns 업데이트된 사용자 정보
    */
+
+  // LLM API 키 업데이트
   async updateApiKey(
     userId: string,
     provider: LLMProvider,
