@@ -33,6 +33,13 @@ import {
   createUpdatedMessages,
   formatSseEvent,
 } from '../common/utils/conversation.utils';
+import {
+  ChatMessage,
+  ConversationTheme,
+  DocumentSource,
+  ImageMetadata,
+  ChatCompletionRequest,
+} from './types/chat.types';
 
 /**
  * 채팅 관련 API를 처리하는 컨트롤러
@@ -86,7 +93,7 @@ export class ChatController {
   @Put('conversations/:id')
   async updateConversation(
     @Param('id') id: number,
-    @Body() body: { messages: any[] },
+    @Body() body: { messages: ChatMessage[] },
   ) {
     return this.chatService.updateConversation(id, body.messages);
   }
@@ -138,7 +145,7 @@ export class ChatController {
   @Put('conversations/:id/theme')
   async updateConversationTheme(
     @Param('id') id: number,
-    @Body() body: { theme: any; themeName: string },
+    @Body() body: { theme: ConversationTheme; themeName: string },
   ) {
     return this.chatService.updateConversationTheme(
       id,
@@ -207,8 +214,7 @@ export class ChatController {
   @Post('completion/:conversationId')
   async chatCompletion(
     @Param('conversationId') conversationId: number,
-    @Body()
-    body: { message: string; file?: any; mode?: 'personal' | 'business' },
+    @Body() body: ChatCompletionRequest,
     @Request() req: AuthenticatedRequest,
   ) {
     try {
@@ -278,9 +284,9 @@ export class ChatController {
 
       // 전체 응답을 저장할 변수
       let fullResponse = '';
-      let responseSources: any[] = [];
+      let responseSources: DocumentSource[] = [];
       let responseImages: string[] = [];
-      let responseImageMetadata: any = null;
+      let responseImageMetadata: ImageMetadata | undefined = undefined;
 
       // 스트리밍 방식으로 메시지 처리
       const result = await this.chatService.processMessageStream(
@@ -291,7 +297,7 @@ export class ChatController {
           fullResponse += chunk;
           res.write(formatSseEvent(SSE_EVENT_TYPES.TOKEN, chunk));
         },
-        (sources: any[]) => {
+        (sources: DocumentSource[]) => {
           responseSources = sources;
           res.write(formatSseEvent(SSE_EVENT_TYPES.SOURCES, sources));
         },

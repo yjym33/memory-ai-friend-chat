@@ -4,8 +4,10 @@ import {
   Strategy,
   VerifyCallback,
   StrategyOptions,
+  Profile,
 } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
+import { OAuthUser } from '../../common/types/request.types';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -52,21 +54,22 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): Promise<void> {
     if (!this.isConfigured) {
-      return done(new Error('Google OAuth가 설정되지 않았습니다.'), false);
+      done(new Error('Google OAuth가 설정되지 않았습니다.'), undefined);
+      return;
     }
 
     const { id, name, emails, photos } = profile;
 
-    const user = {
+    const user: OAuthUser = {
       providerId: id,
       provider: 'google',
-      email: emails[0].value,
-      name: name.givenName + ' ' + name.familyName,
-      profileImage: photos[0].value,
+      email: emails?.[0]?.value || '',
+      name: (name?.givenName || '') + ' ' + (name?.familyName || ''),
+      profileImage: photos?.[0]?.value,
     };
 
     done(null, user);

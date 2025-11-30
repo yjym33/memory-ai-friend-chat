@@ -43,7 +43,10 @@ export interface LLMRequest {
   frequencyPenalty?: number;
   presencePenalty?: number;
   stream?: boolean;
-  [key: string]: any; // 모델별 추가 파라미터
+  // 모델별 추가 파라미터
+  reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
+  stopSequences?: string[];
+  seed?: number;
 }
 
 /**
@@ -84,7 +87,9 @@ export interface LLMConfig {
   frequencyPenalty?: number;
   presencePenalty?: number;
   reasoningEffort?: 'none' | 'low' | 'medium' | 'high';
-  [key: string]: any; // 모델별 추가 파라미터
+  // 모델별 추가 파라미터
+  stopSequences?: string[];
+  seed?: number;
 }
 
 // =====================================

@@ -67,7 +67,13 @@ export class StabilityProvider implements IImageProvider {
         },
       );
 
-      const images = response.data.artifacts.map((artifact: any) => ({
+      interface StabilityArtifact {
+        base64: string;
+        finishReason?: string;
+        seed?: number;
+      }
+
+      const images = response.data.artifacts.map((artifact: StabilityArtifact) => ({
         url: `data:image/png;base64,${artifact.base64}`,
         base64: artifact.base64,
         width,

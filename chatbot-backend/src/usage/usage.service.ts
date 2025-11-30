@@ -14,6 +14,36 @@ interface UsageLimits {
   maxUsersPerOrg: number;
 }
 
+/**
+ * 사용량 기록 메타데이터
+ */
+interface UsageMetadata {
+  documentId?: string;
+  queryText?: string;
+  model?: string;
+  provider?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
+/**
+ * 사용량 확인 결과
+ */
+interface UsageLimitCheckResult {
+  allowed: boolean;
+  reason?: string;
+  usage?: UsageStats;
+  limits?: UsageLimits;
+}
+
+/**
+ * 사용량 통계
+ */
+interface UsageStats {
+  documents: number;
+  queries: number;
+  storage: number;
+}
+
 @Injectable()
 export class UsageService {
   constructor(
@@ -34,7 +64,7 @@ export class UsageService {
       tokenUsage?: number;
       dataSize?: number;
       cost?: number;
-      metadata?: any;
+      metadata?: UsageMetadata;
     } = {},
   ): Promise<void> {
     const today = new Date();
@@ -83,7 +113,7 @@ export class UsageService {
   async checkUsageLimits(
     organizationId: string,
     usageType: UsageType,
-  ): Promise<{ allowed: boolean; reason?: string; usage?: any; limits?: any }> {
+  ): Promise<UsageLimitCheckResult> {
     const organization = await this.organizationRepository.findOne({
       where: { id: organizationId },
     });

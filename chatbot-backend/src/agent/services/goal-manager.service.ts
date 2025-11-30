@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Goal, GoalStatus, GoalCategory } from '../entities/goal.entity';
+import { Milestone } from '../entities/milestone.entity';
 import { MilestoneService, ProgressPattern } from './milestone.service';
+import { UserPatterns } from '../types/agent-state';
 
 /**
  * 목표 추출 결과 인터페이스
@@ -248,7 +250,12 @@ export class GoalManagerService {
   ): Promise<{
     success: boolean;
     goal: Goal;
-    achievedMilestones: any[];
+    achievedMilestones: Array<{
+      id: number;
+      title: string;
+      description: string;
+      targetProgress: number;
+    }>;
     message: string;
   }> {
     const goal = await this.goalRepository.findOne({
@@ -467,9 +474,9 @@ export class GoalManagerService {
   /**
    * 사용자 패턴을 분석합니다
    */
-  private analyzeUserPatterns(goals: Goal[]): any {
-    const patterns = {
-      preferredCategories: [] as string[],
+  private analyzeUserPatterns(goals: Goal[]): UserPatterns {
+    const patterns: UserPatterns = {
+      preferredCategories: [],
       averageProgress: 0,
       completionRate: 0,
       activeGoalsCount: 0,
@@ -596,7 +603,7 @@ export class GoalManagerService {
   /**
    * 개인화된 목표를 생성합니다
    */
-  private generatePersonalizedGoals(patterns: any): GoalRecommendation[] {
+  private generatePersonalizedGoals(patterns: UserPatterns): GoalRecommendation[] {
     const goals: GoalRecommendation[] = [];
 
     if (patterns.completionRate < 30) {

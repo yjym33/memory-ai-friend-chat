@@ -12,6 +12,11 @@ import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
 import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
 import { LLMStreamChunk } from '../llm/types/llm.types';
 import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
+import {
+  DocumentSource,
+  ImageMetadata,
+  SearchResult,
+} from './types/chat.types';
 
 /**
  * 채팅 관련 비즈니스 로직을 처리하는 서비스
@@ -366,7 +371,7 @@ export class ChatService {
    * 검색 결과에서 컨텍스트를 구성합니다.
    */
   private buildContextFromSearchResults(
-    searchResults: Array<{ document: any; chunk: any; score: number }>,
+    searchResults: SearchResult[],
   ): string {
     return searchResults
       .map((result, index) => {
@@ -498,8 +503,8 @@ ${context}
     conversationId: number,
     message: string,
     onChunk: (chunk: string) => void,
-    onSources?: (sources: any[]) => void,
-  ): Promise<{ images?: string[]; imageMetadata?: any }> {
+    onSources?: (sources: DocumentSource[]) => void,
+  ): Promise<{ images?: string[]; imageMetadata?: ImageMetadata }> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['organization'],
@@ -681,7 +686,7 @@ IMPORTANT RULES:
     message: string,
     aiSettings: AiSettings,
     onChunk: (chunk: string) => void,
-    onSources?: (sources: any[]) => void,
+    onSources?: (sources: DocumentSource[]) => void,
   ): Promise<void> {
     if (!user.organizationId) {
       onChunk('기업 모드를 사용하려면 조직에 속해야 합니다.');
@@ -769,7 +774,7 @@ IMPORTANT RULES:
    */
   private addSourceCitations(
     response: string,
-    searchResults: Array<{ document: any; chunk: any; score: number }>,
+    searchResults: SearchResult[],
   ): string {
     const citations = searchResults
       .map((result, index) => {

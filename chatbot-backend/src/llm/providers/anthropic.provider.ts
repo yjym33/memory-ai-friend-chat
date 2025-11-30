@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
+import { MessageCreateParamsStreaming } from '@anthropic-ai/sdk/resources/messages';
+import {
+  RawContentBlockDeltaEvent,
+  RawMessageDeltaEvent,
+} from '@anthropic-ai/sdk/resources';
 import { ILLMProvider } from '../interfaces/llm-provider.interface';
 import {
   LLMRequest,
@@ -8,6 +13,22 @@ import {
   LLMStreamChunk,
   LLMProvider,
 } from '../types/llm.types';
+
+/**
+ * Claude 메시지 형식
+ */
+interface ClaudeMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/**
+ * 텍스트 델타 타입
+ */
+interface TextDelta {
+  type: 'text_delta';
+  text: string;
+}
 
 /**
  * Anthropic Claude Provider 구현
@@ -254,11 +275,12 @@ export class AnthropicProvider implements ILLMProvider {
       );
 
       // Anthropic API 스트리밍 요청 생성
-      const streamConfig: any = {
+      const streamConfig: MessageCreateParamsStreaming = {
         model: request.model,
         max_tokens: request.maxTokens ?? 1000,
         temperature: request.temperature ?? 0.7,
-        messages: messages as any,
+        messages: messages as ClaudeMessage[],
+        stream: true,
       };
 
       // top_p가 있으면 추가
@@ -299,16 +321,16 @@ export class AnthropicProvider implements ILLMProvider {
 
         // content_block_delta: 텍스트 델타 처리 (실제 응답 내용)
         if (event.type === 'content_block_delta') {
-          const deltaEvent = event as any;
+          const deltaEvent = event as RawContentBlockDeltaEvent;
           const delta = deltaEvent.delta;
 
-          // delta가 객체이고 text 속성을 가진 경우
-          if (delta && typeof delta === 'object' && 'text' in delta) {
-            const text = delta.text;
-            if (text && typeof text === 'string' && text.length > 0) {
+          // delta가 text_delta 타입인 경우
+          if (delta && delta.type === 'text_delta') {
+            const textDelta = delta as TextDelta;
+            if (textDelta.text && textDelta.text.length > 0) {
               hasReceivedContent = true;
               onChunk({
-                content: text,
+                content: textDelta.text,
                 done: false,
               });
             }
@@ -316,19 +338,20 @@ export class AnthropicProvider implements ILLMProvider {
         }
         // message_delta: 메시지 델타 (usage 정보 포함 가능)
         else if (event.type === 'message_delta') {
-          const deltaEvent = event as any;
+          const deltaEvent = event as RawMessageDeltaEvent;
 
           // usage 정보 추출
-          if (deltaEvent?.usage) {
+          if (deltaEvent.usage) {
             const usage = deltaEvent.usage;
-            if (usage.input_tokens) totalInputTokens = usage.input_tokens;
             if (usage.output_tokens) totalOutputTokens = usage.output_tokens;
           }
 
-          // delta에 text가 있는 경우도 처리
-          if (deltaEvent?.delta?.text) {
-            const text = deltaEvent.delta.text;
-            if (text && typeof text === 'string' && text.length > 0) {
+          // delta에 text가 있는 경우도 처리 (MessageDeltaEvent.delta는 stop_reason, stop_sequence만 가짐)
+          // 실제 텍스트는 content_block_delta에서 처리됨
+          const deltaData = deltaEvent.delta as unknown as Record<string, unknown>;
+          if ('text' in deltaData && typeof deltaData.text === 'string') {
+            const text = deltaData.text;
+            if (text.length > 0) {
               hasReceivedContent = true;
               onChunk({
                 content: text,

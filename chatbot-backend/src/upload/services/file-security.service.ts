@@ -4,18 +4,27 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-interface FileValidationResult {
-  isValid: boolean;
-  reason?: string;
-  risk?: 'low' | 'medium' | 'high';
-  details?: any;
-}
-
 interface FileScanResult {
   isClean: boolean;
   threats?: string[];
   scanEngine?: string;
   scanTime: number;
+}
+
+interface FileValidationDetails {
+  mimeType?: string;
+  extension?: string;
+  size?: number;
+  content?: string;
+  suspiciousPatterns?: string[];
+  scanTime?: number;
+}
+
+interface FileValidationResult {
+  isValid: boolean;
+  reason?: string;
+  risk?: 'low' | 'medium' | 'high';
+  details?: FileValidationDetails | FileScanResult;
 }
 
 @Injectable()

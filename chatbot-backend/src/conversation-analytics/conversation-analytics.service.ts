@@ -8,6 +8,24 @@ import {
   AnalyticsResult,
 } from './types/analytics.types';
 
+/**
+ * 대화 메시지 타입
+ */
+interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/**
+ * 주제 진화 기록 타입
+ */
+interface TopicEvolution {
+  [topic: string]: {
+    dates: string[];
+    frequency: number;
+  };
+}
+
 @Injectable()
 export class ConversationAnalyticsService {
   constructor(
@@ -94,7 +112,7 @@ export class ConversationAnalyticsService {
   }
 
   // 🔥 누락된 키워드 추출 메서드 추가
-  private extractKeywords(userMessages: any[]): string[] {
+  private extractKeywords(userMessages: ConversationMessage[]): string[] {
     const allText = userMessages
       .map((m) => m.content)
       .join(' ')
@@ -136,7 +154,7 @@ export class ConversationAnalyticsService {
 
   // 감정 분석 (키워드 기반)
   private analyzeEmotion(
-    userMessages: any[],
+    userMessages: ConversationMessage[],
   ): 'positive' | 'negative' | 'neutral' {
     const positiveWords = [
       '기쁘',
@@ -181,7 +199,7 @@ export class ConversationAnalyticsService {
   }
 
   // 주제 추출
-  private extractTopics(userMessages: any[]): string[] {
+  private extractTopics(userMessages: ConversationMessage[]): string[] {
     const topicKeywords = {
       '일/업무': [
         '회사',
@@ -338,7 +356,7 @@ export class ConversationAnalyticsService {
   }
 
   private getFavoriteTopics(
-    topicEvolution: any,
+    topicEvolution: TopicEvolution,
   ): { topic: string; count: number }[] {
     return Object.entries(topicEvolution)
       .map(([topic, data]: [string, any]) => ({ topic, count: data.frequency }))

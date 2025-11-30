@@ -47,6 +47,25 @@ export interface MemoryResponse {
 }
 
 /**
+ * AI 설정 DTO 인터페이스
+ */
+export interface AiSettingsDto {
+  personalityType?: string;
+  speechStyle?: string;
+  emojiUsage?: number;
+  empathyLevel?: number;
+  nickname?: string;
+  memoryRetentionDays?: number;
+  memoryPriorities?: Record<string, number>;
+  userProfile?: {
+    interests?: string[];
+    currentGoals?: string[];
+    importantDates?: Array<{ name: string; date: string }>;
+  };
+  avoidTopics?: string[];
+}
+
+/**
  * 컨텍스트 조회 응답 인터페이스
  */
 export interface ContextResponse {
@@ -327,7 +346,7 @@ export class ChatbotLlmService {
    * @param aiSettings - AiSettings 엔티티
    * @returns JSON 직렬화 가능한 DTO 객체
    */
-  private convertAiSettingsToDto(aiSettings: AiSettings): any {
+  private convertAiSettingsToDto(aiSettings: AiSettings): AiSettingsDto {
     return {
       personalityType: aiSettings.personalityType,
       speechStyle: aiSettings.speechStyle,
@@ -349,9 +368,9 @@ export class ChatbotLlmService {
    * @param error - 발생한 에러
    * @param operation - 수행 중이던 작업 이름 (로깅용)
    */
-  private handleError(error: any, operation: string): void {
+  private handleError(error: unknown, operation: string): void {
     if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
+      const axiosError = error;
 
       // 네트워크 에러 유형별 처리
       if (axiosError.code === 'ECONNREFUSED') {
@@ -380,9 +399,12 @@ export class ChatbotLlmService {
           axiosError.stack,
         );
       }
-    } else {
+    } else if (error instanceof Error) {
       // 일반 에러
       this.logger.error(`${operation} 실패: ${error.message}`, error.stack);
+    } else {
+      // 알 수 없는 에러
+      this.logger.error(`${operation} 실패: 알 수 없는 오류`, String(error));
     }
   }
 

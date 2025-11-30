@@ -4,6 +4,25 @@ import { Repository } from 'typeorm';
 import { Conversation } from '../../chat/entity/conversation.entity';
 import { AgentCacheService } from './agent-cache.service';
 import { safeParseInt } from '../../common/utils/env.util';
+import { MemoryPriorities } from '../types/agent-state';
+
+/**
+ * 대화 메시지 인터페이스
+ */
+export interface ConversationMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: Date;
+}
+
+/**
+ * 대화 데이터 인터페이스 (메모리 추출용)
+ */
+export interface ConversationData {
+  id: number;
+  messages: ConversationMessage[];
+  createdAt: Date;
+}
 
 /**
  * Memory Service
@@ -122,7 +141,7 @@ export class MemoryService {
    * @returns 추출된 기억 목록
    */
   async extractMemories(
-    conversations: any[],
+    conversations: ConversationData[],
     maxMemories: number,
   ): Promise<string[]> {
     const memories: string[] = [];
@@ -165,7 +184,7 @@ export class MemoryService {
    * @returns 처리된 기억 목록
    */
   async processMessageChunk(
-    messageChunk: any[],
+    messageChunk: ConversationMessage[],
     remainingSlots: number,
   ): Promise<string[]> {
     const chunkMemories: string[] = [];
@@ -201,13 +220,16 @@ export class MemoryService {
    * @param priorities - 기억 우선순위 설정
    * @returns 우선순위가 적용된 기억들
    */
-  prioritizeMemories(memories: string[], priorities: any): string[] {
+  prioritizeMemories(
+    memories: string[],
+    priorities: MemoryPriorities | null | undefined,
+  ): string[] {
     return memories.sort((a, b) => {
       let scoreA = 0;
       let scoreB = 0;
 
       for (const [category, keywords] of Object.entries(this.priorityKeywords)) {
-        const priority = priorities?.[category] || 3;
+        const priority = priorities?.[category] ?? 3;
         const keywordList = keywords as string[];
 
         const matchesA = keywordList.filter((keyword) =>
@@ -230,7 +252,7 @@ export class MemoryService {
    * @param msg - 메시지 객체
    * @returns 유효성 여부
    */
-  isValidMessage(msg: any): boolean {
+  isValidMessage(msg: ConversationMessage): boolean {
     return (
       msg &&
       typeof msg === 'object' &&

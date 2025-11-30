@@ -1,5 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiSettings } from '../../ai-settings/entity/ai-settings.entity';
+import {
+  MemoryPriorities,
+  ActiveGoal,
+  DetectedEmotion,
+} from '../types/agent-state';
+
+/**
+ * 프롬프트 컨텍스트 인터페이스
+ */
+export interface PromptContext {
+  emotions?: DetectedEmotion[];
+  goals?: ActiveGoal[];
+  [key: string]: unknown;
+}
+
+/**
+ * 동적 프롬프트 컨텍스트 인터페이스
+ */
+export interface DynamicPromptContext {
+  currentEmotion?: string;
+  activeGoals?: ActiveGoal[];
+  recentTopics?: string[];
+}
 
 /**
  * Prompt Generator Service
@@ -131,13 +154,16 @@ export class PromptGeneratorService {
    * @param priorities - 기억 우선순위 설정
    * @returns 우선순위가 적용된 기억들
    */
-  private prioritizeMemories(memories: string[], priorities: any): string[] {
+  private prioritizeMemories(
+    memories: string[],
+    priorities: MemoryPriorities | null | undefined,
+  ): string[] {
     return memories.sort((a, b) => {
       let scoreA = 0;
       let scoreB = 0;
 
       for (const [category, keywords] of Object.entries(this.priorityKeywords)) {
-        const priority = priorities?.[category] || 3;
+        const priority = priorities?.[category] ?? 3;
         const keywordList = keywords as string[];
 
         const matchesA = keywordList.filter((keyword) =>
@@ -163,7 +189,7 @@ export class PromptGeneratorService {
    */
   generatePurposePrompt(
     purpose: 'emotion_support' | 'goal_tracking' | 'general',
-    context?: Record<string, any>,
+    context?: PromptContext,
   ): string {
     switch (purpose) {
       case 'emotion_support':
@@ -171,7 +197,7 @@ export class PromptGeneratorService {
       case 'goal_tracking':
         return this.generateGoalTrackingPrompt(context);
       default:
-        return this.generateGeneralPrompt(context);
+        return this.generateGeneralPrompt();
     }
   }
 
@@ -180,7 +206,7 @@ export class PromptGeneratorService {
    * @param context - 컨텍스트 정보
    * @returns 감정 지원 프롬프트
    */
-  private generateEmotionSupportPrompt(context?: Record<string, any>): string {
+  private generateEmotionSupportPrompt(context?: PromptContext): string {
     let prompt = `너는 공감적이고 지지적인 AI 친구이다.
 사용자가 감정적으로 힘들어하고 있으니 다음 지침을 따라라:
 
@@ -203,7 +229,7 @@ export class PromptGeneratorService {
    * @param context - 컨텍스트 정보
    * @returns 목표 추적 프롬프트
    */
-  private generateGoalTrackingPrompt(context?: Record<string, any>): string {
+  private generateGoalTrackingPrompt(context?: PromptContext): string {
     let prompt = `너는 목표 달성을 돕는 AI 코치이다.
 사용자의 목표 달성을 지원하기 위해 다음 지침을 따라라:
 
@@ -223,10 +249,9 @@ export class PromptGeneratorService {
 
   /**
    * 일반 대화를 위한 프롬프트를 생성합니다
-   * @param context - 컨텍스트 정보
    * @returns 일반 대화 프롬프트
    */
-  private generateGeneralPrompt(context?: Record<string, any>): string {
+  private generateGeneralPrompt(): string {
     return `너는 친절하고 도움이 되는 AI 친구이다.
 자연스럽고 친근한 대화를 나누며, 사용자의 질문에 정확하고 유용한 답변을 제공한다.
 필요한 경우 적절한 이모지를 사용하여 대화를 더 생동감 있게 만든다.`;
@@ -242,11 +267,7 @@ export class PromptGeneratorService {
   generateDynamicPrompt(
     settings: AiSettings,
     memories: string[],
-    additionalContext?: {
-      currentEmotion?: string;
-      activeGoals?: any[];
-      recentTopics?: string[];
-    },
+    additionalContext?: DynamicPromptContext,
   ): string {
     let prompt = this.generatePromptWithMemory(settings, memories);
 

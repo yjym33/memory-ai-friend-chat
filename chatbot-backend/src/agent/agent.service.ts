@@ -8,8 +8,13 @@ import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 import { Goal } from './entities/goal.entity';
 
 // Types
-import { AgentState, AgentAction } from './types/agent-state';
-import { EmotionType } from './entities/emotion.entity';
+import {
+  AgentState,
+  AgentStatusSummary,
+  EmotionSummaryItem,
+  GoalProgressSummary,
+} from './types/agent-state';
+import { Emotion, EmotionType } from './entities/emotion.entity';
 import { GoalCategory } from './entities/goal.entity';
 
 // Services
@@ -338,14 +343,10 @@ export class AgentService {
   /**
    * 에이전트 상태를 조회합니다
    */
-  async getAgentStatus(userId: string): Promise<{
-    recentEmotions: any[];
-    activeGoals: any[];
-    emotionSummary: any;
-    goalProgress: any;
-  }> {
+  async getAgentStatus(userId: string): Promise<AgentStatusSummary> {
     // 최근 감정 데이터
     const recentEmotions = await this.emotionAnalyzer.getRecentEmotions(userId, 5);
+    const formattedEmotions = this.emotionAnalyzer.formatRecentEmotions(recentEmotions);
 
     // 활성 목표
     const { goals: activeGoals, statistics } =
@@ -355,7 +356,7 @@ export class AgentService {
     const emotionSummary = await this.emotionAnalyzer.getEmotionSummary(userId);
 
     // 목표 진행률 요약
-    const goalProgress = {
+    const goalProgress: GoalProgressSummary = {
       total: statistics.total,
       completed: statistics.completed,
       inProgress: statistics.active,
@@ -363,8 +364,15 @@ export class AgentService {
     };
 
     return {
-      recentEmotions,
-      activeGoals,
+      recentEmotions: formattedEmotions,
+      activeGoals: activeGoals.map((g) => ({
+        id: g.id,
+        title: g.title,
+        category: g.category,
+        status: g.status,
+        progress: g.progress,
+        lastCheckedAt: g.lastCheckedAt,
+      })),
       emotionSummary,
       goalProgress,
     };
@@ -373,14 +381,43 @@ export class AgentService {
   /**
    * 목표 진행률을 업데이트합니다
    */
-  async updateGoalProgress(goalId: number, progress: number): Promise<any> {
+  async updateGoalProgress(
+    goalId: number,
+    progress: number,
+  ): Promise<{
+    success: boolean;
+    goal: Goal;
+    achievedMilestones: Array<{
+      id: number;
+      title: string;
+      description: string;
+      targetProgress: number;
+    }>;
+    message: string;
+  }> {
     return this.goalManager.updateProgress(goalId, progress);
   }
 
   /**
    * 사용자의 모든 목표를 조회합니다
    */
-  async getUserGoals(userId: string): Promise<any> {
+  async getUserGoals(userId: string): Promise<{
+    goals: Goal[];
+    statistics: {
+      total: number;
+      active: number;
+      completed: number;
+      byCategory: Record<string, number>;
+      byPriority: Record<string, number>;
+    };
+    recommendations: Array<{
+      title: string;
+      description: string;
+      category: GoalCategory;
+      priority: number;
+      reason: string;
+    }>;
+  }> {
     return this.goalManager.getUserGoals(userId);
   }
 
@@ -402,7 +439,7 @@ export class AgentService {
   /**
    * 목표를 삭제합니다
    */
-  async deleteGoal(goalId: number): Promise<any> {
+  async deleteGoal(goalId: number): Promise<{ success: boolean; message: string }> {
     return this.goalManager.deleteGoal(goalId);
   }
 

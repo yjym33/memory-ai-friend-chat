@@ -1,6 +1,16 @@
 import { NotFoundException } from '@nestjs/common';
 import { Conversation } from '../../chat/entity/conversation.entity';
 import { ERROR_MESSAGES } from '../constants/llm.constants';
+import { DocumentSource } from '../../chat/types/chat.types';
+
+/**
+ * SSE 이벤트 콘텐츠 타입
+ */
+type SseEventContent =
+  | string
+  | DocumentSource[]
+  | Record<string, unknown>
+  | null;
 
 /**
  * 대화 관련 유틸리티 함수
@@ -36,8 +46,12 @@ export function createUpdatedMessages(
   conversation: Conversation,
   userMessage: string,
   assistantMessage: string,
-  sources?: any[],
-): Array<{ role: 'user' | 'assistant'; content: string; sources?: any[] }> {
+  sources?: DocumentSource[],
+): Array<{
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: DocumentSource[];
+}> {
   return [
     ...conversation.messages,
     { role: 'user' as const, content: userMessage },
@@ -81,7 +95,7 @@ export function generateConversationTitle(
  * @param content - 이벤트 내용
  * @returns SSE 포맷 문자열
  */
-export function formatSseEvent(type: string, content: any): string {
+export function formatSseEvent(type: string, content: SseEventContent): string {
   return `data: ${JSON.stringify({ type, content })}\n\n`;
 }
 

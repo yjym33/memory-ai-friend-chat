@@ -10,6 +10,18 @@ import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 
 /**
+ * 요청 정보 인터페이스
+ */
+interface RequestInfo {
+  method: string;
+  url: string;
+  ip?: string;
+  userAgent?: string;
+  userId?: string;
+  timestamp: string;
+}
+
+/**
  * 모든 예외를 처리하는 글로벌 예외 필터
  * - HTTP 예외, 데이터베이스 오류, 일반 예외를 구분하여 처리
  * - 적절한 로깅과 클라이언트 응답을 제공
@@ -158,7 +170,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   /**
    * 에러 로깅
    */
-  private logError(exception: unknown, requestInfo: any, status: number): void {
+  private logError(
+    exception: unknown,
+    requestInfo: RequestInfo,
+    status: number,
+  ): void {
     const isClientError = status < 500;
     const logLevel = isClientError ? 'warn' : 'error';
 

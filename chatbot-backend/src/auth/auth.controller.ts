@@ -9,15 +9,22 @@ import {
   Res,
   NotFoundException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { KakaoOAuthGuard } from './guards/kakao-oauth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthenticatedRequest } from '../common/types/request.types';
+import { AuthenticatedRequest, OAuthUser } from '../common/types/request.types';
 import { LLMProvider } from '../llm/types/llm.types';
+
+/**
+ * OAuth 콜백에서 사용되는 Request 타입
+ */
+interface OAuthRequest extends ExpressRequest {
+  user: OAuthUser;
+}
 
 /**
  * 인증 관련 API를 처리하는 컨트롤러
@@ -73,7 +80,7 @@ export class AuthController {
    */
   @Get('google/callback')
   @UseGuards(GoogleOAuthGuard)
-  async googleAuthCallback(@Request() req: any, @Res() res: Response) {
+  async googleAuthCallback(@Request() req: OAuthRequest, @Res() res: Response) {
     const result = await this.authService.validateOAuthLogin(req.user);
 
     // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)
@@ -97,7 +104,7 @@ export class AuthController {
    */
   @Get('kakao/callback')
   @UseGuards(KakaoOAuthGuard)
-  async kakaoAuthCallback(@Request() req: any, @Res() res: Response) {
+  async kakaoAuthCallback(@Request() req: OAuthRequest, @Res() res: Response) {
     const result = await this.authService.validateOAuthLogin(req.user);
 
     // 프론트엔드로 리다이렉트 (토큰을 쿼리 파라미터로 전달)

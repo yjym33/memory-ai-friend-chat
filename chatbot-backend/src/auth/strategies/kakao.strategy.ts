@@ -1,7 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-kakao';
+import { Strategy, Profile } from 'passport-kakao';
 import { ConfigService } from '@nestjs/config';
+import { OAuthUser } from '../../common/types/request.types';
+
+/**
+ * 카카오 프로필 JSON 타입
+ */
+interface KakaoJson {
+  kakao_account?: {
+    email?: string;
+  };
+  properties?: {
+    nickname?: string;
+    profile_image?: string;
+  };
+}
+
+/**
+ * 카카오 프로필 확장 타입
+ */
+interface KakaoProfile extends Profile {
+  _json: KakaoJson;
+}
+
+/**
+ * Passport done 콜백 타입
+ */
+type DoneCallback = (error: Error | null, user?: OAuthUser | false) => void;
 
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
@@ -40,20 +66,21 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
-    done: any,
-  ): Promise<any> {
+    profile: KakaoProfile,
+    done: DoneCallback,
+  ): Promise<void> {
     if (!this.isConfigured) {
-      return done(new Error('Kakao OAuth가 설정되지 않았습니다.'), false);
+      done(new Error('Kakao OAuth가 설정되지 않았습니다.'), false);
+      return;
     }
 
     const { id, username, _json } = profile;
 
-    const user = {
+    const user: OAuthUser = {
       providerId: String(id),
       provider: 'kakao',
-      email: _json.kakao_account?.email,
-      name: _json.properties?.nickname || username,
+      email: _json.kakao_account?.email || '',
+      name: _json.properties?.nickname || username || '',
       profileImage: _json.properties?.profile_image,
     };
 

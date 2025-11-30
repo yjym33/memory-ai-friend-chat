@@ -5,16 +5,17 @@ import {
   ManyToOne,
   Index,
 } from 'typeorm';
+import { Document } from './document.entity';
 
 @Entity()
 export class DocumentChunk {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne('Document', 'chunks', {
+  @ManyToOne(() => Document, (document) => document.chunks, {
     onDelete: 'CASCADE',
   })
-  document: any;
+  document: Document;
 
   @Column()
   documentId: string;

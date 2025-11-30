@@ -1,18 +1,35 @@
 import { Request } from 'express';
+import { UserType } from '../../auth/entity/user.entity';
+
+/**
+ * 인증된 사용자 정보
+ */
+export interface AuthenticatedUser {
+  id: string;
+  userId: string;
+  email: string;
+  name: string;
+  userType?: UserType;
+  organizationId?: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
 
 /**
  * 인증된 사용자 정보를 포함한 Request 타입
  */
-import { UserType } from '../../auth/entity/user.entity';
-
 export interface AuthenticatedRequest extends Request {
-  user: {
-    id: string; // UUID
-    userId: string; // JWT에서 오는 userId
-    email: string;
-    name: string;
-    userType?: UserType;
-    organizationId?: string;
-    [key: string]: any;
-  };
+  user: AuthenticatedUser;
+}
+
+/**
+ * OAuth 프로바이더에서 반환하는 사용자 정보
+ */
+export interface OAuthUser {
+  providerId: string;
+  provider: 'google' | 'kakao';
+  email: string;
+  name: string;
+  profileImage?: string;
 }

@@ -58,7 +58,7 @@ export class LlmService {
    * 스트림 데이터 처리 (UTF-8 인코딩 문제 해결)
    */
   private async processStream(
-    stream: any,
+    stream: NodeJS.ReadableStream,
     onChunk: (chunk: string) => void,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
