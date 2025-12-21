@@ -20,6 +20,25 @@ import { AuthenticatedRequest } from '../common/types/request.types';
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}
 
+  /**
+   * 사용자 맞춤 추천 질문을 가져옵니다
+   * 감정, 목표, 시간대, 계절을 기반으로 동적으로 생성됩니다
+   */
+  @Get('suggestions')
+  async getSuggestedQuestions(@Request() req: AuthenticatedRequest) {
+    try {
+      const result = await this.agentService.getSuggestedQuestions(
+        req.user.userId,
+      );
+      return result;
+    } catch (error) {
+      throw new HttpException(
+        '추천 질문을 가져오는데 실패했습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get('status')
   async getAgentStatus(@Request() req: AuthenticatedRequest) {
     try {

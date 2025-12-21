@@ -23,6 +23,10 @@ import { GoalManagerService } from './services/goal-manager.service';
 import { MemoryService } from './services/memory.service';
 import { PromptGeneratorService } from './services/prompt-generator.service';
 import { AgentCacheService } from './services/agent-cache.service';
+import { SuggestionService } from './services/suggestion.service';
+
+// Types
+import { SuggestionResponse } from './types/suggestion.types';
 
 /**
  * Agent Service - Orchestrator
@@ -47,6 +51,7 @@ export class AgentService {
     private readonly memoryService: MemoryService,
     private readonly promptGenerator: PromptGeneratorService,
     private readonly cacheService: AgentCacheService,
+    private readonly suggestionService: SuggestionService,
   ) {}
 
   /**
@@ -441,6 +446,91 @@ export class AgentService {
    */
   async deleteGoal(goalId: number): Promise<{ success: boolean; message: string }> {
     return this.goalManager.deleteGoal(goalId);
+  }
+
+  /**
+   * 사용자 맞춤 추천 질문을 생성합니다
+   * 감정, 목표, 시간대, 계절을 기반으로 동적으로 생성됩니다
+   */
+  async getSuggestedQuestions(userId: string): Promise<SuggestionResponse> {
+    this.logger.log(`[Agent] Generating suggestions for user ${userId}`);
+
+    try {
+      // 1. 최근 감정 조회
+      const recentEmotions = await this.emotionAnalyzer.getRecentEmotions(
+        userId,
+        5,
+      );
+      const emotionTypes = recentEmotions.map((e) => e.type);
+
+      // 2. 활성 목표 조회
+      const { goals } = await this.goalManager.getUserGoals(userId);
+      const activeGoals = goals
+        .filter((g) => g.status === 'active')
+        .map((g) => ({
+          title: g.title,
+          category: g.category,
+          progress: g.progress,
+        }));
+
+      // 3. 시간 컨텍스트 생성
+      const now = new Date();
+      const hour = now.getHours();
+      const month = now.getMonth();
+
+      const timeOfDay = this.suggestionService.getTimeOfDay(hour);
+      const season = this.suggestionService.getSeason(month);
+
+      // 4. 추천 질문 생성
+      const suggestions = await this.suggestionService.generateSuggestions({
+        recentEmotions: emotionTypes,
+        activeGoals,
+        timeOfDay,
+        dayOfWeek: now.getDay(),
+        season,
+      });
+
+      this.logger.debug(
+        `[Agent] Generated ${suggestions.length} suggestions for user ${userId}`,
+      );
+
+      return {
+        success: true,
+        suggestions,
+        context: {
+          timeOfDay,
+          season,
+          hasActiveGoals: activeGoals.length > 0,
+          recentEmotionDetected: emotionTypes.length > 0,
+        },
+      };
+    } catch (error) {
+      this.logger.error('[Agent] Error generating suggestions:', error);
+      
+      // 에러 시 기본 추천 질문 반환
+      const now = new Date();
+      const timeOfDay = this.suggestionService.getTimeOfDay(now.getHours());
+      const season = this.suggestionService.getSeason(now.getMonth());
+      
+      const defaultSuggestions = await this.suggestionService.generateSuggestions({
+        recentEmotions: [],
+        activeGoals: [],
+        timeOfDay,
+        dayOfWeek: now.getDay(),
+        season,
+      });
+
+      return {
+        success: true,
+        suggestions: defaultSuggestions,
+        context: {
+          timeOfDay,
+          season,
+          hasActiveGoals: false,
+          recentEmotionDetected: false,
+        },
+      };
+    }
   }
 
   /**

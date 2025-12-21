@@ -9,4 +9,5 @@ export * from './goal-manager.service';
 export * from './memory.service';
 export * from './milestone.service';
 export * from './prompt-generator.service';
+export * from './suggestion.service';
 

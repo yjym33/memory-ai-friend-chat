@@ -15,6 +15,7 @@ import {
   MemoryService,
   MilestoneService,
   PromptGeneratorService,
+  SuggestionService,
 } from './services';
 
 // Entities
@@ -37,6 +38,7 @@ import { Conversation } from '../chat/entity/conversation.entity';
  * - MemoryService: 대화 기억 관리
  * - MilestoneService: 마일스톤 관리
  * - PromptGeneratorService: 프롬프트 생성
+ * - SuggestionService: 추천 질문 생성
  */
 @Module({
   imports: [
@@ -67,6 +69,9 @@ import { Conversation } from '../chat/entity/conversation.entity';
 
     // 프롬프트 생성 서비스
     PromptGeneratorService,
+
+    // 추천 질문 생성 서비스
+    SuggestionService,
 
     // 메인 오케스트레이터 서비스 (모든 서비스 의존)
     AgentService,
