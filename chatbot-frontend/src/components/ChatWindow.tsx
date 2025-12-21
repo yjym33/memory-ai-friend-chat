@@ -9,6 +9,7 @@ import { ChatTheme } from "../types/theme";
 import { ChatMode } from "./ChatModeSwitch";
 import { FileText, ExternalLink, Volume2, VolumeX, Square, Image as ImageIcon, Download, ZoomIn } from "lucide-react";
 import { useTTS } from "../hooks/useTTS";
+import SuggestedQuestions from "./suggestion/SuggestedQuestions";
 
 interface ChatWindowProps {
   messages: Message[];
@@ -16,6 +17,7 @@ interface ChatWindowProps {
   onThemeChange?: (theme: ChatTheme) => void;
   conversationId?: number | null;
   chatMode?: ChatMode;
+  onSendMessage?: (message: string) => void;
 }
 
 const ChatWindow = React.memo(function ChatWindow({
@@ -24,6 +26,7 @@ const ChatWindow = React.memo(function ChatWindow({
   onThemeChange,
   conversationId,
   chatMode = ChatMode.PERSONAL,
+  onSendMessage,
 }: ChatWindowProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { speak, stop, isSpeaking, isSupported } = useTTS();
@@ -100,12 +103,19 @@ const ChatWindow = React.memo(function ChatWindow({
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full flex flex-col gap-4 sm:gap-6 py-4 sm:py-8 px-2 sm:px-0">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-800 mt-20 p-8 bg-white/80 rounded-lg shadow-sm backdrop-blur-sm">
-              <div className="text-lg font-medium mb-2">
-                💬 대화를 시작해보세요!
-              </div>
-              <div className="text-sm text-gray-600">
-                무엇이든 편하게 물어보세요
+            <div className="text-center text-gray-800 mt-12 p-8">
+              <div className="bg-white/80 rounded-2xl shadow-lg backdrop-blur-sm p-8 max-w-xl mx-auto">
+                <div className="text-2xl font-semibold mb-2">
+                  💬 대화를 시작해보세요!
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  무엇이든 편하게 물어보세요
+                </div>
+
+                {/* 동적 추천 질문 컴포넌트 */}
+                {onSendMessage && (
+                  <SuggestedQuestions onSelectQuestion={onSendMessage} />
+                )}
               </div>
             </div>
           ) : (

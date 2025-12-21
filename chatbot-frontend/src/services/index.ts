@@ -7,3 +7,4 @@ export { ApiKeyService } from "./apiKeyService";
 export { default as ImageService } from "./imageService";
 export { multiModelService } from "./multiModelService";
 export { multiImageService } from "./multiImageService";
+export { SuggestionService } from "./suggestionService";

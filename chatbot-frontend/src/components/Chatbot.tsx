@@ -32,8 +32,15 @@ import {
   ProviderImageResponse,
 } from "../types";
 import { Menu, FileText, BookOpen } from "lucide-react";
-import { getModelDisplayName, getImageModelDisplayName } from "../utils/modelNames";
-import { AiSettingsService, multiModelService, multiImageService } from "../services";
+import {
+  getModelDisplayName,
+  getImageModelDisplayName,
+} from "../utils/modelNames";
+import {
+  AiSettingsService,
+  multiModelService,
+  multiImageService,
+} from "../services";
 
 export default function Chatbot() {
   const [input, setInput] = useState<string>("");
@@ -52,17 +59,27 @@ export default function Chatbot() {
   // Multi-Model 모드 상태 (텍스트)
   const [isMultiModelMode, setIsMultiModelMode] = useState(false);
   const [showMultiModelSelector, setShowMultiModelSelector] = useState(false);
-  const [availableProviders, setAvailableProviders] = useState<ProviderInfo[]>([]);
+  const [availableProviders, setAvailableProviders] = useState<ProviderInfo[]>(
+    []
+  );
   const [selectedProviders, setSelectedProviders] = useState<LLMProvider[]>([]);
-  const [multiModelResponses, setMultiModelResponses] = useState<ProviderResponse[]>([]);
+  const [multiModelResponses, setMultiModelResponses] = useState<
+    ProviderResponse[]
+  >([]);
   const [multiModelLoading, setMultiModelLoading] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string>("");
 
   // Multi-Image 모드 상태 (이미지)
   const [showMultiImageSelector, setShowMultiImageSelector] = useState(false);
-  const [availableImageProviders, setAvailableImageProviders] = useState<ImageProviderInfo[]>([]);
-  const [selectedImageProviders, setSelectedImageProviders] = useState<ImageProvider[]>([]);
-  const [multiImageResponses, setMultiImageResponses] = useState<ProviderImageResponse[]>([]);
+  const [availableImageProviders, setAvailableImageProviders] = useState<
+    ImageProviderInfo[]
+  >([]);
+  const [selectedImageProviders, setSelectedImageProviders] = useState<
+    ImageProvider[]
+  >([]);
+  const [multiImageResponses, setMultiImageResponses] = useState<
+    ProviderImageResponse[]
+  >([]);
   const [pendingImagePrompt, setPendingImagePrompt] = useState<string>("");
 
   // 모바일 환경에서만 사이드바 상태 관리
@@ -245,7 +262,7 @@ export default function Chatbot() {
         setShowMultiModelSelector(false);
         setMultiModelResponses([]);
         setPendingMessage("");
-        
+
         // 대화 새로고침
         window.location.reload();
       } catch (error) {
@@ -324,7 +341,8 @@ export default function Chatbot() {
   const handleSendMessage = async (message?: string, file?: UploadedFile) => {
     const messageToSend = message || input;
 
-    if ((!messageToSend.trim() && !file) || loading || multiModelLoading) return;
+    if ((!messageToSend.trim() && !file) || loading || multiModelLoading)
+      return;
 
     setInput(""); // 입력 필드 즉시 클리어
 
@@ -579,6 +597,7 @@ export default function Chatbot() {
               onThemeChange={saveTheme}
               conversationId={activeChatId}
               chatMode={currentChatMode}
+              onSendMessage={handleSendMessage}
             />
           </div>
 
