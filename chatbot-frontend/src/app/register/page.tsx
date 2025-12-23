@@ -54,9 +54,6 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* 루나 아이콘 및 안내문구 */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white border-opacity-30">
-            <span className="text-white text-xl font-bold">루나</span>
-          </div>
           <h1 className="text-3xl font-bold text-white mb-2">
             루나와 친구되기
           </h1>
@@ -68,13 +65,6 @@ export default function RegisterPage() {
 
         {/* 회원가입 폼 카드 */}
         <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">회원가입</h2>
-            <p className="text-gray-600 text-sm">
-              루나가 당신을 더 잘 알 수 있도록 정보를 알려주세요
-            </p>
-          </div>
-
           <form onSubmit={handleRegister} className="space-y-4">
             {/* 이름 입력 */}
             <div>
@@ -234,26 +224,6 @@ export default function RegisterPage() {
           </div>
 
           {/* 소셜 회원가입 */}
-          <div className="space-y-3">
-            <button
-              onClick={() => handleSocialRegister("google")}
-              className="w-full flex items-center justify-center gap-3 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200"
-            >
-              <div className="w-5 h-5 bg-red-500 rounded-sm flex items-center justify-center">
-                <span className="text-white text-xs font-bold">G</span>
-              </div>
-              <span className="text-gray-700 font-medium">Google</span>
-            </button>
-            <button
-              onClick={() => handleSocialRegister("kakao")}
-              className="w-full flex items-center justify-center gap-3 py-3 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition duration-200"
-            >
-              <div className="w-5 h-5 bg-black rounded-sm flex items-center justify-center">
-                <span className="text-yellow-400 text-xs font-bold">K</span>
-              </div>
-              <span className="font-medium">카카오</span>
-            </button>
-          </div>
 
           {/* 로그인 링크 */}
           <div className="mt-6 text-center">
