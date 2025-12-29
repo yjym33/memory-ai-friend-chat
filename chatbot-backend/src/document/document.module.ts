@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
@@ -13,4 +13,10 @@ import { User } from '../auth/entity/user.entity';
   providers: [DocumentService, VectorService],
   exports: [DocumentService, VectorService],
 })
-export class DocumentModule {}
+export class DocumentModule {
+  private readonly logger = new Logger(DocumentModule.name);
+
+  constructor() {
+    this.logger.debug('[DocumentModule] Constructor 실행');
+  }
+}

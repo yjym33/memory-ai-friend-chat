@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -8,4 +8,10 @@ import { ConfigModule } from '@nestjs/config';
     }),
   ],
 })
-export class AppConfigModule {}
+export class AppConfigModule {
+  private readonly logger = new Logger(AppConfigModule.name);
+
+  constructor() {
+    this.logger.debug('[AppConfigModule] Constructor 실행');
+  }
+}

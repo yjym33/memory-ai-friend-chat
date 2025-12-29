@@ -8,6 +8,7 @@ import { WinstonModuleOptions } from 'nest-winston';
  */
 export const createLoggerConfig = (): WinstonModuleOptions => {
   const nodeEnv = process.env.NODE_ENV || 'development';
+  console.log(`[LoggerConfig] Winston 로거 설정 생성 시작 - 환경: ${nodeEnv}`);
 
   // 로그 파일 저장 경로
   const logDir = 'logs';
@@ -111,8 +112,11 @@ export const createLoggerConfig = (): WinstonModuleOptions => {
     );
   }
 
+  const logLevel = getLogLevel(nodeEnv);
+  console.log(`[LoggerConfig] Winston 로거 설정 완료 - 레벨: ${logLevel}, 환경: ${nodeEnv}`);
+  
   return {
-    level: getLogLevel(nodeEnv),
+    level: logLevel,
     format: logFormat,
     transports,
     // 처리되지 않은 예외 로깅

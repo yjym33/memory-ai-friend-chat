@@ -24,6 +24,7 @@ import { Goal } from './entities/goal.entity';
 import { Milestone } from './entities/milestone.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
+import { Logger } from '@nestjs/common';
 
 /**
  * Agent Module
@@ -85,4 +86,10 @@ import { Conversation } from '../chat/entity/conversation.entity';
     AgentCacheService,
   ],
 })
-export class AgentModule {}
+export class AgentModule {
+  private readonly logger = new Logger(AgentModule.name);
+
+  constructor() {
+    this.logger.debug('[AgentModule] Constructor 실행 - 모듈 인스턴스 생성');
+  }
+}

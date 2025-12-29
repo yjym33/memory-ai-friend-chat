@@ -6,6 +6,7 @@ import {
   Body,
   Request,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { AiSettingsService } from './ai-settings.service';
 import { UpdateAiSettingsDto } from './dto/ai-settings.dto';
@@ -20,7 +21,13 @@ import { AiSettings, ChatMode } from './entity/ai-settings.entity';
 @Controller('ai-settings')
 @UseGuards(JwtAuthGuard) // JWT 인증이 필요한 모든 엔드포인트
 export class AiSettingsController {
-  constructor(private readonly aiSettingsService: AiSettingsService) {}
+  private readonly logger = new Logger(AiSettingsController.name);
+
+  constructor(private readonly aiSettingsService: AiSettingsService) {
+    this.logger.debug(
+      '[AiSettingsController] Constructor 실행 - AI 설정 컨트롤러 초기화',
+    );
+  }
 
   /**
    * 현재 사용자의 AI 설정을 조회합니다.
@@ -29,7 +36,10 @@ export class AiSettingsController {
    */
   @Get()
   async getSettings(@Request() req: AuthenticatedRequest) {
-    return this.aiSettingsService.findByUserId(req.user.userId);
+    this.logger.debug(`[getSettings] 호출 - userId: ${req.user.userId}`);
+    const result = await this.aiSettingsService.findByUserId(req.user.userId);
+    this.logger.debug(`[getSettings] 완료 - userId: ${req.user.userId}`);
+    return result;
   }
 
   /**
@@ -43,7 +53,13 @@ export class AiSettingsController {
     @Request() req: AuthenticatedRequest,
     @Body() updateDto: UpdateAiSettingsDto,
   ) {
-    return this.aiSettingsService.update(req.user.userId, updateDto);
+    this.logger.debug(`[updateSettings] 호출 - userId: ${req.user.userId}`);
+    const result = await this.aiSettingsService.update(
+      req.user.userId,
+      updateDto,
+    );
+    this.logger.debug(`[updateSettings] 완료 - userId: ${req.user.userId}`);
+    return result;
   }
 
   /**
@@ -57,11 +73,16 @@ export class AiSettingsController {
     @Request() req: AuthenticatedRequest,
     @Body() body: { settings: UpdateAiSettingsDto; message: string },
   ) {
-    return this.aiSettingsService.testSettings(
+    this.logger.debug(
+      `[testSettings] 호출 - userId: ${req.user.userId}, message: ${body.message.substring(0, 30)}...`,
+    );
+    const result = await this.aiSettingsService.testSettings(
       req.user.userId,
       body.settings,
       body.message,
     );
+    this.logger.debug(`[testSettings] 완료 - userId: ${req.user.userId}`);
+    return result;
   }
 
   /**
@@ -72,7 +93,15 @@ export class AiSettingsController {
     @Request() req: AuthenticatedRequest,
     @Body() body: { mode: ChatMode },
   ) {
-    return this.aiSettingsService.switchChatMode(req.user.userId, body.mode);
+    this.logger.debug(
+      `[switchChatMode] 호출 - userId: ${req.user.userId}, mode: ${body.mode}`,
+    );
+    const result = await this.aiSettingsService.switchChatMode(
+      req.user.userId,
+      body.mode,
+    );
+    this.logger.debug(`[switchChatMode] 완료 - userId: ${req.user.userId}`);
+    return result;
   }
 
   /**
@@ -80,8 +109,14 @@ export class AiSettingsController {
    */
   @Get('available-modes')
   async getAvailableModes(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(
+      `[getAvailableModes] 호출 - userId: ${req.user.userId}`,
+    );
     const availableModes = await this.aiSettingsService.getAvailableChatModes(
       req.user.userId,
+    );
+    this.logger.debug(
+      `[getAvailableModes] 완료 - userId: ${req.user.userId}, modes: ${availableModes.length}`,
     );
     return { availableModes };
   }

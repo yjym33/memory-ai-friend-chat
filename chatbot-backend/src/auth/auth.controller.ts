@@ -8,6 +8,7 @@ import {
   UseGuards,
   Res,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { Request as ExpressRequest, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -32,7 +33,11 @@ interface OAuthRequest extends ExpressRequest {
  */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly logger = new Logger(AuthController.name);
+
+  constructor(private readonly authService: AuthService) {
+    this.logger.debug('[AuthController] Constructor 실행 - 인증 컨트롤러 초기화');
+  }
 
   /**
    * 사용자 로그인을 처리합니다.
@@ -41,7 +46,13 @@ export class AuthController {
    */
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto.email, loginDto.password);
+    this.logger.debug(`[login] 호출 - email: ${loginDto.email}`);
+    const result = await this.authService.login(
+      loginDto.email,
+      loginDto.password,
+    );
+    this.logger.debug(`[login] 완료 - userId: ${result.userId}`);
+    return result;
   }
 
   /**
@@ -51,8 +62,17 @@ export class AuthController {
    */
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
+    this.logger.debug(`[register] 호출 - email: ${registerDto.email}`);
     const { email, password, name, gender, birthYear } = registerDto;
-    return this.authService.register(email, password, name, gender, birthYear);
+    const result = await this.authService.register(
+      email,
+      password,
+      name,
+      gender,
+      birthYear,
+    );
+    this.logger.debug(`[register] 완료 - userId: ${result.userId}`);
+    return result;
   }
 
   /**
@@ -63,6 +83,7 @@ export class AuthController {
   @Get('validate')
   @UseGuards(JwtAuthGuard)
   async validateToken(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(`[validateToken] 호출 - userId: ${req.user.userId}`);
     return { userId: req.user.userId };
   }
 
@@ -126,11 +147,15 @@ export class AuthController {
     @Request() req: AuthenticatedRequest,
     @Body() body: { provider: LLMProvider; apiKey: string },
   ) {
+    this.logger.debug(
+      `[updateApiKey] 호출 - userId: ${req.user.userId}, provider: ${body.provider}`,
+    );
     await this.authService.updateApiKey(
       req.user.userId,
       body.provider,
       body.apiKey,
     );
+    this.logger.debug(`[updateApiKey] 완료 - userId: ${req.user.userId}`);
     return { message: 'API 키가 성공적으로 저장되었습니다.' };
   }
 
@@ -147,6 +172,9 @@ export class AuthController {
     @Body()
     body: { apiKeys: { openai?: string; google?: string; anthropic?: string } },
   ) {
+    this.logger.debug(
+      `[updateApiKeys] 호출 - userId: ${req.user.userId}, providers: ${Object.keys(body.apiKeys).join(', ')}`,
+    );
     console.log('📥 API 키 저장 요청:', {
       userId: req.user.userId,
       providers: Object.keys(body.apiKeys),
@@ -154,6 +182,7 @@ export class AuthController {
     });
 
     await this.authService.updateApiKeys(req.user.userId, body.apiKeys);
+    this.logger.debug(`[updateApiKeys] 완료 - userId: ${req.user.userId}`);
     return { message: 'API 키들이 성공적으로 저장되었습니다.' };
   }
 
@@ -165,11 +194,15 @@ export class AuthController {
   @Get('api-keys/status')
   @UseGuards(JwtAuthGuard)
   async getApiKeysStatus(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(
+      `[getApiKeysStatus] 호출 - userId: ${req.user.userId}`,
+    );
     const user = await this.authService.getUserById(req.user.userId);
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
+    this.logger.debug(`[getApiKeysStatus] 완료 - userId: ${req.user.userId}`);
     return {
       hasOpenAI: !!user.llmApiKeys?.openai,
       hasGoogle: !!user.llmApiKeys?.google,

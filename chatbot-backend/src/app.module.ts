@@ -1,6 +1,13 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import {
+  Module,
+  MiddlewareConsumer,
+  NestModule,
+  OnModuleInit,
+  OnApplicationBootstrap,
+  Logger,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { WinstonModule } from 'nest-winston';
 import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
@@ -42,17 +49,36 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     // 데이터베이스 설정
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('database.host'),
-        port: configService.get('database.port'),
-        username: configService.get('database.username'),
-        password: configService.get('database.password'),
-        database: configService.get('database.database'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // 개발 환경에서만 true로 설정
-        autoLoadEntities: true,
-      }),
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<TypeOrmModuleOptions> => {
+        const logger = new Logger('TypeORM');
+        logger.debug('[TypeORM] useFactory 실행 - 데이터베이스 연결 설정 시작');
+
+        const dbHost = configService.get('database.host');
+        const dbPort = configService.get('database.port');
+        const dbName = configService.get('database.database');
+        logger.debug(
+          `[TypeORM] 데이터베이스 연결 정보: ${dbHost}:${dbPort}/${dbName}`,
+        );
+
+        const config: TypeOrmModuleOptions = {
+          type: 'postgres',
+          host: dbHost,
+          port: configService.get('database.port'),
+          username: configService.get('database.username'),
+          password: configService.get('database.password'),
+          database: dbName,
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: true, // 개발 환경에서만 true로 설정
+          autoLoadEntities: true,
+        };
+
+        logger.debug(
+          '[TypeORM] 데이터베이스 설정 완료 - TypeORM 연결 대기 중...',
+        );
+        return config;
+      },
       inject: [ConfigService],
     }),
 
@@ -79,9 +105,38 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     },
   ],
 })
-export class AppModule implements NestModule {
+export class AppModule
+  implements NestModule, OnModuleInit, OnApplicationBootstrap
+{
+  private readonly logger = new Logger(AppModule.name);
+
+  constructor() {
+    this.logger.debug(
+      '[AppModule] Constructor 실행 - 모든 하위 모듈 인스턴스 생성 완료',
+    );
+  }
+
   configure(consumer: MiddlewareConsumer) {
-    // 모든 경로에 로거 미들웨어 적용
+    this.logger.debug('[AppModule] configure() 실행 - 미들웨어 설정 시작');
     consumer.apply(LoggerMiddleware).forRoutes('*');
+    this.logger.debug('[AppModule] configure() 완료 - LoggerMiddleware 등록됨');
+  }
+
+  onModuleInit() {
+    this.logger.debug(
+      '[AppModule] onModuleInit() 실행 - 모든 모듈 초기화 완료',
+    );
+    this.logger.debug(
+      '[AppModule] - 하위 모듈들이 모두 로드되고 의존성 주입 완료',
+    );
+  }
+
+  async onApplicationBootstrap() {
+    this.logger.debug(
+      '[AppModule] onApplicationBootstrap() 실행 - 애플리케이션 부트스트랩 완료',
+    );
+    this.logger.debug(
+      '[AppModule] - 서버가 시작되기 직전, 모든 초기화 작업 완료',
+    );
   }
 }

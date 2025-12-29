@@ -14,6 +14,7 @@ import {
   NotFoundException,
   ParseIntPipe,
   ParseUUIDPipe,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService } from './document.service';
@@ -30,7 +31,13 @@ import { UserType } from '../auth/entity/user.entity';
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
 export class DocumentController {
-  constructor(private documentService: DocumentService) {}
+  private readonly logger = new Logger(DocumentController.name);
+
+  constructor(private documentService: DocumentService) {
+    this.logger.debug(
+      '[DocumentController] Constructor 실행 - 문서 컨트롤러 초기화',
+    );
+  }
 
   /**
    * 문서를 업로드합니다.
@@ -97,6 +104,9 @@ export class DocumentController {
     @UploadedFile() file: Express.Multer.File,
     @Body() createDocumentDto: CreateDocumentDto,
   ) {
+    this.logger.debug(
+      `[uploadDocument] 호출 - userId: ${req.user.userId}, fileName: ${file?.originalname || '없음'}`,
+    );
     console.log(`📤 문서 업로드 요청:`, {
       user: req.user.id,
       role: req.user.role,
@@ -158,6 +168,9 @@ export class DocumentController {
       );
 
       console.log(`✅ 문서 업로드 완료: ${result.id}`);
+      this.logger.debug(
+        `[uploadDocument] 완료 - userId: ${req.user.userId}, documentId: ${result.id}`,
+      );
       return result;
     } catch (error) {
       console.error(`❌ 문서 업로드 오류:`, {
@@ -166,6 +179,10 @@ export class DocumentController {
         error: error.message,
         stack: error.stack,
       });
+      this.logger.error(
+        `[uploadDocument] 실패 - userId: ${req.user.userId}`,
+        error,
+      );
 
       // 에러를 다시 던져서 글로벌 에러 핸들러가 처리하도록 함
       throw error;
@@ -180,6 +197,9 @@ export class DocumentController {
     @Request() req: AuthenticatedRequest,
     @Body() searchDto: SearchDocumentsDto,
   ) {
+    this.logger.debug(
+      `[searchDocuments] 호출 - userId: ${req.user.userId}, query: ${searchDto.query}`,
+    );
     // 기업 사용자 또는 관리자만 문서 검색 가능
     const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
       req.user.role,
@@ -204,7 +224,7 @@ export class DocumentController {
       }
     }
 
-    return this.documentService.searchDocuments(
+    const result = await this.documentService.searchDocuments(
       targetOrganizationId,
       searchDto.query,
       {
@@ -213,6 +233,10 @@ export class DocumentController {
         threshold: searchDto.threshold || 0.7,
       },
     );
+    this.logger.debug(
+      `[searchDocuments] 완료 - userId: ${req.user.userId}, 결과 수: ${result.length}`,
+    );
+    return result;
   }
 
   /**
@@ -227,6 +251,9 @@ export class DocumentController {
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
   ) {
+    this.logger.debug(
+      `[getDocuments] 호출 - userId: ${req.user.userId}, type: ${type || '전체'}, page: ${page || 1}`,
+    );
     // 기업 사용자 또는 관리자만 문서 조회 가능
     const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
       req.user.role,
@@ -271,6 +298,9 @@ export class DocumentController {
       { type, status },
     );
 
+    this.logger.debug(
+      `[getDocuments] 완료 - userId: ${req.user.userId}, 문서 수: ${documents.length}, 전체: ${totalCount}`,
+    );
     return {
       documents,
       pagination: {
@@ -287,10 +317,13 @@ export class DocumentController {
    */
   @Get('types')
   async getDocumentTypes() {
-    return Object.values(DocumentType).map((type) => ({
+    this.logger.debug(`[getDocumentTypes] 호출`);
+    const result = Object.values(DocumentType).map((type) => ({
       value: type,
       label: this.getDocumentTypeLabel(type),
     }));
+    this.logger.debug(`[getDocumentTypes] 완료 - 타입 수: ${result.length}`);
+    return result;
   }
 
   /**
@@ -298,6 +331,9 @@ export class DocumentController {
    */
   @Get('embedding-status')
   async getEmbeddingStatus(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(
+      `[getEmbeddingStatus] 호출 - userId: ${req.user.userId}`,
+    );
     // 기업 사용자 또는 관리자만 임베딩 상태 조회 가능
     const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
       req.user.role,
@@ -322,7 +358,10 @@ export class DocumentController {
       }
     }
 
-    return this.documentService.getEmbeddingStatus(targetOrganizationId);
+    const result =
+      await this.documentService.getEmbeddingStatus(targetOrganizationId);
+    this.logger.debug(`[getEmbeddingStatus] 완료 - userId: ${req.user.userId}`);
+    return result;
   }
 
   /**
@@ -333,10 +372,17 @@ export class DocumentController {
     @Request() req: AuthenticatedRequest,
     @Param('id') documentId: string,
   ) {
-    return this.documentService.deleteDocument(
+    this.logger.debug(
+      `[deleteDocument] 호출 - userId: ${req.user.userId}, documentId: ${documentId}`,
+    );
+    const result = await this.documentService.deleteDocument(
       documentId,
       req.user.userId || req.user.id,
     );
+    this.logger.debug(
+      `[deleteDocument] 완료 - userId: ${req.user.userId}, documentId: ${documentId}`,
+    );
+    return result;
   }
 
   /**
@@ -347,16 +393,23 @@ export class DocumentController {
     @Request() req: AuthenticatedRequest,
     @Body() searchDto: AdvancedSearchDto,
   ) {
+    this.logger.debug(
+      `[advancedSearch] 호출 - userId: ${req.user.userId}, query: ${searchDto.query}`,
+    );
     if (!req.user.organizationId) {
       throw new BadRequestException(
         '조직에 속한 사용자만 고급 검색을 사용할 수 있습니다.',
       );
     }
 
-    return this.documentService.advancedSearch(
+    const result = await this.documentService.advancedSearch(
       req.user.organizationId,
       searchDto,
     );
+    this.logger.debug(
+      `[advancedSearch] 완료 - userId: ${req.user.userId}, 결과 수: ${result.results?.length || 0}`,
+    );
+    return result;
   }
 
   /**
@@ -368,15 +421,22 @@ export class DocumentController {
     @Query('q') partialQuery: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
+    this.logger.debug(
+      `[getSearchSuggestions] 호출 - userId: ${req.user.userId}, query: ${partialQuery}`,
+    );
     if (!req.user.organizationId) {
       return [];
     }
 
-    return this.documentService.getSearchSuggestions(
+    const result = await this.documentService.getSearchSuggestions(
       req.user.organizationId,
       partialQuery,
       limit,
     );
+    this.logger.debug(
+      `[getSearchSuggestions] 완료 - userId: ${req.user.userId}, 제안 수: ${result.length}`,
+    );
+    return result;
   }
 
   /**
@@ -384,6 +444,9 @@ export class DocumentController {
    */
   @Post('reprocess-embeddings')
   async reprocessEmbeddings(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(
+      `[reprocessEmbeddings] 호출 - userId: ${req.user.userId}`,
+    );
     // 기업 사용자 또는 관리자만 실행 가능
     const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
       req.user.role,
@@ -410,6 +473,9 @@ export class DocumentController {
 
     await this.documentService.reprocessMissingEmbeddings(targetOrganizationId);
 
+    this.logger.debug(
+      `[reprocessEmbeddings] 완료 - userId: ${req.user.userId}`,
+    );
     return { message: '임베딩 재처리가 시작되었습니다.' };
   }
 
@@ -435,6 +501,9 @@ export class DocumentController {
     @Request() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
+    this.logger.debug(
+      `[getDocument] 호출 - userId: ${req.user.userId}, documentId: ${id}`,
+    );
     // 기업 사용자 또는 관리자만 문서 조회 가능
     const isAdmin = ['super_admin', 'admin', 'org_admin'].includes(
       req.user.role,
@@ -466,6 +535,9 @@ export class DocumentController {
     if (!document) {
       throw new NotFoundException(`ID ${id}인 문서를 찾을 수 없습니다.`);
     }
+    this.logger.debug(
+      `[getDocument] 완료 - userId: ${req.user.userId}, documentId: ${id}`,
+    );
     return document;
   }
 }

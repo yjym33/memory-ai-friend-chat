@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,12 +15,16 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private encryptionService: EncryptionService,
-  ) {}
+  ) {
+    this.logger.debug('[AuthService] Constructor 실행 - 인증 서비스 초기화');
+  }
 
   // 회원가입
   async register(
@@ -30,7 +35,9 @@ export class AuthService {
     birthYear: number,
     passwordCheck?: string,
   ) {
+    this.logger.debug(`[register] 호출 - email: ${email}`);
     if (passwordCheck !== undefined && password !== passwordCheck) {
+      this.logger.warn(`[register] 실패 - 비밀번호 불일치: ${email}`);
       throw new ConflictException(
         '비밀번호와 비밀번호 확인이 일치하지 않습니다.',
       );
@@ -40,6 +47,7 @@ export class AuthService {
     });
 
     if (existingUser) {
+      this.logger.warn(`[register] 실패 - 이미 등록된 이메일: ${email}`);
       throw new ConflictException('이미 등록된 이메일입니다.');
     }
 
@@ -55,6 +63,7 @@ export class AuthService {
 
     const token = this.jwtService.sign({ userId: user.id });
 
+    this.logger.debug(`[register] 완료 - userId: ${user.id}, email: ${email}`);
     return {
       userId: user.id,
       token,
@@ -63,12 +72,14 @@ export class AuthService {
 
   // 로그인
   async login(email: string, password: string) {
+    this.logger.debug(`[login] 호출 - email: ${email}`);
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['organization'],
     });
 
     if (!user) {
+      this.logger.warn(`[login] 실패 - 사용자를 찾을 수 없음: ${email}`);
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
 

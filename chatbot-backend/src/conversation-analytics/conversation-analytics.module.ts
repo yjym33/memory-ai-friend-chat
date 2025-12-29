@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConversationAnalyticsController } from './conversation-analytics.controller';
 import { ConversationAnalyticsService } from './conversation-analytics.service';
@@ -10,4 +10,10 @@ import { Conversation } from '../chat/entity/conversation.entity';
   providers: [ConversationAnalyticsService],
   exports: [ConversationAnalyticsService],
 })
-export class ConversationAnalyticsModule {}
+export class ConversationAnalyticsModule {
+  private readonly logger = new Logger(ConversationAnalyticsModule.name);
+
+  constructor() {
+    this.logger.debug('[ConversationAnalyticsModule] Constructor 실행');
+  }
+}

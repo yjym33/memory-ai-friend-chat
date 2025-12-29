@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from './entity/conversation.entity';
 import { Repository } from 'typeorm';
@@ -24,6 +24,8 @@ import {
  */
 @Injectable()
 export class ChatService {
+  private readonly logger = new Logger(ChatService.name);
+
   constructor(
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
@@ -35,7 +37,9 @@ export class ChatService {
     private llmAdapterService: LLMAdapterService,
     private chatbotLlmService: ChatbotLlmService,
     private imageAdapterService: ImageAdapterService,
-  ) {}
+  ) {
+    this.logger.debug('[ChatService] Constructor 실행 - 채팅 서비스 초기화');
+  }
 
   /**
    * 대화 제목을 업데이트합니다.
@@ -66,11 +70,16 @@ export class ChatService {
    * @returns 생성된 대화 객체
    */
   async createConversation(userId: string): Promise<Conversation> {
+    this.logger.debug(`[createConversation] 호출 - userId: ${userId}`);
     const conversation = this.conversationRepository.create({
       messages: [],
       userId: userId,
     });
-    return this.conversationRepository.save(conversation);
+    const result = await this.conversationRepository.save(conversation);
+    this.logger.debug(
+      `[createConversation] 완료 - userId: ${userId}, conversationId: ${result.id}`,
+    );
+    return result;
   }
 
   /**
@@ -88,10 +97,15 @@ export class ChatService {
    * @returns 대화 객체 배열 (생성일 기준 내림차순)
    */
   async getAllConversations(userId: string): Promise<Conversation[]> {
-    return this.conversationRepository.find({
+    this.logger.debug(`[getAllConversations] 호출 - userId: ${userId}`);
+    const result = await this.conversationRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
     });
+    this.logger.debug(
+      `[getAllConversations] 완료 - userId: ${userId}, 대화 개수: ${result.length}`,
+    );
+    return result;
   }
 
   /**

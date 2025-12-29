@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
@@ -11,4 +11,10 @@ import { Organization } from '../auth/entity/organization.entity';
   providers: [AdminService],
   exports: [AdminService],
 })
-export class AdminModule {}
+export class AdminModule {
+  private readonly logger = new Logger(AdminModule.name);
+
+  constructor() {
+    this.logger.debug('[AdminModule] Constructor 실행');
+  }
+}

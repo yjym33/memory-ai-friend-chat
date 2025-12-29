@@ -40,12 +40,16 @@ export class AnthropicProvider implements ILLMProvider {
   private readonly anthropic: Anthropic;
 
   constructor(private configService: ConfigService) {
+    this.logger.debug(
+      '[AnthropicProvider] Constructor 실행 - Anthropic Claude Provider 초기화',
+    );
     // 기본 API 키는 환경 변수에서 가져옴
     const defaultApiKey =
       this.configService.get<string>('ANTHROPIC_API_KEY') || '';
     this.anthropic = new Anthropic({
       apiKey: defaultApiKey,
     });
+    this.logger.debug('[AnthropicProvider] Anthropic 클라이언트 생성 완료');
   }
 
   /**

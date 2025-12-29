@@ -16,8 +16,8 @@ export class LoggerMiddleware implements NestMiddleware {
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('User-Agent') || '';
 
-    // 요청 로깅
-    this.logger.log(`⬅️  ${method} ${originalUrl} - ${ip} - ${userAgent}`);
+    // 요청 로깅 (debug 레벨로 변경하여 상세 추적 가능)
+    this.logger.debug(`[REQUEST] ⬅️  ${method} ${originalUrl} - ${ip}`);
 
     // 응답 완료 시 로깅
     res.on('finish', () => {
@@ -42,14 +42,14 @@ export class LoggerMiddleware implements NestMiddleware {
 
       switch (logLevel) {
         case 'error':
-          this.logger.error(logMessage, logMeta);
+          this.logger.error(`[RESPONSE] ${logMessage}`, logMeta);
           break;
         case 'warn':
-          this.logger.warn(logMessage, logMeta);
+          this.logger.warn(`[RESPONSE] ${logMessage}`, logMeta);
           break;
         case 'log':
         default:
-          this.logger.log(logMessage, logMeta);
+          this.logger.debug(`[RESPONSE] ${logMessage}`, logMeta);
           break;
       }
     });

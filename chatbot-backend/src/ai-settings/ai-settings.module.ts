@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiSettingsController } from './ai-settings.controller';
 import { AiSettingsService } from './ai-settings.service';
@@ -18,4 +18,10 @@ import { User } from '../auth/entity/user.entity';
   providers: [AiSettingsService],
   exports: [AiSettingsService], // 다른 모듈에서 사용 가능하도록 내보내기
 })
-export class AiSettingsModule {}
+export class AiSettingsModule {
+  private readonly logger = new Logger(AiSettingsModule.name);
+
+  constructor() {
+    this.logger.debug('[AiSettingsModule] Constructor 실행');
+  }
+}

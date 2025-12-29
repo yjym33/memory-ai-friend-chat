@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ChatbotLlmService } from './chatbot-llm.service';
 
@@ -33,5 +33,11 @@ import { ChatbotLlmService } from './chatbot-llm.service';
     ChatbotLlmService,
   ],
 })
-export class ChatbotLlmModule {}
+export class ChatbotLlmModule {
+  private readonly logger = new Logger(ChatbotLlmModule.name);
+
+  constructor() {
+    this.logger.debug('[ChatbotLlmModule] Constructor 실행');
+  }
+}
 

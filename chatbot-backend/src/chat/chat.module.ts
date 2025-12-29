@@ -13,6 +13,7 @@ import { ChatbotLlmModule } from '../chatbot-llm/chatbot-llm.module';
 import { ImageGenerationModule } from '../image-generation/image-generation.module';
 import { LlmService } from '../common/services/llm.service';
 import { FileExtractionService } from '../common/services/file-extraction.service';
+import { Logger } from '@nestjs/common';
 
 /**
  * 채팅 기능을 위한 모듈
@@ -36,4 +37,10 @@ import { FileExtractionService } from '../common/services/file-extraction.servic
   providers: [ChatService, LlmService, FileExtractionService],
   exports: [ChatService], // 다른 모듈에서 ChatService 사용 가능
 })
-export class ChatModule {}
+export class ChatModule {
+  private readonly logger = new Logger(ChatModule.name);
+
+  constructor() {
+    this.logger.debug('[ChatModule] Constructor 실행');
+  }
+}

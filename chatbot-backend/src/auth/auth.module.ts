@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { EncryptionService } from '../common/services/encryption.service';
+import { Logger } from '@nestjs/common';
 
 /**
  * 인증 관련 기능을 제공하는 전역 모듈
@@ -51,4 +52,10 @@ import { EncryptionService } from '../common/services/encryption.service';
   ],
   exports: [AuthService, JwtAuthGuard], // 다른 모듈에서 사용 가능하도록 내보내기
 })
-export class AuthModule {}
+export class AuthModule {
+  private readonly logger = new Logger(AuthModule.name);
+
+  constructor() {
+    this.logger.debug('[AuthModule] Constructor 실행');
+  }
+}

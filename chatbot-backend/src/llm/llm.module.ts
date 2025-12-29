@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { LLMProviderFactory } from './providers/llm-provider.factory';
@@ -33,4 +33,10 @@ import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
     EncryptionService,
   ],
 })
-export class LLMModule {}
+export class LLMModule {
+  private readonly logger = new Logger(LLMModule.name);
+
+  constructor() {
+    this.logger.debug('[LLMModule] Constructor 실행');
+  }
+}

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { DalleProvider } from './providers/dalle.provider';
@@ -30,5 +30,11 @@ import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
   ],
   exports: [ImageAdapterService, ImageProviderFactory, ImageOrchestratorService],
 })
-export class ImageGenerationModule {}
+export class ImageGenerationModule {
+  private readonly logger = new Logger(ImageGenerationModule.name);
+
+  constructor() {
+    this.logger.debug('[ImageGenerationModule] Constructor 실행');
+  }
+}
 

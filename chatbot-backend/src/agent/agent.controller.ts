@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { AgentService } from './agent.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,7 +19,11 @@ import { AuthenticatedRequest } from '../common/types/request.types';
 @Controller('agent')
 @UseGuards(JwtAuthGuard)
 export class AgentController {
-  constructor(private readonly agentService: AgentService) {}
+  private readonly logger = new Logger(AgentController.name);
+
+  constructor(private readonly agentService: AgentService) {
+    this.logger.debug('[AgentController] Constructor 실행 - 에이전트 컨트롤러 초기화');
+  }
 
   /**
    * 사용자 맞춤 추천 질문을 가져옵니다
@@ -26,12 +31,22 @@ export class AgentController {
    */
   @Get('suggestions')
   async getSuggestedQuestions(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(
+      `[getSuggestedQuestions] 호출 - userId: ${req.user.userId}`,
+    );
     try {
       const result = await this.agentService.getSuggestedQuestions(
         req.user.userId,
       );
+      this.logger.debug(
+        `[getSuggestedQuestions] 완료 - userId: ${req.user.userId}, 질문 개수: ${result.suggestions?.length || 0}`,
+      );
       return result;
     } catch (error) {
+      this.logger.error(
+        `[getSuggestedQuestions] 실패 - userId: ${req.user.userId}`,
+        error,
+      );
       throw new HttpException(
         '추천 질문을 가져오는데 실패했습니다.',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -41,12 +56,14 @@ export class AgentController {
 
   @Get('status')
   async getAgentStatus(@Request() req: AuthenticatedRequest) {
+    this.logger.debug(`[getAgentStatus] 호출 - userId: ${req.user.userId}`);
     try {
       const agentStatus = await this.agentService.getAgentStatus(
         req.user.userId,
       );
       const cacheStats = this.agentService.getCacheStats();
 
+      this.logger.debug(`[getAgentStatus] 완료 - userId: ${req.user.userId}`);
       return {
         ...agentStatus,
         memoryCache: {
@@ -55,6 +72,10 @@ export class AgentController {
         },
       };
     } catch (error) {
+      this.logger.error(
+        `[getAgentStatus] 실패 - userId: ${req.user.userId}`,
+        error,
+      );
       throw new HttpException(
         '에이전트 상태를 가져오는데 실패했습니다.',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -67,17 +88,33 @@ export class AgentController {
     @Param('goalId') goalId: number,
     @Body() body: { progress: number },
   ) {
-    return this.agentService.updateGoalProgress(goalId, body.progress);
+    this.logger.debug(
+      `[updateGoalProgress] 호출 - goalId: ${goalId}, progress: ${body.progress}`,
+    );
+    const result = await this.agentService.updateGoalProgress(
+      goalId,
+      body.progress,
+    );
+    this.logger.debug(`[updateGoalProgress] 완료 - goalId: ${goalId}`);
+    return result;
   }
 
   @Get('goals')
   async getUserGoals(@Request() req: AuthenticatedRequest) {
-    return this.agentService.getUserGoals(req.user.userId);
+    this.logger.debug(`[getUserGoals] 호출 - userId: ${req.user.userId}`);
+    const result = await this.agentService.getUserGoals(req.user.userId);
+    this.logger.debug(
+      `[getUserGoals] 완료 - userId: ${req.user.userId}, 목표 개수: ${result.goals?.length || 0}`,
+    );
+    return result;
   }
 
   @Delete('goals/:goalId')
   async deleteGoal(@Param('goalId') goalId: number) {
-    return this.agentService.deleteGoal(goalId);
+    this.logger.debug(`[deleteGoal] 호출 - goalId: ${goalId}`);
+    const result = await this.agentService.deleteGoal(goalId);
+    this.logger.debug(`[deleteGoal] 완료 - goalId: ${goalId}`);
+    return result;
   }
 
   @Post('goals')

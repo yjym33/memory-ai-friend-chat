@@ -11,6 +11,7 @@ import {
   UseGuards,
   Res,
   Header,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -48,6 +49,8 @@ import {
 @Controller('chat')
 @UseGuards(JwtAuthGuard) // JWT 인증이 필요한 모든 엔드포인트
 export class ChatController {
+  private readonly logger = new Logger('ChatController');
+
   constructor(
     private readonly chatService: ChatService,
     private configService: ConfigService,
@@ -56,7 +59,11 @@ export class ChatController {
     private readonly fileExtractionService: FileExtractionService,
     private readonly orchestratorService: LLMOrchestratorService,
     private readonly imageOrchestratorService: ImageOrchestratorService,
-  ) {}
+  ) {
+    this.logger.debug(
+      '[ChatController] Constructor 실행 - 채팅 컨트롤러 초기화',
+    );
+  }
 
   /**
    * 사용자의 모든 대화 목록을 조회합니다.
@@ -64,7 +71,14 @@ export class ChatController {
    */
   @Get('conversations')
   async getAllConversations(@Request() req: AuthenticatedRequest) {
-    return this.chatService.getAllConversations(req.user.userId);
+    this.logger.debug(
+      `[getAllConversations] 호출 - userId: ${req.user.userId}`,
+    );
+    const result = await this.chatService.getAllConversations(req.user.userId);
+    this.logger.debug(
+      `[getAllConversations] 완료 - 대화 개수: ${result.length}`,
+    );
+    return result;
   }
 
   /**
@@ -73,7 +87,10 @@ export class ChatController {
    */
   @Get('conversations/:id')
   async getConversation(@Param('id') id: number) {
-    return this.chatService.getConversation(id);
+    this.logger.debug(`[getConversation] 호출 - conversationId: ${id}`);
+    const result = await this.chatService.getConversation(id);
+    this.logger.debug(`[getConversation] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -82,7 +99,12 @@ export class ChatController {
    */
   @Post('conversations')
   async createConversation(@Request() req: AuthenticatedRequest) {
-    return this.chatService.createConversation(req.user.userId);
+    this.logger.debug(`[createConversation] 호출 - userId: ${req.user.userId}`);
+    const result = await this.chatService.createConversation(req.user.userId);
+    this.logger.debug(
+      `[createConversation] 완료 - 새로운 대화 ID: ${result.id}`,
+    );
+    return result;
   }
 
   /**
@@ -95,7 +117,12 @@ export class ChatController {
     @Param('id') id: number,
     @Body() body: { messages: ChatMessage[] },
   ) {
-    return this.chatService.updateConversation(id, body.messages);
+    this.logger.debug(
+      `[updateConversation] 호출 - conversationId: ${id}, 메시지 개수: ${body.messages.length}`,
+    );
+    const result = await this.chatService.updateConversation(id, body.messages);
+    this.logger.debug(`[updateConversation] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -108,7 +135,15 @@ export class ChatController {
     @Param('id') id: number,
     @Body() body: { title: string },
   ) {
-    return this.chatService.updateConversationTitle(id, body.title);
+    this.logger.debug(
+      `[updateConversationTitle] 호출 - conversationId: ${id}, title: ${body.title}`,
+    );
+    const result = await this.chatService.updateConversationTitle(
+      id,
+      body.title,
+    );
+    this.logger.debug(`[updateConversationTitle] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -121,7 +156,15 @@ export class ChatController {
     @Param('id') id: number,
     @Body() body: { pinned: boolean },
   ) {
-    return this.chatService.updateConversationPin(id, body.pinned);
+    this.logger.debug(
+      `[updateConversationPin] 호출 - conversationId: ${id}, pinned: ${body.pinned}`,
+    );
+    const result = await this.chatService.updateConversationPin(
+      id,
+      body.pinned,
+    );
+    this.logger.debug(`[updateConversationPin] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -134,7 +177,17 @@ export class ChatController {
     @Param('id') id: number,
     @Body() body: { archived: boolean },
   ) {
-    return this.chatService.updateConversationArchive(id, body.archived);
+    this.logger.debug(
+      `[updateConversationArchive] 호출 - conversationId: ${id}, archived: ${body.archived}`,
+    );
+    const result = await this.chatService.updateConversationArchive(
+      id,
+      body.archived,
+    );
+    this.logger.debug(
+      `[updateConversationArchive] 완료 - conversationId: ${id}`,
+    );
+    return result;
   }
 
   /**
@@ -147,11 +200,16 @@ export class ChatController {
     @Param('id') id: number,
     @Body() body: { theme: ConversationTheme; themeName: string },
   ) {
-    return this.chatService.updateConversationTheme(
+    this.logger.debug(
+      `[updateConversationTheme] 호출 - conversationId: ${id}, themeName: ${body.themeName}`,
+    );
+    const result = await this.chatService.updateConversationTheme(
       id,
       body.theme,
       body.themeName,
     );
+    this.logger.debug(`[updateConversationTheme] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -160,7 +218,10 @@ export class ChatController {
    */
   @Get('conversations/:id/theme')
   async getConversationTheme(@Param('id') id: number) {
-    return this.chatService.getConversationTheme(id);
+    this.logger.debug(`[getConversationTheme] 호출 - conversationId: ${id}`);
+    const result = await this.chatService.getConversationTheme(id);
+    this.logger.debug(`[getConversationTheme] 완료 - conversationId: ${id}`);
+    return result;
   }
 
   /**
@@ -169,10 +230,16 @@ export class ChatController {
    */
   @Delete('conversations/:id')
   async deleteConversation(@Param('id') id: number) {
+    this.logger.debug(`[deleteConversation] 호출 - conversationId: ${id}`);
     try {
       await this.chatService.deleteConversation(id);
+      this.logger.debug(`[deleteConversation] 완료 - conversationId: ${id}`);
       return { message: '대화가 성공적으로 삭제되었습니다.' };
     } catch (error) {
+      this.logger.error(
+        `[deleteConversation] 실패 - conversationId: ${id}`,
+        error,
+      );
       throw new NotFoundException('대화를 찾을 수 없습니다.');
     }
   }
@@ -217,12 +284,19 @@ export class ChatController {
     @Body() body: ChatCompletionRequest,
     @Request() req: AuthenticatedRequest,
   ) {
+    this.logger.debug(
+      `[chatCompletion] 호출 - conversationId: ${conversationId}, userId: ${req.user.userId}, message: ${body.message.substring(0, 50)}...`,
+    );
     try {
       // 1) 기업/개인 모드 메시지 처리 (ChatService)
+      this.logger.debug(`[chatCompletion] ChatService.processMessage 호출`);
       const { response, sources } = await this.chatService.processMessage(
         req.user.userId,
         conversationId,
         body.message,
+      );
+      this.logger.debug(
+        `[chatCompletion] ChatService.processMessage 완료 - response length: ${response.length}`,
       );
 
       // 2) 대화 내용 업데이트
@@ -244,12 +318,19 @@ export class ChatController {
       );
 
       // 3) 응답 반환 (출처 포함)
+      this.logger.debug(
+        `[chatCompletion] 완료 - conversationId: ${conversationId}`,
+      );
       return {
         role: 'assistant',
         content: response,
         sources: sources || [],
       };
     } catch (error) {
+      this.logger.error(
+        `[chatCompletion] 에러 - conversationId: ${conversationId}`,
+        error,
+      );
       console.error('Chat completion error:', error);
       return {
         role: 'assistant',
@@ -275,6 +356,9 @@ export class ChatController {
     @Request() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
+    this.logger.debug(
+      `[chatCompletionStream] 호출 - conversationId: ${conversationId}, userId: ${req.user.userId}`,
+    );
     try {
       // SSE 헤더 설정
       res.setHeader('Content-Type', 'text/event-stream');
@@ -308,16 +392,18 @@ export class ChatController {
         responseImages = result.images;
         responseImageMetadata = result.imageMetadata;
         // 이미지 정보를 SSE로 전송
-        res.write(formatSseEvent(SSE_EVENT_TYPES.IMAGES, {
-          images: responseImages,
-          imageMetadata: responseImageMetadata,
-        }));
+        res.write(
+          formatSseEvent(SSE_EVENT_TYPES.IMAGES, {
+            images: responseImages,
+            imageMetadata: responseImageMetadata,
+          }),
+        );
       }
 
       // 대화 내용을 데이터베이스에 저장
       const conversation =
         await this.chatService.getConversation(conversationId);
-      
+
       const validatedConversation = validateConversationExists(
         conversation,
         conversationId,
@@ -427,7 +513,9 @@ export class ChatController {
         // 프롬프트 추출
         const prompt = this.chatService.extractImagePrompt(body.message);
 
-        console.log(`🖼️ ${imageProviders.length}개 이미지 Provider로 생성 시작: ${prompt}`);
+        console.log(
+          `🖼️ ${imageProviders.length}개 이미지 Provider로 생성 시작: ${prompt}`,
+        );
 
         // 여러 이미지 Provider로 동시 생성
         const multiImageResult =

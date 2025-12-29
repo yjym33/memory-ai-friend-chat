@@ -52,7 +52,11 @@ export class AgentService {
     private readonly promptGenerator: PromptGeneratorService,
     private readonly cacheService: AgentCacheService,
     private readonly suggestionService: SuggestionService,
-  ) {}
+  ) {
+    this.logger.debug(
+      '[AgentService] Constructor 실행 - AI 에이전트 서비스 초기화 (Orchestrator)',
+    );
+  }
 
   /**
    * 메시지를 처리하고 응답을 생성합니다

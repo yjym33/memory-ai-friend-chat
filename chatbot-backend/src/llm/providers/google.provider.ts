@@ -19,10 +19,14 @@ export class GoogleProvider implements ILLMProvider {
   private readonly genAI: GoogleGenerativeAI;
 
   constructor(private configService: ConfigService) {
+    this.logger.debug(
+      '[GoogleProvider] Constructor 실행 - Google Gemini Provider 초기화',
+    );
     // 기본 API 키는 환경 변수에서 가져옴
     const defaultApiKey =
       this.configService.get<string>('GOOGLE_API_KEY') || '';
     this.genAI = new GoogleGenerativeAI(defaultApiKey);
+    this.logger.debug('[GoogleProvider] GoogleGenerativeAI 클라이언트 생성 완료');
   }
 
   /**

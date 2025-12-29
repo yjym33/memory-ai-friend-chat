@@ -20,12 +20,16 @@ export class OpenAIProvider implements ILLMProvider {
   private readonly openai: OpenAI;
 
   constructor(private configService: ConfigService) {
+    this.logger.debug(
+      '[OpenAIProvider] Constructor 실행 - OpenAI Provider 초기화',
+    );
     // 기본 API 키는 환경 변수에서 가져옴 (사용자별 키는 나중에 주입)
     const defaultApiKey =
       this.configService.get<string>('OPENAI_API_KEY') || '';
     this.openai = new OpenAI({
       apiKey: defaultApiKey,
     });
+    this.logger.debug('[OpenAIProvider] OpenAI 클라이언트 생성 완료');
   }
 
   /**

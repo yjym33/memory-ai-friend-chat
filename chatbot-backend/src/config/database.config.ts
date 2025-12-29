@@ -9,9 +9,10 @@ import { safeParseInt } from '../common/utils/env.util';
 
 export default registerAs('database', (): TypeOrmModuleOptions => {
   const nodeEnv = process.env.NODE_ENV || 'development';
+  console.log(`[DatabaseConfig] 데이터베이스 설정 함수 실행 - 환경: ${nodeEnv}`);
 
-  return {
-    type: 'postgres',
+  const config: TypeOrmModuleOptions = {
+    type: 'postgres' as const,
     host: process.env.DB_HOST || 'localhost',
     port: safeParseInt(process.env.DB_PORT, 5432),
     username: process.env.DB_USERNAME || 'postgres',
@@ -30,6 +31,9 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
 
     autoLoadEntities: true,
   };
+
+  console.log(`[DatabaseConfig] 데이터베이스 설정 완료 - synchronize: ${config.synchronize}`);
+  return config;
 });
 
 /**
