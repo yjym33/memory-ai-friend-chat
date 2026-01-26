@@ -383,11 +383,8 @@ const ChatListSidebar = React.memo(function ChatListSidebar({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (
-                                window.confirm("이 대화를 삭제하시겠습니까?")
-                              ) {
-                                onDeleteChat(chat.id);
-                              }
+                              // confirm은 useChat의 deleteChat 함수 내부에서 처리됨
+                              onDeleteChat(chat.id);
                             }}
                             className="p-1.5 sm:p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
                             title="대화 삭제"
