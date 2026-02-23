@@ -263,7 +263,7 @@ class ErrorHandler {
   }
 
   // 일반 에러에서 AppError 생성
-  createFromError(error: unknown, category?: ErrorCategory): AppError {
+  createFromError(error: unknown, _category?: ErrorCategory): AppError {
     if (error instanceof Error) {
       return this.createSystemError(error.message, error, {
         stackTrace: error.stack,

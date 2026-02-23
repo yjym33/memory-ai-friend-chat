@@ -40,6 +40,7 @@ import {
   AiSettingsService,
   multiModelService,
   multiImageService,
+  apiClient,
 } from "../services";
 
 export default function Chatbot() {
@@ -97,6 +98,7 @@ export default function Chatbot() {
     updateChatTitle,
     toggleChatPin,
     toggleChatArchive,
+    fetchConversations,
   } = useChat();
 
   // 테마 관리
@@ -186,29 +188,26 @@ export default function Chatbot() {
 
       try {
         // 이미지 Provider도 함께 전송
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/chat/completion/${activeChatId}/multi`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              message,
-              providers: selectedProviders,
-              imageProviders: selectedImageProviders,
-            }),
-          }
-        );
-
-        const data = await response.json();
+        const data = await apiClient.post<{
+          success: boolean;
+          isImageGeneration?: boolean;
+          isMultiImage?: boolean;
+          multiImageResponses?: ProviderImageResponse[];
+          prompt?: string;
+          images?: unknown[];
+          responses?: ProviderResponse[];
+          error?: string;
+        }>(`/chat/completion/${activeChatId}/multi`, {
+          message,
+          providers: selectedProviders,
+          imageProviders: selectedImageProviders,
+        });
 
         if (data.success) {
           // 이미지 생성 응답인 경우 (Multi-Image)
-          if (data.isImageGeneration && data.isMultiImage) {
+          if (data.isImageGeneration && data.isMultiImage && data.multiImageResponses) {
             console.log("🎨 Multi-Image 생성 완료:", data.multiImageResponses);
-            setPendingImagePrompt(data.prompt);
+            setPendingImagePrompt(data.prompt || "");
             setMultiImageResponses(data.multiImageResponses);
             setShowMultiImageSelector(true);
             setMultiModelLoading(false);
@@ -220,13 +219,15 @@ export default function Chatbot() {
             console.log("🎨 이미지 생성 완료:", data.images);
             setMultiModelLoading(false);
             setPendingMessage("");
-            window.location.reload();
+            fetchConversations();
             return;
           }
 
           // 일반 Multi-Model 텍스트 응답
-          setMultiModelResponses(data.responses);
-          setShowMultiModelSelector(true);
+          if (data.responses) {
+            setMultiModelResponses(data.responses);
+            setShowMultiModelSelector(true);
+          }
         } else {
           console.error("Multi-Model 응답 생성 실패:", data.error);
         }
@@ -236,7 +237,7 @@ export default function Chatbot() {
         setMultiModelLoading(false);
       }
     },
-    [activeChatId, selectedProviders, selectedImageProviders]
+    [activeChatId, selectedProviders, selectedImageProviders, fetchConversations]
   );
 
   // Multi-Model: 응답 선택 처리
@@ -264,12 +265,12 @@ export default function Chatbot() {
         setPendingMessage("");
 
         // 대화 새로고침
-        window.location.reload();
+        fetchConversations();
       } catch (error) {
         console.error("응답 저장 실패:", error);
       }
     },
-    [activeChatId, pendingMessage, multiModelResponses]
+    [activeChatId, pendingMessage, multiModelResponses, fetchConversations]
   );
 
   // Multi-Model: 취소 처리
@@ -281,46 +282,37 @@ export default function Chatbot() {
 
   // Multi-Image: 이미지 선택 처리
   const handleMultiImageSelect = useCallback(
-    async (response: ProviderImageResponse, imageUrl: string) => {
+    async (response: ProviderImageResponse, _imageUrl: string) => {
       if (!activeChatId) return;
 
       try {
         // 선택된 이미지를 대화에 저장
-        const saveResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/chat/completion/${activeChatId}/multi/select`,
+        await apiClient.post<{ success?: boolean }>(
+          `/chat/completion/${activeChatId}/multi/select`,
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              userMessage: `이미지 생성: ${pendingImagePrompt}`,
-              selectedProvider: response.provider,
-              selectedModel: response.model,
-              selectedContent: `🎨 선택한 이미지 (${response.provider} - ${response.model})`,
-              allResponses: multiImageResponses.map((r) => ({
-                provider: r.provider,
-                model: r.model,
-                content: r.images[0]?.url || "",
-                latency: r.latency,
-              })),
-            }),
+            userMessage: `이미지 생성: ${pendingImagePrompt}`,
+            selectedProvider: response.provider,
+            selectedModel: response.model,
+            selectedContent: `🎨 선택한 이미지 (${response.provider} - ${response.model})`,
+            allResponses: multiImageResponses.map((r) => ({
+              provider: r.provider,
+              model: r.model,
+              content: r.images[0]?.url || "",
+              latency: r.latency,
+            })),
           }
         );
 
-        if (saveResponse.ok) {
-          setShowMultiImageSelector(false);
-          setMultiImageResponses([]);
-          setPendingMessage("");
-          setPendingImagePrompt("");
-          window.location.reload();
-        }
+        setShowMultiImageSelector(false);
+        setMultiImageResponses([]);
+        setPendingMessage("");
+        setPendingImagePrompt("");
+        fetchConversations();
       } catch (error) {
         console.error("이미지 저장 실패:", error);
       }
     },
-    [activeChatId, pendingImagePrompt, multiImageResponses]
+    [activeChatId, pendingImagePrompt, multiImageResponses, fetchConversations]
   );
 
   // Multi-Image: 취소 처리

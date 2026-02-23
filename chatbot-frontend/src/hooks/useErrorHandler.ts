@@ -174,7 +174,11 @@ export function useApiErrorHandler() {
     async (error: unknown, endpoint?: string) => {
       // Axios 에러 처리
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as any;
+        const axiosError = error as { 
+          response?: { status: number, statusText: string };
+          message?: string;
+          request?: unknown;
+        };
 
         if (axiosError.response) {
           // 서버 응답이 있는 경우
@@ -216,7 +220,7 @@ export function useApiErrorHandler() {
 
 // 폼 유효성 검사를 위한 에러 핸들링 훅
 export function useFormErrorHandler() {
-  const { createValidationError, handleError } = useErrorHandler();
+  const { createValidationError } = useErrorHandler();
   const [fieldErrors, setFieldErrors] = useState<Record<string, AppError>>({});
 
   const setFieldError = useCallback(

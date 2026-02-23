@@ -1,15 +1,12 @@
 import { Providers } from "./providers";
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ErrorBoundary } from "../components/error/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "AI 친구와의 대화",
   description: "AI 친구와 함께하는 개인화된 채팅 경험",
   manifest: "/manifest.json",
-  themeColor: "#8b5cf6",
-  viewport:
-    "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -22,6 +19,15 @@ export const metadata: Metadata = {
     icon: "/icon-192x192.png",
     apple: "/icon-192x192.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#8b5cf6",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

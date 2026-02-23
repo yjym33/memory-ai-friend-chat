@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatService } from "../services";
 import { Conversation, UploadedFile } from "../types";
 import { ChatMode } from "../components/ChatModeSwitch";
@@ -28,7 +28,7 @@ export function useChat() {
   );
 
   // 대화 목록 불러오기
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const data = await ChatService.getConversations();
       setConversations(data);
@@ -44,13 +44,13 @@ export function useChat() {
       );
       handleError(apiError, { showToast: true });
     }
-  };
+  }, [activeChatId, createApiError, handleError]);
 
   // 메시지 전송 (스트리밍 방식)
   const sendMessage = async (
     message: string,
     file?: UploadedFile,
-    chatMode: ChatMode = ChatMode.PERSONAL
+    _chatMode: ChatMode = ChatMode.PERSONAL
   ) => {
     // 메시지가 없으면 전송하지 않음
     if (!message.trim() && !file) return;
