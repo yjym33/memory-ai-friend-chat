@@ -6,16 +6,17 @@ import { LLMModel, ImageModel } from "../types";
 export const MODEL_NAMES: Record<string, string> = {
   [LLMModel.GPT_4]: "GPT-4",
   [LLMModel.GPT_4O]: "GPT-4o",
-  [LLMModel.GPT_4_TURBO]: "GPT-4 Turbo",
-  [LLMModel.GPT_5_1]: "GPT-5.1",
-  [LLMModel.GEMINI_PRO]: "Gemini Pro",
-  [LLMModel.GEMINI_ULTRA]: "Gemini Ultra",
-  [LLMModel.GEMINI_1_5_PRO]: "Gemini 1.5 Pro",
-  [LLMModel.GEMINI_1_5_FLASH]: "Gemini 1.5 Flash",
-  [LLMModel.CLAUDE_3_OPUS]: "Claude 3 Opus",
-  [LLMModel.CLAUDE_3_SONNET]: "Claude 3 Sonnet",
-  [LLMModel.CLAUDE_3_HAIKU]: "Claude 3 Haiku",
+  [LLMModel.GPT_4O_MINI]: "GPT-4o mini",
+  [LLMModel.GPT_5_2]: "GPT-5.2 Thinking",
+  [LLMModel.GPT_5_3_CODEX]: "GPT-5.3 Codex",
+  [LLMModel.O1]: "o1",
+  [LLMModel.O3_MINI]: "o3-mini",
+  [LLMModel.GEMINI_3_1]: "Gemini 3.1 Pro",
+  [LLMModel.GEMINI_3_FLASH]: "Gemini 3 Flash",
   [LLMModel.CLAUDE_3_5_SONNET]: "Claude 3.5 Sonnet",
+  [LLMModel.CLAUDE_3_7_SONNET]: "Claude 3.7 Sonnet",
+  [LLMModel.CLAUDE_4_6_SONNET]: "Claude 4.6 Sonnet",
+  [LLMModel.CLAUDE_4_6_OPUS]: "Claude 4.6 Opus",
 };
 
 /**
@@ -26,8 +27,9 @@ export const IMAGE_MODEL_NAMES: Record<string, string> = {
   [ImageModel.DALLE_2]: "DALL-E 2",
   [ImageModel.SDXL_1_0]: "SDXL 1.0",
   [ImageModel.SD_1_6]: "SD 1.6",
-  [ImageModel.GEMINI_FLASH_IMAGE]: "Gemini Flash",
+  [ImageModel.GEMINI_FLASH_IMAGE]: "Gemini 2.0 Flash",
   [ImageModel.GEMINI_FLASH_IMAGE_PREVIEW]: "Gemini Preview",
+  [ImageModel.IMAGEN_3]: "Imagen 3",
 };
 
 /**
@@ -46,25 +48,25 @@ export function getModelDisplayName(modelId: string): string {
   const lowerModelId = modelId.toLowerCase();
 
   // GPT 모델
+  if (lowerModelId.includes("gpt-5.3-codex")) return "GPT-5.3 Codex";
+  if (lowerModelId.includes("gpt-5.2")) return "GPT-5.2 Thinking";
+  if (lowerModelId.includes("gpt-4o-mini")) return "GPT-4o mini";
   if (lowerModelId.includes("gpt-4o")) return "GPT-4o";
-  if (lowerModelId.includes("gpt-4-turbo")) return "GPT-4 Turbo";
-  if (lowerModelId.includes("gpt-4")) return "GPT-4";
-  if (lowerModelId.includes("gpt-5")) return "GPT-5.1";
+  if (lowerModelId.includes("o3-mini")) return "o3-mini";
+  if (lowerModelId.includes("o1")) return "o1";
+  if (lowerModelId.includes("gpt-5")) return "GPT-5 Core";
 
   // Claude 모델
+  if (lowerModelId.includes("claude-sonnet-4-6")) return "Claude 4.6 Sonnet";
+  if (lowerModelId.includes("claude-opus-4-6")) return "Claude 4.6 Opus";
+  if (lowerModelId.includes("claude-3-7-sonnet")) return "Claude 3.7 Sonnet";
   if (lowerModelId.includes("claude-3-5-sonnet")) return "Claude 3.5 Sonnet";
-  if (lowerModelId.includes("claude-3-opus")) return "Claude 3 Opus";
-  if (lowerModelId.includes("claude-3-sonnet")) return "Claude 3 Sonnet";
-  if (lowerModelId.includes("claude-3-haiku")) return "Claude 3 Haiku";
-  if (lowerModelId.includes("claude-opus")) return "Claude Opus";
-  if (lowerModelId.includes("claude-sonnet")) return "Claude Sonnet";
-  if (lowerModelId.includes("claude-haiku")) return "Claude Haiku";
-
+  
   // Gemini 모델
-  if (lowerModelId.includes("gemini-1-5-flash")) return "Gemini 1.5 Flash";
-  if (lowerModelId.includes("gemini-1-5-pro")) return "Gemini 1.5 Pro";
-  if (lowerModelId.includes("gemini-ultra")) return "Gemini Ultra";
+  if (lowerModelId.includes("gemini-3.1")) return "Gemini 3.1 Pro";
+  if (lowerModelId.includes("gemini-3-flash")) return "Gemini 3 Flash";
   if (lowerModelId.includes("gemini-pro")) return "Gemini Pro";
+  if (lowerModelId.includes("gemini-ultra")) return "Gemini Ultra";
 
   // 매칭되지 않으면 원본 반환
   return modelId;

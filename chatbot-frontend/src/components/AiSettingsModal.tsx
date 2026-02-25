@@ -30,7 +30,7 @@ export default function AiSettingsModal({
   // 모델 설정 상태
   const [modelSettings, setModelSettings] = useState({
     provider: LLMProvider.OPENAI,
-    model: "gpt-5.1",
+    model: "gpt-4o",
     config: {
       temperature: 0.7,
       maxTokens: 1000,
@@ -97,7 +97,7 @@ export default function AiSettingsModal({
       
       setModelSettings({
         provider: (settings.llmProvider as LLMProvider) || LLMProvider.OPENAI,
-        model: settings.llmModel || "gpt-5.1",
+        model: settings.llmModel || "gpt-4o",
         config: {
           ...defaultConfig,
           ...(settings.llmConfig || {}),

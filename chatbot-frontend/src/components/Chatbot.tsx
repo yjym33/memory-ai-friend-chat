@@ -113,7 +113,7 @@ export default function Chatbot() {
   // 현재 사용 중인 LLM 모델 이름
   const currentModelName = aiSettings?.llmModel
     ? getModelDisplayName(aiSettings.llmModel)
-    : "GPT-5.1";
+    : "GPT-5.2";
 
   // 현재 사용 중인 이미지 생성 모델 이름
   const currentImageModelName = aiSettings?.imageModel

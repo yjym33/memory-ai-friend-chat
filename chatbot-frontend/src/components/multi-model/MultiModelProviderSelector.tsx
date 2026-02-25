@@ -2,6 +2,7 @@
 
 import React from "react";
 import { LLMProvider, ProviderInfo } from "../../types";
+import { getModelDisplayName } from "../../utils/modelNames";
 
 interface MultiModelProviderSelectorProps {
   providers: ProviderInfo[];
@@ -153,7 +154,7 @@ export const MultiModelProviderSelector: React.FC<
                   {provider.name}
                 </span>
                 <span className="text-xs text-gray-400 block">
-                  {isDisabled ? "API 키 필요" : provider.defaultModel}
+                  {isDisabled ? "API 키 필요" : getModelDisplayName(provider.defaultModel)}
                 </span>
               </div>
               {isSelected && !isDisabled && (

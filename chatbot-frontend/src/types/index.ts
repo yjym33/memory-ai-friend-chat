@@ -100,20 +100,21 @@ export enum LLMModel {
   // OpenAI
   GPT_4 = 'gpt-4',
   GPT_4O = 'gpt-4o',
-  GPT_4_TURBO = 'gpt-4-turbo',
-  GPT_5_1 = 'gpt-5.1',
+  GPT_4O_MINI = 'gpt-4o-mini',
+  GPT_5_2 = 'gpt-5.2',
+  GPT_5_3_CODEX = 'gpt-5.3-codex',
+  O1 = 'o1',
+  O3_MINI = 'o3-mini',
   
   // Google Gemini
-  GEMINI_PRO = 'gemini-pro',
-  GEMINI_ULTRA = 'gemini-ultra',
-  GEMINI_1_5_PRO = 'gemini-1.5-pro',
-  GEMINI_1_5_FLASH = 'gemini-1.5-flash',
+  GEMINI_3_1 = 'gemini-3.1-pro-preview',
+  GEMINI_3_FLASH = 'gemini-3-flash',
   
   // Anthropic Claude
-  CLAUDE_3_OPUS = 'claude-3-opus-20240229',
-  CLAUDE_3_SONNET = 'claude-3-sonnet-20240229',
-  CLAUDE_3_HAIKU = 'claude-3-haiku-20240307',
   CLAUDE_3_5_SONNET = 'claude-3-5-sonnet-20241022',
+  CLAUDE_3_7_SONNET = 'claude-3-7-sonnet-20251022',
+  CLAUDE_4_6_SONNET = 'claude-sonnet-4-6',
+  CLAUDE_4_6_OPUS = 'claude-opus-4-6',
 }
 
 // LLM 설정 타입
@@ -144,9 +145,10 @@ export enum ImageModel {
   // Stability AI
   SDXL_1_0 = 'stable-diffusion-xl-1024-v1-0',
   SD_1_6 = 'stable-diffusion-v1-6',
-  // Google Imagen (Nano Banana)
+  // Google Imagen / Gemini
   GEMINI_FLASH_IMAGE = 'gemini-2.0-flash-exp',
   GEMINI_FLASH_IMAGE_PREVIEW = 'gemini-2.0-flash-preview-image-generation',
+  IMAGEN_3 = 'imagen-3',
 }
 
 export type ImageSize =

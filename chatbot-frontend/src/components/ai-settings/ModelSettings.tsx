@@ -32,27 +32,25 @@ interface ModelSettingsProps {
  */
 const AVAILABLE_MODELS: Record<LLMProvider, string[]> = {
   [LLMProvider.OPENAI]: [
-    LLMModel.GPT_4,
+    LLMModel.GPT_5_2,
+    LLMModel.GPT_5_3_CODEX,
     LLMModel.GPT_4O,
-    LLMModel.GPT_4_TURBO,
-    LLMModel.GPT_5_1,
+    LLMModel.GPT_4O_MINI,
+    LLMModel.O1,
+    LLMModel.O3_MINI,
   ],
   [LLMProvider.GOOGLE]: [
-    LLMModel.GEMINI_PRO,
-    LLMModel.GEMINI_ULTRA,
+    LLMModel.GEMINI_3_1,
+    LLMModel.GEMINI_2_0_PRO,
+    LLMModel.GEMINI_2_0_FLASH,
     LLMModel.GEMINI_1_5_PRO,
     LLMModel.GEMINI_1_5_FLASH,
   ],
   [LLMProvider.ANTHROPIC]: [
-    // 확실히 작동하는 모델들 (우선 배치)
-    LLMModel.CLAUDE_3_HAIKU, // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
-    // 주의: claude-3-opus-20240229는 일부 API 환경에서 404 오류 발생 가능 (비활성화)
-    // 실제 API에서 지원하는지 확인 후 주석 해제
-    // LLMModel.CLAUDE_3_OPUS, // Claude 3 Opus (일부 환경에서 404 발생)
-    // 주의: claude-3-5-sonnet-20241022는 일부 API 환경에서 404 오류 발생 가능
-    // LLMModel.CLAUDE_3_5_SONNET, // Claude 3.5 Sonnet (일부 환경에서 404 발생)
-    // 주의: claude-3-sonnet-20240229는 일부 Anthropic API 환경에서 지원되지 않을 수 있음
-    // LLMModel.CLAUDE_3_SONNET, // 필요시 주석 해제
+    LLMModel.CLAUDE_5_SONNET,
+    LLMModel.CLAUDE_4_6_SONNET,
+    LLMModel.CLAUDE_4_6_OPUS,
+    LLMModel.CLAUDE_3_5_SONNET,
   ],
 };
 
@@ -312,8 +310,8 @@ export default function ModelSettings({
           </div>
         )}
 
-        {/* Reasoning Effort (GPT-5.1) */}
-        {provider === LLMProvider.OPENAI && model.includes('gpt-5') && (
+        {/* Reasoning Effort (o1, o3, gpt-5) */}
+        {provider === LLMProvider.OPENAI && (model.startsWith('o1') || model.startsWith('o3') || model.startsWith('gpt-5')) && (
           <div className="space-y-2">
             <label htmlFor="reasoning-effort" className="block text-xs font-medium text-gray-700">
               Reasoning Effort
@@ -330,7 +328,7 @@ export default function ModelSettings({
               <option value="high">High (깊은 추론)</option>
             </select>
             <p className="text-xs text-gray-500">
-              GPT-5.1 전용 설정. 깊은 추론은 더 정확하지만 느립니다.
+              o1/o3/gpt-5 전용 설정. 깊은 추론은 더 정확하지만 느립니다.
             </p>
           </div>
         )}

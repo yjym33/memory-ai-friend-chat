@@ -12,7 +12,8 @@ const AVAILABLE_IMAGE_MODELS: Record<string, { id: string; name: string; descrip
     { id: ImageModel.SD_1_6, name: "SD 1.6", description: "안정적인 이미지 생성" },
   ],
   [ImageProvider.GOOGLE_IMAGEN]: [
-    { id: ImageModel.GEMINI_FLASH_IMAGE, name: "Gemini 2.0 Flash", description: "빠른 이미지 생성 (권장)" },
+    { id: ImageModel.IMAGEN_3, name: "Imagen 3", description: "최고 품질 이미지 생성 (권장)" },
+    { id: ImageModel.GEMINI_FLASH_IMAGE, name: "Gemini 2.0 Flash", description: "빠른 이미지 생성" },
     { id: ImageModel.GEMINI_FLASH_IMAGE_PREVIEW, name: "Gemini Flash Preview", description: "이미지 생성 전용 모델" },
   ],
 };

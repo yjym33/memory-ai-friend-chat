@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ImageProvider, ImageProviderInfo } from "../../types";
+import { getImageModelDisplayName } from "../../utils/modelNames";
 
 interface MultiImageProviderSelectorProps {
   providers: ImageProviderInfo[];
@@ -155,7 +156,7 @@ export const MultiImageProviderSelector: React.FC<
                   {provider.name}
                 </span>
                 <span className="text-xs text-gray-400 block">
-                  {isDisabled ? "API 키 필요" : provider.defaultModel}
+                  {isDisabled ? "API 키 필요" : getImageModelDisplayName(provider.defaultModel)}
                 </span>
               </div>
               {isSelected && !isDisabled && (
