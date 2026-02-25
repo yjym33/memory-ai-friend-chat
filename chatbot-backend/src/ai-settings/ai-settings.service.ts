@@ -46,7 +46,7 @@ export class AiSettingsService {
         userProfile: { interests: [], currentGoals: [], importantDates: [] },
         avoidTopics: [],
         llmProvider: LLMProvider.OPENAI,
-        llmModel: 'gpt-5.1',
+        llmModel: 'gpt-5.2',
         llmConfig: {
           temperature: 0.7,
           maxTokens: 1000,
@@ -81,13 +81,22 @@ export class AiSettingsService {
   ): Promise<AiSettings> {
     // 404 오류를 발생시키는 모델들을 확실히 작동하는 Haiku 모델로 변경
     const deprecatedModels: Record<string, string> = {
-      // Anthropic Claude 모델 마이그레이션
-      // claude-3-opus-20240229가 404 오류를 발생시키는 경우 (Haiku는 정상 작동 확인)
-      'claude-3-opus-20240229': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
-      // claude-3-5-sonnet-20241022가 404 오류를 발생시키는 경우
-      'claude-3-5-sonnet-20241022': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
-      // claude-3-sonnet-20240229도 일부 환경에서 지원되지 않음
-      'claude-3-sonnet-20240229': 'claude-3-haiku-20240307', // Haiku로 변경 (확실히 작동)
+      // 구형 모델들을 2026년 최신 표준 모델인 Claude 4.6 Sonnet으로 변경
+      'claude-5-sonnet-20260203': 'claude-sonnet-4-6',
+      'claude-4-6-sonnet-20260217': 'claude-sonnet-4-6',
+      'claude-3-opus-20240229': 'claude-sonnet-4-6',
+      'claude-3-5-sonnet-20241022': 'claude-sonnet-4-6',
+      'claude-3-haiku-20240307': 'claude-sonnet-4-6',
+      'gpt-5.1': 'gpt-5.2',
+      'gpt-4o': 'gpt-5.2',
+      'gpt-4o-2024-05-13': 'gpt-5.2',
+      'gemini-3.1-pro-preview': 'gemini-3.1-pro-preview',
+      'gemini-2.0-flash-exp': 'gemini-3.1-pro-preview',
+      'gemini-2.0-flash': 'gemini-3.1-pro-preview',
+      'gemini-3.1': 'gemini-3.1-pro-preview',
+      'gemini-3-pro': 'gemini-3.1-pro-preview',
+      'gemini-1.5-pro': 'gemini-3.1-pro-preview',
+      'gemini-1.5-flash': 'gemini-3.1-pro-preview',
     };
 
     if (deprecatedModels[settings.llmModel]) {
@@ -168,7 +177,7 @@ export class AiSettingsService {
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: 'gpt-4o',
+          model: 'gpt-5.2',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message },

@@ -101,11 +101,7 @@ export class AnthropicProvider implements ILLMProvider {
    * 확실히 작동하는 모델인 claude-3-opus-20240229를 기본값으로 사용합니다.
    */
   getDefaultModel(): string {
-    // claude-3-opus-20240229가 404 오류를 발생시키는 경우가 있어
-    // 확실히 작동하는 Haiku 모델을 기본값으로 변경
-    return 'claude-3-haiku-20240307'; // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
-    // 참고: claude-3-opus-20240229는 일부 환경에서 404 오류 발생
-    // return 'claude-3-opus-20240229';
+    return 'claude-sonnet-4-6'; 
   }
 
   /**
@@ -130,19 +126,10 @@ export class AnthropicProvider implements ILLMProvider {
    */
   getAvailableModels(): string[] {
     return [
-      // 확실히 작동하는 모델들 (우선 배치)
-      'claude-3-haiku-20240307', // Claude 3 Haiku (확실히 지원됨 - 정상 작동 확인)
-
-      // 주의: 아래 모델은 일부 API 환경에서 404 오류를 발생시킬 수 있음
-      // 실제 API에서 지원하는지 확인 후 주석 해제하여 사용하세요
-      // 'claude-3-opus-20240229', // Claude 3 Opus (일부 환경에서 404 발생 - 비활성화)
-      // 'claude-3-5-sonnet-20241022', // Claude 3.5 Sonnet (일부 환경에서 404 발생)
-      // 'claude-3-sonnet-20240229', // 이전 버전 (일부 환경에서 404 발생 가능)
-
-      // 참고: 모델 이름 형식이 다를 수 있음
-      // 필요시 Anthropic API 문서를 확인하여 정확한 모델 이름 사용
-      // 최신 모델 정보: https://docs.anthropic.com/claude/docs/models-overview
-      // 참고: Haiku 모델이 정상 작동하는 것으로 확인됨
+      'claude-sonnet-4-6',
+      'claude-opus-4-6',
+      'claude-3-7-sonnet-20251022',
+      'claude-3-5-sonnet-20241022',
     ];
   }
 

@@ -95,7 +95,7 @@ export const developmentConfig = {
   ai: {
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-5.2',
       maxTokens: 2000,
       temperature: 0.7,
       timeout: 30000,

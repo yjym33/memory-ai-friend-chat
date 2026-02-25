@@ -48,11 +48,19 @@ export class OpenAIProvider implements ILLMProvider {
   }
 
   getDefaultModel(): string {
-    return 'gpt-4o';
+    return 'gpt-5.2';
   }
 
   getAvailableModels(): string[] {
-    return ['gpt-4', 'gpt-4o', 'gpt-4-turbo', 'gpt-5.1', 'gpt-3.5-turbo'];
+    return [
+      'gpt-5.3-codex',
+      'gpt-5.2',
+      'gpt-5.2-instant',
+      'gpt-4o',
+      'gpt-4o-mini',
+      'o1',
+      'o3-mini',
+    ];
   }
 
   validateModel(model: string): boolean {
@@ -64,7 +72,7 @@ export class OpenAIProvider implements ILLMProvider {
    * 최신 모델(gpt-4o, gpt-4-turbo, o1, gpt-5 등)은 max_completion_tokens를 사용합니다.
    */
   private usesMaxCompletionTokens(model: string): boolean {
-    const modernModels = ['gpt-4o', 'gpt-4-turbo', 'gpt-5', 'o1', 'o3'];
+    const modernModels = ['gpt-5', 'gpt-4o', 'gpt-4-turbo', 'o1', 'o3'];
     return modernModels.some((m) => model.toLowerCase().includes(m));
   }
 
