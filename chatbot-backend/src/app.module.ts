@@ -27,6 +27,7 @@ import { DocumentModule } from './document/document.module';
 import { AdminModule } from './admin/admin.module';
 import { LLMModule } from './llm/llm.module';
 import { ImageGenerationModule } from './image-generation/image-generation.module';
+import { DatabaseConfigService } from './config/database.config.service';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
@@ -49,37 +50,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     // 데이터베이스 설정
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (
-        configService: ConfigService,
-      ): Promise<TypeOrmModuleOptions> => {
-        const logger = new Logger('TypeORM');
-        logger.debug('[TypeORM] useFactory 실행 - 데이터베이스 연결 설정 시작');
-
-        const dbHost = configService.get('database.host');
-        const dbPort = configService.get('database.port');
-        const dbName = configService.get('database.database');
-        logger.debug(
-          `[TypeORM] 데이터베이스 연결 정보: ${dbHost}:${dbPort}/${dbName}`,
-        );
-
-        const config: TypeOrmModuleOptions = {
-          type: 'postgres',
-          host: dbHost,
-          port: configService.get('database.port'),
-          username: configService.get('database.username'),
-          password: configService.get('database.password'),
-          database: dbName,
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: true, // 개발 환경에서만 true로 설정
-          autoLoadEntities: true,
-        };
-
-        logger.debug(
-          '[TypeORM] 데이터베이스 설정 완료 - TypeORM 연결 대기 중...',
-        );
-        return config;
-      },
-      inject: [ConfigService],
+      useClass: DatabaseConfigService,
     }),
 
     // 기능 모듈들

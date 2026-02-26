@@ -11,6 +11,7 @@ import { LLMAdapterService } from '../llm/services/llm-adapter.service';
 import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
 import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
 import { LLMStreamChunk } from '../llm/types/llm.types';
+import { ConversationService } from './conversation.service';
 import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
 import {
   DocumentSource,
@@ -31,6 +32,7 @@ export class ChatService {
     private conversationRepository: Repository<Conversation>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private conversationService: ConversationService,
     private documentService: DocumentService,
     private aiSettingsService: AiSettingsService,
     private agentService: AgentService,
@@ -42,187 +44,10 @@ export class ChatService {
   }
 
   /**
-   * 대화 제목을 업데이트합니다.
-   * @param id - 대화 ID
-   * @param title - 새로운 제목
-   * @returns 업데이트된 대화 객체
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async updateConversationTitle(
-    id: number,
-    title: string,
-  ): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    if (!conversation) {
-      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
-    }
-    await this.conversationRepository.update(id, { title });
-    const updatedConversation = await this.getConversation(id);
-    if (!updatedConversation) {
-      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
-    }
-    return updatedConversation;
-  }
-
-  /**
-   * 새로운 대화를 생성합니다.
-   * @param userId - 사용자 ID
-   * @returns 생성된 대화 객체
-   */
-  async createConversation(userId: string): Promise<Conversation> {
-    this.logger.debug(`[createConversation] 호출 - userId: ${userId}`);
-    const conversation = this.conversationRepository.create({
-      messages: [],
-      userId: userId,
-    });
-    const result = await this.conversationRepository.save(conversation);
-    this.logger.debug(
-      `[createConversation] 완료 - userId: ${userId}, conversationId: ${result.id}`,
-    );
-    return result;
-  }
-
-  /**
-   * 특정 대화를 조회합니다.
-   * @param id - 대화 ID
-   * @returns 대화 객체
-   */
-  async getConversation(id: number): Promise<Conversation | null> {
-    return this.conversationRepository.findOne({ where: { id } });
-  }
-
-  /**
-   * 사용자의 모든 대화를 조회합니다.
-   * @param userId - 사용자 ID
-   * @returns 대화 객체 배열 (생성일 기준 내림차순)
-   */
-  async getAllConversations(userId: string): Promise<Conversation[]> {
-    this.logger.debug(`[getAllConversations] 호출 - userId: ${userId}`);
-    const result = await this.conversationRepository.find({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-    });
-    this.logger.debug(
-      `[getAllConversations] 완료 - userId: ${userId}, 대화 개수: ${result.length}`,
-    );
-    return result;
-  }
-
-  /**
-   * 대화 내용을 업데이트합니다.
-   * @param id - 대화 ID
-   * @param messages - 새로운 메시지 배열
-   * @returns 업데이트된 대화 객체
-   */
-  async updateConversation(
-    id: number,
-    messages: { role: 'user' | 'assistant'; content: string }[],
-  ): Promise<Conversation> {
-    await this.conversationRepository.update(id, { messages });
-    const updatedConversation = await this.getConversation(id);
-    if (!updatedConversation) {
-      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
-    }
-    return updatedConversation;
-  }
-
-  /**
-   * 대화를 삭제합니다.
-   * @param id - 대화 ID
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async deleteConversation(id: number): Promise<void> {
-    const result = await this.conversationRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`ID ${id}인 대화를 찾을 수 없습니다.`);
-    }
-  }
-
-  /**
-   * 대화의 고정 상태를 업데이트합니다.
-   * @param id - 대화 ID
-   * @param pinned - 고정 상태
-   * @returns 업데이트된 대화 객체
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async updateConversationPin(
-    id: number,
-    pinned: boolean,
-  ): Promise<Conversation> {
-    const conversation = await this.conversationRepository.findOneBy({ id });
-    if (!conversation) {
-      throw new NotFoundException('대화를 찾을 수 없습니다.');
-    }
-    conversation.pinned = pinned;
-    await this.conversationRepository.save(conversation);
-    return conversation;
-  }
-
-  /**
-   * 대화의 보관 상태를 업데이트합니다.
-   * @param id - 대화 ID
-   * @param archived - 보관 상태
-   * @returns 업데이트된 대화 객체
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async updateConversationArchive(
-    id: number,
-    archived: boolean,
-  ): Promise<Conversation> {
-    const conversation = await this.conversationRepository.findOneBy({ id });
-    if (!conversation) {
-      throw new NotFoundException('대화를 찾을 수 없습니다.');
-    }
-    conversation.isArchived = archived;
-    await this.conversationRepository.save(conversation);
-    return conversation;
-  }
-
-  /**
-   * 대화의 테마를 업데이트합니다.
-   * @param id - 대화 ID
-   * @param theme - 테마 설정
-   * @param themeName - 테마 이름
-   * @returns 업데이트된 대화 객체
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async updateConversationTheme(
-    id: number,
-    theme: Conversation['theme'],
-    themeName: string,
-  ): Promise<Conversation> {
-    const conversation = await this.conversationRepository.findOneBy({ id });
-    if (!conversation) {
-      throw new NotFoundException('대화를 찾을 수 없습니다.');
-    }
-    conversation.theme = theme;
-    conversation.themeName = themeName;
-    await this.conversationRepository.save(conversation);
-    return conversation;
-  }
-
-  /**
-   * 대화의 테마를 조회합니다.
-   * @param id - 대화 ID
-   * @returns 테마 설정
-   * @throws NotFoundException - 대화를 찾을 수 없는 경우
-   */
-  async getConversationTheme(id: number): Promise<{
-    theme: Conversation['theme'];
-    themeName: string;
-  }> {
-    const conversation = await this.conversationRepository.findOneBy({ id });
-    if (!conversation) {
-      throw new NotFoundException('대화를 찾을 수 없습니다.');
-    }
-    return {
-      theme: conversation.theme,
-      themeName: conversation.themeName,
-    };
-  }
-
-  /**
    * 모드에 따라 메시지를 처리합니다.
+   * @param userId - 사용자 ID
+   * @param conversationId - 대화 ID
+   * @param message - 사용자 메시지
    */
   async processMessage(
     userId: string,

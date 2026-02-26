@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { ConversationService } from './conversation.service';
 import { Conversation } from './entity/conversation.entity';
 import { User } from '../auth/entity/user.entity';
 import { AuthModule } from '../auth/auth.module';
@@ -11,7 +12,6 @@ import { DocumentModule } from '../document/document.module';
 import { LLMModule } from '../llm/llm.module';
 import { ChatbotLlmModule } from '../chatbot-llm/chatbot-llm.module';
 import { ImageGenerationModule } from '../image-generation/image-generation.module';
-import { LlmService } from '../common/services/llm.service';
 import { FileExtractionService } from '../common/services/file-extraction.service';
 import { Logger } from '@nestjs/common';
 
@@ -34,8 +34,8 @@ import { Logger } from '@nestjs/common';
     ImageGenerationModule, // 이미지 생성 모듈
   ],
   controllers: [ChatController],
-  providers: [ChatService, LlmService, FileExtractionService],
-  exports: [ChatService], // 다른 모듈에서 ChatService 사용 가능
+  providers: [ChatService, ConversationService, FileExtractionService],
+  exports: [ChatService, ConversationService], // 다른 모듈에서 ChatService 사용 가능
 })
 export class ChatModule {
   private readonly logger = new Logger(ChatModule.name);

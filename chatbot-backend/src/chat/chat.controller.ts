@@ -42,6 +42,8 @@ import {
   ChatCompletionRequest,
 } from './types/chat.types';
 
+import { ConversationService } from './conversation.service';
+
 /**
  * 채팅 관련 API를 처리하는 컨트롤러
  * 대화 관리 및 AI 응답 생성을 담당합니다.
@@ -53,6 +55,7 @@ export class ChatController {
 
   constructor(
     private readonly chatService: ChatService,
+    private readonly conversationService: ConversationService,
     private configService: ConfigService,
     private readonly aiSettingsService: AiSettingsService,
     private readonly agentService: AgentService,
@@ -74,7 +77,7 @@ export class ChatController {
     this.logger.debug(
       `[getAllConversations] 호출 - userId: ${req.user.userId}`,
     );
-    const result = await this.chatService.getAllConversations(req.user.userId);
+    const result = await this.conversationService.getAllConversations(req.user.userId);
     this.logger.debug(
       `[getAllConversations] 완료 - 대화 개수: ${result.length}`,
     );
@@ -88,7 +91,7 @@ export class ChatController {
   @Get('conversations/:id')
   async getConversation(@Param('id') id: number) {
     this.logger.debug(`[getConversation] 호출 - conversationId: ${id}`);
-    const result = await this.chatService.getConversation(id);
+    const result = await this.conversationService.getConversation(id);
     this.logger.debug(`[getConversation] 완료 - conversationId: ${id}`);
     return result;
   }
@@ -100,7 +103,7 @@ export class ChatController {
   @Post('conversations')
   async createConversation(@Request() req: AuthenticatedRequest) {
     this.logger.debug(`[createConversation] 호출 - userId: ${req.user.userId}`);
-    const result = await this.chatService.createConversation(req.user.userId);
+    const result = await this.conversationService.createConversation(req.user.userId);
     this.logger.debug(
       `[createConversation] 완료 - 새로운 대화 ID: ${result.id}`,
     );
@@ -120,7 +123,7 @@ export class ChatController {
     this.logger.debug(
       `[updateConversation] 호출 - conversationId: ${id}, 메시지 개수: ${body.messages.length}`,
     );
-    const result = await this.chatService.updateConversation(id, body.messages);
+    const result = await this.conversationService.updateConversation(id, body.messages);
     this.logger.debug(`[updateConversation] 완료 - conversationId: ${id}`);
     return result;
   }
@@ -138,7 +141,7 @@ export class ChatController {
     this.logger.debug(
       `[updateConversationTitle] 호출 - conversationId: ${id}, title: ${body.title}`,
     );
-    const result = await this.chatService.updateConversationTitle(
+    const result = await this.conversationService.updateConversationTitle(
       id,
       body.title,
     );
@@ -159,7 +162,7 @@ export class ChatController {
     this.logger.debug(
       `[updateConversationPin] 호출 - conversationId: ${id}, pinned: ${body.pinned}`,
     );
-    const result = await this.chatService.updateConversationPin(
+    const result = await this.conversationService.updateConversationPin(
       id,
       body.pinned,
     );
@@ -180,7 +183,7 @@ export class ChatController {
     this.logger.debug(
       `[updateConversationArchive] 호출 - conversationId: ${id}, archived: ${body.archived}`,
     );
-    const result = await this.chatService.updateConversationArchive(
+    const result = await this.conversationService.updateConversationArchive(
       id,
       body.archived,
     );
@@ -203,7 +206,7 @@ export class ChatController {
     this.logger.debug(
       `[updateConversationTheme] 호출 - conversationId: ${id}, themeName: ${body.themeName}`,
     );
-    const result = await this.chatService.updateConversationTheme(
+    const result = await this.conversationService.updateConversationTheme(
       id,
       body.theme,
       body.themeName,
@@ -219,7 +222,7 @@ export class ChatController {
   @Get('conversations/:id/theme')
   async getConversationTheme(@Param('id') id: number) {
     this.logger.debug(`[getConversationTheme] 호출 - conversationId: ${id}`);
-    const result = await this.chatService.getConversationTheme(id);
+    const result = await this.conversationService.getConversationTheme(id);
     this.logger.debug(`[getConversationTheme] 완료 - conversationId: ${id}`);
     return result;
   }
@@ -232,7 +235,7 @@ export class ChatController {
   async deleteConversation(@Param('id') id: number) {
     this.logger.debug(`[deleteConversation] 호출 - conversationId: ${id}`);
     try {
-      await this.chatService.deleteConversation(id);
+      await this.conversationService.deleteConversation(id);
       this.logger.debug(`[deleteConversation] 완료 - conversationId: ${id}`);
       return { message: '대화가 성공적으로 삭제되었습니다.' };
     } catch (error) {
@@ -301,7 +304,7 @@ export class ChatController {
 
       // 2) 대화 내용 업데이트
       const conversation =
-        await this.chatService.getConversation(conversationId);
+        await this.conversationService.getConversation(conversationId);
       if (!conversation) {
         throw new NotFoundException('대화를 찾을 수 없습니다.');
       }
@@ -312,7 +315,7 @@ export class ChatController {
         { role: 'assistant' as const, content: response, sources },
       ];
 
-      await this.chatService.updateConversation(
+      await this.conversationService.updateConversation(
         conversationId,
         updatedMessages,
       );
@@ -402,7 +405,7 @@ export class ChatController {
 
       // 대화 내용을 데이터베이스에 저장
       const conversation =
-        await this.chatService.getConversation(conversationId);
+        await this.conversationService.getConversation(conversationId);
 
       const validatedConversation = validateConversationExists(
         conversation,
@@ -425,7 +428,7 @@ export class ChatController {
         },
       ];
 
-      await this.chatService.updateConversation(
+      await this.conversationService.updateConversation(
         conversationId,
         updatedMessages,
       );
@@ -748,7 +751,7 @@ export class ChatController {
 
       // 대화 저장
       const conversation =
-        await this.chatService.getConversation(conversationId);
+        await this.conversationService.getConversation(conversationId);
       if (conversation) {
         const updatedMessages = [
           ...conversation.messages,
@@ -763,7 +766,7 @@ export class ChatController {
             })),
           },
         ];
-        await this.chatService.updateConversation(
+        await this.conversationService.updateConversation(
           conversationId,
           updatedMessages,
         );
@@ -806,7 +809,7 @@ export class ChatController {
   ) {
     try {
       const conversation =
-        await this.chatService.getConversation(conversationId);
+        await this.conversationService.getConversation(conversationId);
 
       if (!conversation) {
         throw new NotFoundException('대화를 찾을 수 없습니다.');
@@ -829,7 +832,7 @@ export class ChatController {
         },
       ];
 
-      await this.chatService.updateConversation(
+      await this.conversationService.updateConversation(
         conversationId,
         updatedMessages,
       );
