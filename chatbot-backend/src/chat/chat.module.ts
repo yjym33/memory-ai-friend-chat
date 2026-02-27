@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
+import { ConversationController } from './conversation.controller';
 import { ChatService } from './chat.service';
 import { ConversationService } from './conversation.service';
 import { Conversation } from './entity/conversation.entity';
@@ -33,7 +34,7 @@ import { Logger } from '@nestjs/common';
     ChatbotLlmModule, // chatbot-llm 서비스 모듈 (프롬프트 생성 + 메모리 관리)
     ImageGenerationModule, // 이미지 생성 모듈
   ],
-  controllers: [ChatController],
+  controllers: [ChatController, ConversationController],
   providers: [ChatService, ConversationService, FileExtractionService],
   exports: [ChatService, ConversationService], // 다른 모듈에서 ChatService 사용 가능
 })

@@ -25,6 +25,8 @@ import { Milestone } from './entities/milestone.entity';
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Logger } from '@nestjs/common';
+import { AiSettingsModule } from '../ai-settings/ai-settings.module';
+import { LLMModule } from '../llm/llm.module';
 
 /**
  * Agent Module
@@ -50,6 +52,8 @@ import { Logger } from '@nestjs/common';
       AiSettings,
       Conversation,
     ]),
+    AiSettingsModule,
+    LLMModule,
   ],
   controllers: [AgentController],
   providers: [

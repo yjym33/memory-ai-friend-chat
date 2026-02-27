@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import axios from 'axios';
 
 // Entities
 import { AiSettings } from '../ai-settings/entity/ai-settings.entity';
@@ -24,6 +23,8 @@ import { MemoryService } from './services/memory.service';
 import { PromptGeneratorService } from './services/prompt-generator.service';
 import { AgentCacheService } from './services/agent-cache.service';
 import { SuggestionService } from './services/suggestion.service';
+import { AiSettingsService } from '../ai-settings/ai-settings.service';
+import { LLMAdapterService } from '../llm/services/llm-adapter.service';
 
 // Types
 import { SuggestionResponse } from './types/suggestion.types';
@@ -44,14 +45,14 @@ export class AgentService {
   private readonly logger = new Logger(AgentService.name);
 
   constructor(
-    @InjectRepository(AiSettings)
-    private aiSettingsRepository: Repository<AiSettings>,
     private readonly emotionAnalyzer: EmotionAnalyzerService,
     private readonly goalManager: GoalManagerService,
     private readonly memoryService: MemoryService,
     private readonly promptGenerator: PromptGeneratorService,
     private readonly cacheService: AgentCacheService,
     private readonly suggestionService: SuggestionService,
+    private readonly aiSettingsService: AiSettingsService,
+    private readonly llmAdapterService: LLMAdapterService,
   ) {
     this.logger.debug(
       '[AgentService] Constructor 실행 - AI 에이전트 서비스 초기화 (Orchestrator)',
@@ -243,11 +244,8 @@ export class AgentService {
     message: string,
   ): Promise<string> {
     try {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) return 'AI 시스템 오류: OpenAI API 키가 없습니다.';
-
-      // AI 설정 불러오기
-      const aiSettings = await this.getAiSettings(userId);
+      // AI 설정 불러오기 (용도에 맞는 최신 방식 사용)
+      const aiSettings = await this.aiSettingsService.findByUserId(userId);
 
       // 대화 히스토리 불러오기
       const memories = await this.memoryService.getRecentMemories(
@@ -269,31 +267,22 @@ export class AgentService {
 
       this.logger.debug(`🤖 AI 설정이 적용된 시스템 프롬프트 생성 완료`);
 
-      const res = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
+      // LLMAdapterService를 사용하여 응답 생성 (중앙화된 모델 관리 지원)
+      const response = await this.llmAdapterService.generateResponse(
+        userId,
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message },
+        ],
         {
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: message },
-          ],
-          temperature: 0.8,
-          max_tokens: 1024,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
+          temperature: aiSettings.llmConfig?.temperature || 0.8,
+          maxTokens: aiSettings.llmConfig?.maxTokens || 1024,
         },
       );
 
-      return (
-        res.data.choices?.[0]?.message?.content?.trim() ||
-        '응답 생성에 실패했어. 다시 한 번 말해줄래?'
-      );
+      return response.content || '응답 생성에 실패했어. 다시 한 번 말해줄래?';
     } catch (e) {
-      this.logger.error('[OpenAI] 일반 답변 생성 오류:', e);
+      this.logger.error('[LLM] 일반 답변 생성 오류:', e);
       return '죄송해요, 답변을 생성하는 데 문제가 발생했어요.';
     }
   }
@@ -320,29 +309,7 @@ export class AgentService {
    * 사용자의 AI 설정을 가져옵니다
    */
   private async getAiSettings(userId: string): Promise<AiSettings> {
-    let settings = await this.aiSettingsRepository.findOne({
-      where: { userId },
-    });
-
-    if (!settings) {
-      this.logger.log(
-        `🔧 사용자 ${userId}의 AI 설정이 없어서 기본값으로 생성합니다.`,
-      );
-      settings = this.aiSettingsRepository.create({
-        userId,
-        personalityType: '친근함',
-        speechStyle: '반말',
-        emojiUsage: 3,
-        empathyLevel: 3,
-        memoryRetentionDays: 90,
-        memoryPriorities: { personal: 5, hobby: 4, work: 3, emotion: 5 },
-        userProfile: { interests: [], currentGoals: [], importantDates: [] },
-        avoidTopics: [],
-      });
-      settings = await this.aiSettingsRepository.save(settings);
-    }
-
-    return settings;
+    return this.aiSettingsService.findByUserId(userId);
   }
 
   // ============================================================
