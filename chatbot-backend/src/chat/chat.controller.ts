@@ -124,22 +124,11 @@ export class ChatController {
       );
 
       // 2) 대화 내용 업데이트
-      const conversation =
-        await this.conversationService.getConversation(conversationId);
-      if (!conversation) {
-        throw new NotFoundException('대화를 찾을 수 없습니다.');
-      }
-      const updatedMessages = [
-        ...conversation.messages,
+      await this.conversationService.addMessages(conversationId, [
         { role: 'user' as const, content: body.message },
         // 응답에 출처 포함
         { role: 'assistant' as const, content: response, sources },
-      ];
-
-      await this.conversationService.updateConversation(
-        conversationId,
-        updatedMessages,
-      );
+      ]);
 
       // 3) 응답 반환 (출처 포함)
       this.logger.debug(
@@ -224,18 +213,8 @@ export class ChatController {
         );
       }
 
-      // 대화 내용을 데이터베이스에 저장
-      const conversation =
-        await this.conversationService.getConversation(conversationId);
-
-      const validatedConversation = validateConversationExists(
-        conversation,
-        conversationId,
-      );
-
-      // 메시지 업데이트 (이미지 정보 포함)
-      const updatedMessages = [
-        ...validatedConversation.messages,
+      // 대화 내용을 데이터베이스에 저장 (이미지 정보 포함)
+      await this.conversationService.addMessages(conversationId, [
         { role: 'user' as const, content: body.message },
         {
           role: 'assistant' as const,
@@ -247,12 +226,7 @@ export class ChatController {
             messageType: 'image' as const,
           }),
         },
-      ];
-
-      await this.conversationService.updateConversation(
-        conversationId,
-        updatedMessages,
-      );
+      ]);
 
       // 스트리밍 완료
       res.write(formatSseEvent(SSE_EVENT_TYPES.DONE, null));

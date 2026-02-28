@@ -1,17 +1,16 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Conversation } from './entity/conversation.entity';
 import { Repository } from 'typeorm';
 import { User } from '../auth/entity/user.entity';
 import { AiSettings, ChatMode } from '../ai-settings/entity/ai-settings.entity';
 import { DocumentService } from '../document/document.service';
+import { DocumentType } from '../document/entity/document.entity';
 import { AiSettingsService } from '../ai-settings/ai-settings.service';
 import { AgentService } from '../agent/agent.service';
 import { LLMAdapterService } from '../llm/services/llm-adapter.service';
 import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
 import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
 import { LLMStreamChunk } from '../llm/types/llm.types';
-import { ConversationService } from './conversation.service';
 import { LLM_CONFIG, ERROR_MESSAGES } from '../common/constants/llm.constants';
 import {
   DocumentSource,
@@ -28,11 +27,8 @@ export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
   constructor(
-    @InjectRepository(Conversation)
-    private conversationRepository: Repository<Conversation>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private conversationService: ConversationService,
     private documentService: DocumentService,
     private aiSettingsService: AiSettingsService,
     private agentService: AgentService,
@@ -55,13 +51,7 @@ export class ChatService {
     message: string,
   ): Promise<{
     response: string;
-    sources: Array<{
-      title: string;
-      documentId: string;
-      type?: string;
-      relevance: number;
-      snippet: string;
-    }>;
+    sources: DocumentSource[];
   }> {
     const user = await this.getUserWithSettings(userId);
     const aiSettings = await this.aiSettingsService.findByUserId(userId);
@@ -105,13 +95,7 @@ export class ChatService {
     aiSettings: AiSettings,
   ): Promise<{
     response: string;
-    sources: Array<{
-      title: string;
-      documentId: string;
-      type?: string;
-      relevance: number;
-      snippet: string;
-    }>;
+    sources: DocumentSource[];
   }> {
     if (!user.organizationId) {
       return {
@@ -155,15 +139,17 @@ export class ChatService {
       const response = await this.generateLLMResponse(user.id, prompt);
 
       // 4. 출처 정보 생성
-      const extractedSources = searchResults.slice(0, 5).map((r) => ({
-        title: r.document?.title,
-        documentId: r.document?.id,
-        type: r.document?.type,
-        relevance: Number(r.score.toFixed(3)),
-        snippet:
-          (r.chunk?.content || '').substring(0, 220).replace(/\s+/g, ' ') +
-          ((r.chunk?.content || '').length > 220 ? '...' : ''),
-      }));
+      const extractedSources: DocumentSource[] = searchResults
+        .slice(0, 5)
+        .map((r) => ({
+          title: r.document?.title || 'Unknown',
+          documentId: r.document?.id || '',
+          type: r.document?.type || DocumentType.OTHER,
+          relevance: Number(r.score.toFixed(3)),
+          snippet:
+            (r.chunk?.content || '').substring(0, 220).replace(/\s+/g, ' ') +
+            ((r.chunk?.content || '').length > 220 ? '...' : ''),
+        }));
 
       // 5. 출처 정보 추가 (설정에 따라)
       if (aiSettings.businessSettings?.includeSourceCitations !== false) {

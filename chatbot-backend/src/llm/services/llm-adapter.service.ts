@@ -43,7 +43,7 @@ export class LLMAdapterService {
     messages: Array<{ role: string; content: string }>,
     options?: Partial<LLMRequest>,
   ): Promise<LLMResponse> {
-    
+
     // 사용자 설정 가져오기
     const aiSettings = await this.aiSettingsRepository.findOne({
       where: { userId },
@@ -105,6 +105,7 @@ export class LLMAdapterService {
     onChunk: (chunk: LLMStreamChunk) => void,
     options?: Partial<LLMRequest>,
   ): Promise<void> {
+    this.logger.debug(`[LLMAdapterService] generateStreamingResponse 호출`);
     // 사용자 설정 가져오기
     const aiSettings = await this.aiSettingsRepository.findOne({
       where: { userId },

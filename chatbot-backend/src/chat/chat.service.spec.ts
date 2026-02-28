@@ -2,65 +2,95 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatService } from './chat.service';
-import { Conversation } from './entity/conversation.entity';
+import { User } from '../auth/entity/user.entity';
+import { DocumentService } from '../document/document.service';
+import { AiSettingsService } from '../ai-settings/ai-settings.service';
+import { AgentService } from '../agent/agent.service';
+import { LLMAdapterService } from '../llm/services/llm-adapter.service';
+import { ChatbotLlmService } from '../chatbot-llm/chatbot-llm.service';
+import { ImageAdapterService } from '../image-generation/services/image-adapter.service';
+import { ChatMode } from '../ai-settings/entity/ai-settings.entity';
 
 describe('ChatService', () => {
   let service: ChatService;
-  let repository: jest.Mocked<Repository<Conversation>>;
+  let userRepository: jest.Mocked<Repository<User>>;
+  let agentService: jest.Mocked<AgentService>;
+  let aiSettingsService: jest.Mocked<AiSettingsService>;
 
   beforeEach(async () => {
-    const mockRepository = {
+    const mockRepo = {
       findOne: jest.fn(),
-      create: jest.fn(),
       save: jest.fn(),
-      find: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      findOneBy: jest.fn(),
+    };
+
+    const mockAiSettingsService = {
+      findByUserId: jest.fn(),
+    };
+
+    const mockAgentService = {
+      processMessage: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatService,
         {
-          provide: getRepositoryToken(Conversation),
-          useValue: mockRepository,
+          provide: getRepositoryToken(User),
+          useValue: mockRepo,
+        },
+        {
+          provide: DocumentService,
+          useValue: {},
+        },
+        {
+          provide: AiSettingsService,
+          useValue: mockAiSettingsService,
+        },
+        {
+          provide: AgentService,
+          useValue: mockAgentService,
+        },
+        {
+          provide: LLMAdapterService,
+          useValue: {},
+        },
+        {
+          provide: ChatbotLlmService,
+          useValue: {},
+        },
+        {
+          provide: ImageAdapterService,
+          useValue: {},
         },
       ],
     }).compile();
 
     service = module.get<ChatService>(ChatService);
-    repository = module.get(getRepositoryToken(Conversation));
+    userRepository = module.get(getRepositoryToken(User));
+    agentService = module.get(AgentService);
+    aiSettingsService = module.get(AiSettingsService);
   });
 
-  it('서비스가 정의되어야 한다', () => {
+  it('service should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('createConversation', () => {
-    it('새로운 대화를 생성해야 한다', async () => {
-      const userId = 'test-user-id';
-      const mockConversation = {
-        id: 1,
-        title: '새 대화',
-        messages: [],
-        userId,
-        pinned: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+  describe('processMessage', () => {
+    it('should delegate to AgentService in PERSONAL mode', async () => {
+      const userId = 'user-1';
+      const conversationId = 1;
+      const message = 'Hello';
+      const mockUser = { id: userId, organizationId: null };
+      const mockAiSettings = { chatMode: ChatMode.PERSONAL };
 
-      repository.create.mockReturnValue(mockConversation as any);
-      repository.save.mockResolvedValue(mockConversation as any);
+      userRepository.findOne.mockResolvedValue(mockUser as any);
+      aiSettingsService.findByUserId.mockResolvedValue(mockAiSettings as any);
+      agentService.processMessage.mockResolvedValue('Agent Response');
 
-      const result = await service.createConversation(userId);
+      const result = await service.processMessage(userId, conversationId, message);
 
-      expect(repository.create).toHaveBeenCalledWith({
-        messages: [],
-        userId,
-      });
-      expect(repository.save).toHaveBeenCalled();
-      expect(result).toEqual(mockConversation);
+      expect(agentService.processMessage).toHaveBeenCalledWith(userId, message);
+      expect(result.response).toBe('Agent Response');
     });
   });
 });

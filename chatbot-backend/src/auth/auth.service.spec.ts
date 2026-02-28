@@ -6,11 +6,13 @@ import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { User } from './entity/user.entity';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { EncryptionService } from '../common/services/encryption.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let userRepository: jest.Mocked<Repository<User>>;
   let jwtService: jest.Mocked<JwtService>;
+  let encryptionService: jest.Mocked<EncryptionService>;
 
   const mockUser: User = {
     id: 'test-uuid',
@@ -23,6 +25,7 @@ describe('AuthService', () => {
     role: 'user' as any,
     businessProfile: {},
     conversations: [],
+    llmApiKeys: {},
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -40,6 +43,11 @@ describe('AuthService', () => {
       verify: jest.fn(),
     };
 
+    const mockEncryptionService = {
+      encryptApiKey: jest.fn((key) => `encrypted-${key}`),
+      decryptApiKey: jest.fn((key) => key.replace('encrypted-', '')),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -51,12 +59,17 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: EncryptionService,
+          useValue: mockEncryptionService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     userRepository = module.get(getRepositoryToken(User));
     jwtService = module.get(JwtService);
+    encryptionService = module.get(EncryptionService);
   });
 
   it('서비스가 정의되어야 한다', () => {
@@ -117,14 +130,23 @@ describe('AuthService', () => {
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
+        relations: ['organization'],
       });
       expect(bcrypt.compare).toHaveBeenCalledWith(
         'password123',
         mockUser.password,
       );
-      expect(jwtService.sign).toHaveBeenCalledWith({ userId: mockUser.id });
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        userId: mockUser.id,
+        userType: mockUser.userType,
+        role: mockUser.role,
+        organizationId: undefined,
+      });
       expect(result).toEqual({
         userId: mockUser.id,
+        userType: mockUser.userType,
+        role: mockUser.role,
+        organizationId: undefined,
         token: 'jwt-token',
       });
     });

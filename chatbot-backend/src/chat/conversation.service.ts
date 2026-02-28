@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Conversation } from './entity/conversation.entity';
+import { ChatMessage } from './types/chat.types';
 
 @Injectable()
 export class ConversationService {
@@ -45,12 +46,23 @@ export class ConversationService {
 
   async updateConversation(
     id: number,
-    messages: { role: 'user' | 'assistant'; content: string }[],
+    messages: ChatMessage[],
   ): Promise<Conversation> {
-    await this.conversationRepository.update(id, { messages });
+    await this.conversationRepository.update(id, { messages } as any);
     const updated = await this.getConversation(id);
     if (!updated) throw new NotFoundException('대화를 찾을 수 없습니다.');
     return updated;
+  }
+
+  async addMessages(
+    id: number,
+    newMessages: ChatMessage[],
+  ): Promise<Conversation> {
+    const conversation = await this.getConversation(id);
+    if (!conversation) throw new NotFoundException('대화를 찾을 수 없습니다.');
+
+    const updatedMessages = [...(conversation.messages || []), ...newMessages];
+    return this.updateConversation(id, updatedMessages);
   }
 
   async deleteConversation(id: number): Promise<void> {
