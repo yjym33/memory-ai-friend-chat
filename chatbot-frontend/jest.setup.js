@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom";
 
+// Mock uuid
+jest.mock("uuid", () => ({
+  v4: () => "test-uuid-v4",
+  v1: () => "test-uuid-v1",
+}));
+
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter() {

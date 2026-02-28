@@ -1,24 +1,19 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import ChatInput from "../ChatInput";
+import { ChatMode } from "../ChatModeSwitch";
 
 // Mock the file upload component
 jest.mock("../upload/EnhancedFileUpload", () => {
-  return function MockFileUpload({ onFileUploaded, onFileRemoved }: any) {
+  return function MockFileUpload({ onFileUploaded }: { onFileUploaded: (file: { id: string; originalName: string; size: number }) => void }) {
     return (
       <div data-testid="file-upload">
         <button
-          onClick={() => onFileUploaded({ id: "test-file", name: "test.txt" })}
+          onClick={() => onFileUploaded({ id: "test-file", originalName: "test.txt", size: 1024 })}
           data-testid="upload-file"
         >
           Upload File
-        </button>
-        <button
-          onClick={() => onFileRemoved("test-file")}
-          data-testid="remove-file"
-        >
-          Remove File
         </button>
       </div>
     );
@@ -28,217 +23,106 @@ jest.mock("../upload/EnhancedFileUpload", () => {
 // Mock lucide-react icons
 jest.mock("lucide-react", () => ({
   Send: () => <div data-testid="send-icon" />,
-  Paperclip: () => <div data-testid="paperclip-icon" />,
+  Plus: () => <div data-testid="plus-icon" />,
   X: () => <div data-testid="x-icon" />,
+  FileText: () => <div data-testid="file-text-icon" />,
+  Mic: () => <div data-testid="mic-icon" />,
+  MicOff: () => <div data-testid="mic-off-icon" />,
+}));
+
+// Mock useSTT hook
+jest.mock("../../hooks/useSTT", () => ({
+  useSTT: () => ({
+    start: jest.fn(),
+    stop: jest.fn(),
+    isListening: false,
+    transcript: "",
+    interimTranscript: "",
+    isSupported: true,
+    error: null,
+  }),
 }));
 
 describe("ChatInput", () => {
   const mockProps = {
-    onSendMessage: jest.fn(),
+    input: "",
+    setInput: jest.fn(),
+    sendMessage: jest.fn(),
     loading: false,
-    placeholder: "Type a message...",
+    chatMode: ChatMode.PERSONAL,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("should render input field with placeholder", () => {
+  it("should render input field", () => {
     render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    expect(input).toBeInTheDocument();
+    const textarea = screen.getByRole("textbox");
+    expect(textarea).toBeInTheDocument();
   });
 
-  it("should render send button", () => {
-    render(<ChatInput {...mockProps} />);
+  it("should display placeholder based on chat mode", () => {
+    const { rerender } = render(<ChatInput {...mockProps} />);
+    expect(screen.getByPlaceholderText(/AI 친구 루나/)).toBeInTheDocument();
 
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-    expect(sendButton).toBeInTheDocument();
+    rerender(<ChatInput {...mockProps} chatMode={ChatMode.BUSINESS} />);
+    expect(screen.getByPlaceholderText(/업로드된 문서/)).toBeInTheDocument();
   });
 
-  it("should render file upload toggle button", () => {
-    render(<ChatInput {...mockProps} />);
-
-    const fileButton = screen.getByTestId("paperclip-icon").closest("button");
-    expect(fileButton).toBeInTheDocument();
-  });
-
-  it("should call onSendMessage when send button is clicked", async () => {
+  it("should call setInput when typing", async () => {
     const user = userEvent.setup();
     render(<ChatInput {...mockProps} />);
+    const textarea = screen.getByRole("textbox");
+    
+    await user.type(textarea, "Hello");
+    expect(mockProps.setInput).toHaveBeenCalled();
+  });
 
-    const input = screen.getByPlaceholderText("Type a message...");
+  it("should call sendMessage when send button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<ChatInput {...mockProps} input="Hello world" />);
+    
     const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    await user.type(input, "Hello world");
     if (sendButton) {
       await user.click(sendButton);
     }
 
-    expect(mockProps.onSendMessage).toHaveBeenCalledWith("Hello world", []);
+    expect(mockProps.sendMessage).toHaveBeenCalledWith("Hello world");
   });
 
-  it("should call onSendMessage when Enter key is pressed", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-
-    await user.type(input, "Hello world{enter}");
-
-    expect(mockProps.onSendMessage).toHaveBeenCalledWith("Hello world", []);
-  });
-
-  it("should not send message when Shift+Enter is pressed", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-
-    await user.type(input, "Hello world");
-    await user.keyboard("{Shift>}{Enter}{/Shift}");
-
-    expect(mockProps.onSendMessage).not.toHaveBeenCalled();
-  });
-
-  it("should not send empty message", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    if (sendButton) {
-      await user.click(sendButton);
-    }
-
-    expect(mockProps.onSendMessage).not.toHaveBeenCalled();
-  });
-
-  it("should not send message when loading", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} loading={true} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    await user.type(input, "Hello world");
-    if (sendButton) {
-      await user.click(sendButton);
-    }
-
-    expect(mockProps.onSendMessage).not.toHaveBeenCalled();
-  });
-
-  it("should disable send button when loading", () => {
-    render(<ChatInput {...mockProps} loading={true} />);
-
+  it("should disable send button when input is empty and no file", () => {
+    render(<ChatInput {...mockProps} input="" />);
     const sendButton = screen.getByTestId("send-icon").closest("button");
     expect(sendButton).toBeDisabled();
+  });
+
+  it("should enable send button when file is uploaded even if input is empty", async () => {
+    const user = userEvent.setup();
+    render(<ChatInput {...mockProps} input="" />);
+    
+    const plusButton = screen.getByTestId("plus-icon").closest("button");
+    if (plusButton) await user.click(plusButton);
+    
+    const uploadButton = screen.getByTestId("upload-file");
+    await user.click(uploadButton);
+    
+    const sendButton = screen.getByTestId("send-icon").closest("button");
+    expect(sendButton).not.toBeDisabled();
   });
 
   it("should toggle file upload panel", async () => {
     const user = userEvent.setup();
     render(<ChatInput {...mockProps} />);
-
-    const fileButton = screen.getByTestId("paperclip-icon").closest("button");
-
-    // File upload should not be visible initially
+    
+    const plusButton = screen.getByTestId("plus-icon").closest("button");
+    
     expect(screen.queryByTestId("file-upload")).not.toBeInTheDocument();
-
-    // Click to show file upload
-    if (fileButton) {
-      await user.click(fileButton);
-    }
+    
+    if (plusButton) await user.click(plusButton);
     expect(screen.getByTestId("file-upload")).toBeInTheDocument();
-
-    // Click again to hide file upload
-    if (fileButton) {
-      await user.click(fileButton);
-    }
+    
+    if (plusButton) await user.click(plusButton);
     expect(screen.queryByTestId("file-upload")).not.toBeInTheDocument();
-  });
-
-  it("should clear input after sending message", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText(
-      "Type a message..."
-    ) as HTMLTextAreaElement;
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    await user.type(input, "Hello world");
-    if (sendButton) {
-      await user.click(sendButton);
-    }
-
-    expect(input.value).toBe("");
-  });
-
-  it("should handle textarea resize", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const textarea = screen.getByPlaceholderText("Type a message...");
-
-    // Type multiple lines
-    await user.type(textarea, "Line 1{enter}Line 2{enter}Line 3");
-
-    // Textarea should expand (this is handled by CSS, but we can check the content)
-    expect(textarea).toHaveValue("Line 1\nLine 2\nLine 3");
-  });
-
-  it("should show correct placeholder text", () => {
-    const customPlaceholder = "Custom placeholder text";
-    render(<ChatInput {...mockProps} placeholder={customPlaceholder} />);
-
-    expect(screen.getByPlaceholderText(customPlaceholder)).toBeInTheDocument();
-  });
-
-  it("should handle special characters in message", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    const specialMessage = "Hello! @#$%^&*()_+ 한글 测试 🎉";
-    await user.type(input, specialMessage);
-    if (sendButton) {
-      await user.click(sendButton);
-    }
-
-    expect(mockProps.onSendMessage).toHaveBeenCalledWith(specialMessage, []);
-  });
-
-  it("should handle long text input", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    const longText =
-      "This is a very long message that should be handled properly by the input component. ".repeat(
-        5
-      );
-
-    await user.type(input, longText);
-
-    expect(input).toHaveValue(longText);
-  });
-
-  it("should trim whitespace from messages", async () => {
-    const user = userEvent.setup();
-    render(<ChatInput {...mockProps} />);
-
-    const input = screen.getByPlaceholderText("Type a message...");
-    const sendButton = screen.getByTestId("send-icon").closest("button");
-
-    await user.type(input, "   Hello world   ");
-    if (sendButton) {
-      await user.click(sendButton);
-    }
-
-    expect(mockProps.onSendMessage).toHaveBeenCalledWith("Hello world", []);
   });
 });

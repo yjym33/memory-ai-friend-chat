@@ -1,0 +1,2129 @@
+npm warn Unknown user config "python". This will stop working in the next major version of npm.
+
+> chatbot-frontend@0.1.0 test
+> jest
+
+FAIL src/components/error/__tests__/ErrorBoundary.test.tsx
+  ● ErrorBoundary › should show error details in development mode
+
+    TestingLibraryElementError: Unable to find an element with the text: /오류 세부사항/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-h-screen flex items-center justify-center bg-gray-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-triangle-alert w-8 h-8 text-red-600"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 9v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 17h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-xl font-semibold text-gray-900 mb-2"[39m
+            [36m>[39m
+              [0m앗! 문제가 발생했습니다[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-gray-600 mb-6"[39m
+            [36m>[39m
+              [0m화면을 표시하는 중 오류가 발생했습니다.[0m
+              [36m<br />[39m
+              [0m잠시 후 다시 시도해주세요.[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mb-4 p-3 bg-gray-100 rounded text-left text-sm"[39m
+            [36m>[39m
+              [36m<details>[39m
+                [36m<summary[39m
+                  [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+                [36m>[39m
+                  [0m개발자 정보[0m
+                [36m</summary>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mt-2 text-xs text-gray-700"[39m
+                [36m>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m에러 ID:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mtest-uuid-v4[0m
+                  [36m</p>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m메시지:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mTest error[0m
+                  [36m</p>[39m
+                  [36m<pre[39m
+                    [33mclass[39m=[32m"mt-2 overflow-auto max-h-32 text-xs"[39m
+                  [36m>[39m
+                    [0mError: Test error
+
+       6 | const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+       7 |   if (shouldThrow) {
+    >  8 |     throw new Error("Test error");
+         |           ^
+       9 |   }
+      10 |   return <div>No error</div>;
+      11 | };
+
+      at ThrowError (src/components/error/__tests__/ErrorBoundary.test.tsx:8:11)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14384:44)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at Object.&lt;anonymous&gt; (src/components/error/__tests__/ErrorBoundary.test.tsx:53:11)
+          at new Promise (&lt;anonymous&gt;)
+                    [36m</pre>[39m
+                  [36m</div>[39m
+                [36m</details>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex gap-3 justify-center"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-refresh-cw w-4 h-4"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 3v5h-5"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 16H3v5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m다시 시도[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"[39m
+                [36m>[39m
+                  [0m새로고침[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</body>[39m
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (src/components/error/__tests__/ErrorBoundary.test.tsx:59:19)
+
+  ● ErrorBoundary › should render custom fallback when provided
+
+    TestingLibraryElementError: Unable to find an element with the text: Custom error: Test error. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div />[39m
+    [36m</body>[39m
+
+      90 |     );
+      91 |
+    > 92 |     expect(screen.getByText("Custom error: Test error")).toBeInTheDocument();
+         |                   ^
+      93 |   });
+      94 |
+      95 |   it("should call onError callback when error occurs", () => {
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (src/components/error/__tests__/ErrorBoundary.test.tsx:92:19)
+
+  ● ErrorBoundary › should reset error state when children change
+
+    TestingLibraryElementError: Unable to find an element with the text: New content. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-h-screen flex items-center justify-center bg-gray-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-triangle-alert w-8 h-8 text-red-600"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 9v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 17h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-xl font-semibold text-gray-900 mb-2"[39m
+            [36m>[39m
+              [0m앗! 문제가 발생했습니다[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-gray-600 mb-6"[39m
+            [36m>[39m
+              [0m화면을 표시하는 중 오류가 발생했습니다.[0m
+              [36m<br />[39m
+              [0m잠시 후 다시 시도해주세요.[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mb-4 p-3 bg-gray-100 rounded text-left text-sm"[39m
+            [36m>[39m
+              [36m<details>[39m
+                [36m<summary[39m
+                  [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+                [36m>[39m
+                  [0m개발자 정보[0m
+                [36m</summary>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mt-2 text-xs text-gray-700"[39m
+                [36m>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m에러 ID:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mtest-uuid-v4[0m
+                  [36m</p>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m메시지:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mTest error[0m
+                  [36m</p>[39m
+                  [36m<pre[39m
+                    [33mclass[39m=[32m"mt-2 overflow-auto max-h-32 text-xs"[39m
+                  [36m>[39m
+                    [0mError: Test error
+
+       6 | const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+       7 |   if (shouldThrow) {
+    >  8 |     throw new Error("Test error");
+         |           ^
+       9 |   }
+      10 |   return <div>No error</div>;
+      11 | };
+
+      at ThrowError (src/components/error/__tests__/ErrorBoundary.test.tsx:8:11)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14384:44)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at Object.&lt;anonymous&gt; (src/components/error/__tests__/ErrorBoundary.test.tsx:113:32)
+          at new Promise (&lt;anonymous&gt;)
+                    [36m</pre>[39m
+                  [36m</div>[39m
+                [36m</details>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex gap-3 justify-center"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-refresh-cw w-4 h-4"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 3v5h-5"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 16H3v5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m다시 시도[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"[39m
+                [36m>[39m
+                  [0m새로고침[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</body>[39m
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (src/components/error/__tests__/ErrorBoundary.test.tsx:130:19)
+
+  ● ErrorBoundary › should handle component stack traces
+
+    TestingLibraryElementError: Unable to find an element with the text: /컴포넌트 스택/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-h-screen flex items-center justify-center bg-gray-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-triangle-alert w-8 h-8 text-red-600"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 9v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 17h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-xl font-semibold text-gray-900 mb-2"[39m
+            [36m>[39m
+              [0m앗! 문제가 발생했습니다[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-gray-600 mb-6"[39m
+            [36m>[39m
+              [0m화면을 표시하는 중 오류가 발생했습니다.[0m
+              [36m<br />[39m
+              [0m잠시 후 다시 시도해주세요.[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mb-4 p-3 bg-gray-100 rounded text-left text-sm"[39m
+            [36m>[39m
+              [36m<details>[39m
+                [36m<summary[39m
+                  [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+                [36m>[39m
+                  [0m개발자 정보[0m
+                [36m</summary>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mt-2 text-xs text-gray-700"[39m
+                [36m>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m에러 ID:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mtest-uuid-v4[0m
+                  [36m</p>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m메시지:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mTest error[0m
+                  [36m</p>[39m
+                  [36m<pre[39m
+                    [33mclass[39m=[32m"mt-2 overflow-auto max-h-32 text-xs"[39m
+                  [36m>[39m
+                    [0mError: Test error
+
+       6 | const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+       7 |   if (shouldThrow) {
+    >  8 |     throw new Error("Test error");
+         |           ^
+       9 |   }
+      10 |   return <div>No error</div>;
+      11 | };
+
+      at ThrowError (src/components/error/__tests__/ErrorBoundary.test.tsx:8:11)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14384:44)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at Object.&lt;anonymous&gt; (src/components/error/__tests__/ErrorBoundary.test.tsx:227:11)
+          at new Promise (&lt;anonymous&gt;)
+                    [36m</pre>[39m
+                  [36m</div>[39m
+                [36m</details>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex gap-3 justify-center"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-refresh-cw w-4 h-4"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 3v5h-5"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 16H3v5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m다시 시도[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"[39m
+                [36m>[39m
+                  [0m새로고침[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</body>[39m
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (src/components/error/__tests__/ErrorBoundary.test.tsx:234:19)
+
+  ● ErrorBoundary › should be accessible
+
+    TestingLibraryElementError: Found multiple elements with the role "button"
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<button[39m
+      [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[39m
+    [36m>[39m
+      [36m<svg[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"lucide lucide-refresh-cw w-4 h-4"[39m
+        [33mfill[39m=[32m"none"[39m
+        [33mheight[39m=[32m"24"[39m
+        [33mstroke[39m=[32m"currentColor"[39m
+        [33mstroke-linecap[39m=[32m"round"[39m
+        [33mstroke-linejoin[39m=[32m"round"[39m
+        [33mstroke-width[39m=[32m"2"[39m
+        [33mviewBox[39m=[32m"0 0 24 24"[39m
+        [33mwidth[39m=[32m"24"[39m
+        [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+      [36m>[39m
+        [36m<path[39m
+          [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+        [36m/>[39m
+        [36m<path[39m
+          [33md[39m=[32m"M21 3v5h-5"[39m
+        [36m/>[39m
+        [36m<path[39m
+          [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+        [36m/>[39m
+        [36m<path[39m
+          [33md[39m=[32m"M8 16H3v5"[39m
+        [36m/>[39m
+      [36m</svg>[39m
+      [0m다시 시도[0m
+    [36m</button>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<button[39m
+      [33mclass[39m=[32m"px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"[39m
+    [36m>[39m
+      [0m새로고침[0m
+    [36m</button>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-h-screen flex items-center justify-center bg-gray-50"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-triangle-alert w-8 h-8 text-red-600"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 9v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 17h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-xl font-semibold text-gray-900 mb-2"[39m
+            [36m>[39m
+              [0m앗! 문제가 발생했습니다[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-gray-600 mb-6"[39m
+            [36m>[39m
+              [0m화면을 표시하는 중 오류가 발생했습니다.[0m
+              [36m<br />[39m
+              [0m잠시 후 다시 시도해주세요.[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mb-4 p-3 bg-gray-100 rounded text-left text-sm"[39m
+            [36m>[39m
+              [36m<details>[39m
+                [36m<summary[39m
+                  [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+                [36m>[39m
+                  [0m개발자 정보[0m
+                [36m</summary>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mt-2 text-xs text-gray-700"[39m
+                [36m>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m에러 ID:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mtest-uuid-v4[0m
+                  [36m</p>[39m
+                  [36m<p>[39m
+                    [36m<strong>[39m
+                      [0m메시지:[0m
+                    [36m</strong>[39m
+                    [0m [0m
+                    [0mTest error[0m
+                  [36m</p>[39m
+                  [36m<pre[39m
+                    [33mclass[39m=[32m"mt-2 overflow-auto max-h-32 text-xs"[39m
+                  [36m>[39m
+                    [0mError: Test error
+
+       6 | const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+       7 |   if (shouldThrow) {
+    >  8 |     throw new Error("Test error");
+         |           ^
+       9 |   }
+      10 |   return <div>No error</div>;
+      11 | };
+
+      at ThrowError (src/components/error/__tests__/ErrorBoundary.test.tsx:8:11)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14384:44)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at Object.&lt;anonymous&gt; (src/components/error/__tests__/ErrorBoundary.test.tsx:240:11)
+          at new Promise (&lt;anonymous&gt;)
+                    [36m</pre>[39m
+                  [36m</div>[39m
+                [36m</details>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex gap-3 justify-center"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-refresh-cw w-4 h-4"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 3v5h-5"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 16H3v5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m다시 시도[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"[39m
+                [36m>[39m
+                  [0m새로고침[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</body>[39m
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByRole (src/components/error/__tests__/ErrorBoundary.test.tsx:248:19)
+
+FAIL src/lib/__tests__/responseHandler.test.ts
+  ● ResponseHandler › parseUserListResponse › should parse valid user list response
+
+    TypeError: responseHandler.parseUserListResponse is not a function
+
+      31 |       };
+      32 |
+    > 33 |       const result = responseHandler.parseUserListResponse(mockResponse);
+         |                                      ^
+      34 |
+      35 |       expect(result.users).toHaveLength(2);
+      36 |       expect(result.pagination.page).toBe(1);
+
+      at Object.parseUserListResponse (src/lib/__tests__/responseHandler.test.ts:33:38)
+
+  ● ResponseHandler › parseUserListResponse › should handle response without pagination
+
+    TypeError: responseHandler.parseUserListResponse is not a function
+
+      44 |       };
+      45 |
+    > 46 |       const result = responseHandler.parseUserListResponse(mockResponse);
+         |                                      ^
+      47 |
+      48 |       expect(result.users).toHaveLength(1);
+      49 |       expect(result.pagination.page).toBe(1);
+
+      at Object.parseUserListResponse (src/lib/__tests__/responseHandler.test.ts:46:38)
+
+  ● ResponseHandler › parseUserListResponse › should handle empty user list
+
+    TypeError: responseHandler.parseUserListResponse is not a function
+
+      55 |       const mockResponse = { users: [] };
+      56 |
+    > 57 |       const result = responseHandler.parseUserListResponse(mockResponse);
+         |                                      ^
+      58 |
+      59 |       expect(result.users).toHaveLength(0);
+      60 |       expect(result.pagination.totalCount).toBe(0);
+
+      at Object.parseUserListResponse (src/lib/__tests__/responseHandler.test.ts:57:38)
+
+  ● ResponseHandler › parseUserListResponse › should throw error for invalid response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Invalid user list response format"
+    Received message:   "responseHandler.parseUserListResponse is not a function"
+
+          65 |
+          66 |       expect(() => {
+        > 67 |         responseHandler.parseUserListResponse(invalidResponse);
+             |                         ^
+          68 |       }).toThrow("Invalid user list response format");
+          69 |     });
+          70 |   });
+
+      at parseUserListResponse (src/lib/__tests__/responseHandler.test.ts:67:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:68:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:68:10)
+
+  ● ResponseHandler › parseDocumentListResponse › should parse valid document list response
+
+    TypeError: responseHandler.parseDocumentListResponse is not a function
+
+      84 |       };
+      85 |
+    > 86 |       const result = responseHandler.parseDocumentListResponse(mockResponse);
+         |                                      ^
+      87 |
+      88 |       expect(result.documents).toHaveLength(2);
+      89 |       expect(result.pagination.page).toBe(1);
+
+      at Object.parseDocumentListResponse (src/lib/__tests__/responseHandler.test.ts:86:38)
+
+  ● ResponseHandler › parseDocumentListResponse › should handle array response format
+
+    TypeError: responseHandler.parseDocumentListResponse is not a function
+
+       97 |       ];
+       98 |
+    >  99 |       const result = responseHandler.parseDocumentListResponse(mockResponse);
+          |                                      ^
+      100 |
+      101 |       expect(result.documents).toHaveLength(2);
+      102 |       expect(result.pagination.totalCount).toBe(2);
+
+      at Object.parseDocumentListResponse (src/lib/__tests__/responseHandler.test.ts:99:38)
+
+  ● ResponseHandler › parseDocumentListResponse › should throw error for invalid document response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Invalid document list response format"
+    Received message:   "responseHandler.parseDocumentListResponse is not a function"
+
+          107 |
+          108 |       expect(() => {
+        > 109 |         responseHandler.parseDocumentListResponse(invalidResponse);
+              |                         ^
+          110 |       }).toThrow("Invalid document list response format");
+          111 |     });
+          112 |   });
+
+      at parseDocumentListResponse (src/lib/__tests__/responseHandler.test.ts:109:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:110:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:110:10)
+
+  ● ResponseHandler › parseOrganizationListResponse › should parse valid organization list response
+
+    TypeError: responseHandler.parseOrganizationListResponse is not a function
+
+      122 |
+      123 |       const result =
+    > 124 |         responseHandler.parseOrganizationListResponse(mockResponse);
+          |                         ^
+      125 |
+      126 |       expect(result.organizations).toHaveLength(2);
+      127 |       expect(result.organizations[0].name).toBe("Org 1");
+
+      at Object.parseOrganizationListResponse (src/lib/__tests__/responseHandler.test.ts:124:25)
+
+  ● ResponseHandler › parseOrganizationListResponse › should handle array response format
+
+    TypeError: responseHandler.parseOrganizationListResponse is not a function
+
+      132 |
+      133 |       const result =
+    > 134 |         responseHandler.parseOrganizationListResponse(mockResponse);
+          |                         ^
+      135 |
+      136 |       expect(result.organizations).toHaveLength(1);
+      137 |     });
+
+      at Object.parseOrganizationListResponse (src/lib/__tests__/responseHandler.test.ts:134:25)
+
+  ● ResponseHandler › parseOrganizationListResponse › should throw error for invalid organization response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Invalid organization list response format"
+    Received message:   "responseHandler.parseOrganizationListResponse is not a function"
+
+          141 |
+          142 |       expect(() => {
+        > 143 |         responseHandler.parseOrganizationListResponse(invalidResponse);
+              |                         ^
+          144 |       }).toThrow("Invalid organization list response format");
+          145 |     });
+          146 |   });
+
+      at parseOrganizationListResponse (src/lib/__tests__/responseHandler.test.ts:143:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:144:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:144:10)
+
+  ● ResponseHandler › parseStatisticsResponse › should parse valid statistics response
+
+    TypeError: responseHandler.parseStatisticsResponse is not a function
+
+      155 |       };
+      156 |
+    > 157 |       const result = responseHandler.parseStatisticsResponse(mockResponse);
+          |                                      ^
+      158 |
+      159 |       expect(result.totalUsers).toBe(100);
+      160 |       expect(result.totalDocuments).toBe(50);
+
+      at Object.parseStatisticsResponse (src/lib/__tests__/responseHandler.test.ts:157:38)
+
+  ● ResponseHandler › parseStatisticsResponse › should handle partial statistics
+
+    TypeError: responseHandler.parseStatisticsResponse is not a function
+
+      168 |       };
+      169 |
+    > 170 |       const result = responseHandler.parseStatisticsResponse(mockResponse);
+          |                                      ^
+      171 |
+      172 |       expect(result.totalUsers).toBe(50);
+      173 |       expect(result.totalDocuments).toBe(0);
+
+      at Object.parseStatisticsResponse (src/lib/__tests__/responseHandler.test.ts:170:38)
+
+  ● ResponseHandler › parseStatisticsResponse › should throw error for invalid statistics response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Invalid statistics response format"
+    Received message:   "responseHandler.parseStatisticsResponse is not a function"
+
+          179 |
+          180 |       expect(() => {
+        > 181 |         responseHandler.parseStatisticsResponse(invalidResponse);
+              |                         ^
+          182 |       }).toThrow("Invalid statistics response format");
+          183 |     });
+          184 |   });
+
+      at parseStatisticsResponse (src/lib/__tests__/responseHandler.test.ts:181:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:182:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:182:10)
+
+  ● ResponseHandler › parseEmbeddingStatusResponse › should parse valid embedding status response
+
+    TypeError: responseHandler.parseEmbeddingStatusResponse is not a function
+
+      194 |       };
+      195 |
+    > 196 |       const result = responseHandler.parseEmbeddingStatusResponse(mockResponse);
+          |                                      ^
+      197 |
+      198 |       expect(result.total).toBe(100);
+      199 |       expect(result.processed).toBe(80);
+
+      at Object.parseEmbeddingStatusResponse (src/lib/__tests__/responseHandler.test.ts:196:38)
+
+  ● ResponseHandler › parseEmbeddingStatusResponse › should handle minimal embedding status
+
+    TypeError: responseHandler.parseEmbeddingStatusResponse is not a function
+
+      209 |       };
+      210 |
+    > 211 |       const result = responseHandler.parseEmbeddingStatusResponse(mockResponse);
+          |                                      ^
+      212 |
+      213 |       expect(result.total).toBe(10);
+      214 |       expect(result.processed).toBe(5);
+
+      at Object.parseEmbeddingStatusResponse (src/lib/__tests__/responseHandler.test.ts:211:38)
+
+  ● ResponseHandler › parseEmbeddingStatusResponse › should throw error for invalid embedding status response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Invalid embedding status response format"
+    Received message:   "responseHandler.parseEmbeddingStatusResponse is not a function"
+
+          221 |
+          222 |       expect(() => {
+        > 223 |         responseHandler.parseEmbeddingStatusResponse(invalidResponse);
+              |                         ^
+          224 |       }).toThrow("Invalid embedding status response format");
+          225 |     });
+          226 |   });
+
+      at parseEmbeddingStatusResponse (src/lib/__tests__/responseHandler.test.ts:223:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:224:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:224:10)
+
+  ● ResponseHandler › validateResponse › should validate response with required fields
+
+    expect(received).not.toThrow()
+
+    Error name:    "TypeError"
+    Error message: "responseHandler.validateResponse is not a function"
+
+          232 |
+          233 |       expect(() => {
+        > 234 |         responseHandler.validateResponse(response, requiredFields);
+              |                         ^
+          235 |       }).not.toThrow();
+          236 |     });
+          237 |
+
+      at validateResponse (src/lib/__tests__/responseHandler.test.ts:234:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:235:14)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:235:14)
+
+  ● ResponseHandler › validateResponse › should throw error for missing required fields
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Missing required fields: age, email"
+    Received message:   "responseHandler.validateResponse is not a function"
+
+          241 |
+          242 |       expect(() => {
+        > 243 |         responseHandler.validateResponse(response, requiredFields);
+              |                         ^
+          244 |       }).toThrow("Missing required fields: age, email");
+          245 |     });
+          246 |
+
+      at validateResponse (src/lib/__tests__/responseHandler.test.ts:243:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:244:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:244:10)
+
+  ● ResponseHandler › validateResponse › should handle null or undefined response
+
+    expect(received).toThrow(expected)
+
+    Expected substring: "Response is null or undefined"
+    Received message:   "responseHandler.validateResponse is not a function"
+
+          247 |     it("should handle null or undefined response", () => {
+          248 |       expect(() => {
+        > 249 |         responseHandler.validateResponse(null, ["name"]);
+              |                         ^
+          250 |       }).toThrow("Response is null or undefined");
+          251 |
+          252 |       expect(() => {
+
+      at validateResponse (src/lib/__tests__/responseHandler.test.ts:249:25)
+      at Object.<anonymous> (node_modules/@jest/expect/node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/@jest/expect/node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:250:10)
+      at Object.toThrow (src/lib/__tests__/responseHandler.test.ts:250:10)
+
+  ● ResponseHandler › createPaginationInfo › should create pagination info from response
+
+    TypeError: responseHandler.createPaginationInfo is not a function
+
+      265 |       };
+      266 |
+    > 267 |       const result = responseHandler.createPaginationInfo(response);
+          |                                      ^
+      268 |
+      269 |       expect(result.page).toBe(2);
+      270 |       expect(result.totalPages).toBe(10);
+
+      at Object.createPaginationInfo (src/lib/__tests__/responseHandler.test.ts:267:38)
+
+  ● ResponseHandler › createPaginationInfo › should provide defaults for missing pagination fields
+
+    TypeError: responseHandler.createPaginationInfo is not a function
+
+      276 |       const response = {};
+      277 |
+    > 278 |       const result = responseHandler.createPaginationInfo(response);
+          |                                      ^
+      279 |
+      280 |       expect(result.page).toBe(1);
+      281 |       expect(result.totalPages).toBe(1);
+
+      at Object.createPaginationInfo (src/lib/__tests__/responseHandler.test.ts:278:38)
+
+  ● ResponseHandler › createPaginationInfo › should handle array length for totalCount
+
+    TypeError: responseHandler.createPaginationInfo is not a function
+
+      288 |       const arrayLength = 15;
+      289 |
+    > 290 |       const result = responseHandler.createPaginationInfo(
+          |                                      ^
+      291 |         response,
+      292 |         arrayLength
+      293 |       );
+
+      at Object.createPaginationInfo (src/lib/__tests__/responseHandler.test.ts:290:38)
+
+FAIL src/hooks/__tests__/useAuth.integration.test.ts
+  ● useAuth Integration Tests › Login Flow › should complete successful login flow
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      61 |       };
+      62 |
+    > 63 |       mockAuthService.login.mockResolvedValue(mockAuthResponse);
+         |                             ^
+      64 |
+      65 |       const { result } = renderHook(() => useAuth());
+      66 |
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:63:29)
+
+  ● useAuth Integration Tests › Login Flow › should handle login failure
+
+    TypeError: Cannot read properties of undefined (reading 'mockRejectedValue')
+
+      84 |     it("should handle login failure", async () => {
+      85 |       const loginError = new Error("Invalid credentials");
+    > 86 |       mockAuthService.login.mockRejectedValue(loginError);
+         |                             ^
+      87 |
+      88 |       const { result } = renderHook(() => useAuth());
+      89 |
+
+      at Object.mockRejectedValue (src/hooks/__tests__/useAuth.integration.test.ts:86:29)
+
+  ● useAuth Integration Tests › Login Flow › should handle network errors during login
+
+    TypeError: Cannot read properties of undefined (reading 'mockRejectedValue')
+
+      106 |         message: "Network request failed",
+      107 |       };
+    > 108 |       mockAuthService.login.mockRejectedValue(networkError);
+          |                             ^
+      109 |
+      110 |       const { result } = renderHook(() => useAuth());
+      111 |
+
+      at Object.mockRejectedValue (src/hooks/__tests__/useAuth.integration.test.ts:108:29)
+
+  ● useAuth Integration Tests › Registration Flow › should complete successful registration flow
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      147 |       };
+      148 |
+    > 149 |       mockAuthService.register.mockResolvedValue(mockAuthResponse);
+          |                                ^
+      150 |
+      151 |       const { result } = renderHook(() => useAuth());
+      152 |
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:149:32)
+
+  ● useAuth Integration Tests › Registration Flow › should handle registration validation errors
+
+    TypeError: Cannot read properties of undefined (reading 'mockRejectedValue')
+
+      176 |       };
+      177 |
+    > 178 |       mockAuthService.register.mockRejectedValue(validationError);
+          |                                ^
+      179 |
+      180 |       const { result } = renderHook(() => useAuth());
+      181 |
+
+      at Object.mockRejectedValue (src/hooks/__tests__/useAuth.integration.test.ts:178:32)
+
+  ● useAuth Integration Tests › Logout Flow › should complete logout flow
+
+    TypeError: (0 , _useAuth.useAuth) is not a function
+
+      210 |       mockLocalStorage.getItem.mockReturnValue("existing-token");
+      211 |
+    > 212 |       const { result } = renderHook(() => useAuth());
+          |                                                  ^
+      213 |
+      214 |       // Simulate being logged in
+      215 |       act(() => {
+
+      at src/hooks/__tests__/useAuth.integration.test.ts:212:50
+      at TestComponent (node_modules/@testing-library/react/dist/pure.js:331:27)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14384:44)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at renderHook (node_modules/@testing-library/react/dist/pure.js:340:7)
+      at Object.<anonymous> (src/hooks/__tests__/useAuth.integration.test.ts:212:36)
+
+  ● useAuth Integration Tests › Token Persistence › should restore authentication state from stored token
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      243 |
+      244 |       mockLocalStorage.getItem.mockReturnValue(storedToken);
+    > 245 |       mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
+          |                                      ^
+      246 |
+      247 |       const { result } = renderHook(() => useAuth());
+      248 |
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:245:38)
+
+  ● useAuth Integration Tests › Token Persistence › should handle invalid stored token
+
+    TypeError: Cannot read properties of undefined (reading 'mockRejectedValue')
+
+      258 |       const invalidToken = "invalid-jwt-token";
+      259 |       mockLocalStorage.getItem.mockReturnValue(invalidToken);
+    > 260 |       mockAuthService.getCurrentUser.mockRejectedValue(
+          |                                      ^
+      261 |         new Error("Invalid token")
+      262 |       );
+      263 |
+
+      at Object.mockRejectedValue (src/hooks/__tests__/useAuth.integration.test.ts:260:38)
+
+  ● useAuth Integration Tests › Business User Flow › should handle business user login
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      291 |       };
+      292 |
+    > 293 |       mockAuthService.login.mockResolvedValue(mockAuthResponse);
+          |                             ^
+      294 |
+      295 |       const { result } = renderHook(() => useAuth());
+      296 |
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:293:29)
+
+  ● useAuth Integration Tests › Admin User Flow › should handle admin user login
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      323 |       };
+      324 |
+    > 325 |       mockAuthService.login.mockResolvedValue(mockAuthResponse);
+          |                             ^
+      326 |
+      327 |       const { result } = renderHook(() => useAuth());
+      328 |
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:325:29)
+
+  ● useAuth Integration Tests › Error Recovery › should recover from temporary network failures
+
+    TypeError: Cannot read properties of undefined (reading 'mockRejectedValueOnce')
+
+      350 |       // First call fails, second succeeds
+      351 |       mockAuthService.login
+    > 352 |         .mockRejectedValueOnce(networkError)
+          |          ^
+      353 |         .mockResolvedValueOnce({
+      354 |           user: mockUser,
+      355 |           token: "jwt-token",
+
+      at Object.mockRejectedValueOnce (src/hooks/__tests__/useAuth.integration.test.ts:352:10)
+
+  ● useAuth Integration Tests › Concurrent Operations › should handle concurrent login attempts
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      392 |       };
+      393 |
+    > 394 |       mockAuthService.login.mockResolvedValue({
+          |                             ^
+      395 |         user: mockUser,
+      396 |         token: "jwt-token",
+      397 |         userType: "individual" as const,
+
+      at Object.mockResolvedValue (src/hooks/__tests__/useAuth.integration.test.ts:394:29)
+
+FAIL src/lib/__tests__/errorHandler.test.ts
+  ● ErrorHandler › Error Classes › should create BaseError with correct properties
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Classes › should create NetworkError with network category
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Classes › should create ValidationError with validation category
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Classes › should create AuthenticationError with auth category
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Classes › should create AuthorizationError with auth category
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Classes › should create ServerError with server category
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle BaseError correctly
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle network errors with retry option
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle authentication errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle server errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle unknown errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Handling › should handle axios-like errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Recovery › should suggest retry for network errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Recovery › should not suggest retry for validation errors
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Error Recovery › should provide appropriate retry delay
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Context Information › should include context in error result
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+  ● ErrorHandler › Context Information › should handle errors without context
+
+    TypeError: _errorHandler.ErrorHandler is not a constructor
+
+      43 |
+      44 |   beforeEach(() => {
+    > 45 |     errorHandler = new ErrorHandler();
+         |                    ^
+      46 |     jest.clearAllMocks();
+      47 |   });
+      48 |
+
+      at Object.<anonymous> (src/lib/__tests__/errorHandler.test.ts:45:20)
+
+FAIL src/services/__tests__/apiClient.test.ts
+  ● API Client Integration › Response Interceptors › should handle network errors
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: "NETWORK_ERROR"
+
+      129 |       // Simulate network error handling
+      130 |       const isNetworkError = !networkError.response && networkError.code;
+    > 131 |       expect(isNetworkError).toBe(true);
+          |                              ^
+      132 |     });
+      133 |
+      134 |     it("should handle server errors (5xx)", async () => {
+
+      at Object.toBe (src/services/__tests__/apiClient.test.ts:131:30)
+
+  ● API Client Integration › Base URL Configuration › should use correct base URL for API requests
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"baseURL": "http://localhost:8080"}
+
+    Number of calls: 0
+
+      329 |
+      330 |       // This would be tested by checking the axios.create call
+    > 331 |       expect(mockedAxios.create).toHaveBeenCalledWith(
+          |                                  ^
+      332 |         expect.objectContaining({
+      333 |           baseURL: expectedBaseURL,
+      334 |         })
+
+      at Object.toHaveBeenCalledWith (src/services/__tests__/apiClient.test.ts:331:34)
+
+FAIL src/lib/__tests__/logger.test.ts
+  ● Logger › in development environment › should log messages in development
+
+    TypeError: _logger.logger.log is not a function
+
+      48 |
+      49 |     it("should log messages in development", () => {
+    > 50 |       logger.log("test message");
+         |              ^
+      51 |       expect(mockConsole.log).toHaveBeenCalledWith("test message");
+      52 |     });
+      53 |
+
+      at Object.log (src/lib/__tests__/logger.test.ts:50:14)
+
+  ● Logger › in development environment › should log error messages in development
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "error message"
+    Received: "[ERROR] 2026-02-27T14:19:19.380Z - error message", ""
+
+    Number of calls: 1
+
+      54 |     it("should log error messages in development", () => {
+      55 |       logger.error("error message");
+    > 56 |       expect(mockConsole.error).toHaveBeenCalledWith("error message");
+         |                                 ^
+      57 |     });
+      58 |
+      59 |     it("should log warning messages in development", () => {
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:56:33)
+
+  ● Logger › in development environment › should log warning messages in development
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "warning message"
+
+    Number of calls: 0
+
+      59 |     it("should log warning messages in development", () => {
+      60 |       logger.warn("warning message");
+    > 61 |       expect(mockConsole.warn).toHaveBeenCalledWith("warning message");
+         |                                ^
+      62 |     });
+      63 |
+      64 |     it("should log info messages in development", () => {
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:61:32)
+
+  ● Logger › in development environment › should log info messages in development
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "info message"
+
+    Number of calls: 0
+
+      64 |     it("should log info messages in development", () => {
+      65 |       logger.info("info message");
+    > 66 |       expect(mockConsole.info).toHaveBeenCalledWith("info message");
+         |                                ^
+      67 |     });
+      68 |
+      69 |     it("should log debug messages in development", () => {
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:66:32)
+
+  ● Logger › in development environment › should log debug messages in development
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "debug message"
+
+    Number of calls: 0
+
+      69 |     it("should log debug messages in development", () => {
+      70 |       logger.debug("debug message");
+    > 71 |       expect(mockConsole.debug).toHaveBeenCalledWith("debug message");
+         |                                 ^
+      72 |     });
+      73 |   });
+      74 |
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:71:33)
+
+  ● Logger › in production environment › should not log regular messages in production
+
+    TypeError: _logger.logger.log is not a function
+
+      80 |
+      81 |     it("should not log regular messages in production", () => {
+    > 82 |       logger.log("test message");
+         |              ^
+      83 |       expect(mockConsole.log).not.toHaveBeenCalled();
+      84 |     });
+      85 |
+
+      at Object.log (src/lib/__tests__/logger.test.ts:82:14)
+
+  ● Logger › in production environment › should still log error messages in production
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "error message"
+    Received: "[ERROR] 2026-02-27T14:19:19.381Z - error message", ""
+
+    Number of calls: 1
+
+      86 |     it("should still log error messages in production", () => {
+      87 |       logger.error("error message");
+    > 88 |       expect(mockConsole.error).toHaveBeenCalledWith("error message");
+         |                                 ^
+      89 |     });
+      90 |
+      91 |     it("should not log warning messages in production", () => {
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:88:33)
+
+  ● Logger › with multiple arguments › should handle multiple arguments
+
+    TypeError: _logger.logger.log is not a function
+
+      111 |
+      112 |     it("should handle multiple arguments", () => {
+    > 113 |       logger.log("message", { data: "test" }, 123);
+          |              ^
+      114 |       expect(mockConsole.log).toHaveBeenCalledWith(
+      115 |         "message",
+      116 |         { data: "test" },
+
+      at Object.log (src/lib/__tests__/logger.test.ts:113:14)
+
+  ● Logger › with multiple arguments › should handle objects and arrays
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "Test:", {"key": "value"}, [1, 2, 3]
+
+    Number of calls: 0
+
+      123 |       const testArr = [1, 2, 3];
+      124 |       logger.info("Test:", testObj, testArr);
+    > 125 |       expect(mockConsole.info).toHaveBeenCalledWith("Test:", testObj, testArr);
+          |                                ^
+      126 |     });
+      127 |   });
+      128 | });
+
+      at Object.toHaveBeenCalledWith (src/lib/__tests__/logger.test.ts:125:32)
+
+PASS src/components/__tests__/ChatInput.test.tsx
+PASS src/hooks/__tests__/useLocalStorage.test.ts
+  ● Console
+
+    console.error
+      useLocalStorage error for key "test-key": Error: localStorage error
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:116:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as getItem] (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:148:19)
+          at getItem (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:127:40)
+          at mountStateImpl (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:6355:24)
+          at mountState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:6376:22)
+          at Object.useState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22784:18)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.useState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1500:34)
+          at useLocalStorage (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:124:49)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:120:22
+          at TestComponent (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:331:27)
+          at Object.react-stack-bottom-frame (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+          at renderWithHooks (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+          at updateFunctionComponent (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+          at beginWork (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+          at runWithFiberInDEV (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+          at performUnitOfWork (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+          at workLoopSync (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+          at renderRootSync (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+          at performWorkOnRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14334:13)
+          at performWorkOnRootViaSchedulerTask (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+          at flushActQueue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:862:34)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1151:10)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at renderRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:190:26)
+          at render (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:292:10)
+          at renderHook (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:340:7)
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:119:34)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at onError (src/hooks/useLocalStorage.ts:131:7)
+      at mountStateImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6355:24)
+      at mountState (node_modules/react-dom/cjs/react-dom-client.development.js:6376:22)
+      at Object.useState (node_modules/react-dom/cjs/react-dom-client.development.js:22784:18)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useState (node_modules/react/cjs/react.development.js:1500:34)
+      at useLocalStorage (src/hooks/useLocalStorage.ts:124:49)
+      at src/hooks/__tests__/useLocalStorage.test.ts:120:22
+      at TestComponent (node_modules/@testing-library/react/dist/pure.js:331:27)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14334:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at renderHook (node_modules/@testing-library/react/dist/pure.js:340:7)
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:119:34)
+
+    console.error
+      useLocalStorage error for key "test-key": Error: localStorage error
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:116:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as getItem] (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:148:19)
+          at getItem (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:93:40)
+          at readValue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:251:21)
+          at Object.react-stack-bottom-frame (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22509:20)
+          at runWithFiberInDEV (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+          at commitHookEffectListMount (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:10758:29)
+          at commitHookPassiveMountEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:10880:11)
+          at commitPassiveMountOnFiber (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12653:13)
+          at recursivelyTraversePassiveMountEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12627:11)
+          at commitPassiveMountOnFiber (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12657:11)
+          at flushPassiveEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15460:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15324:11
+          at flushActQueue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:862:34)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1151:10)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at renderRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:190:26)
+          at render (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:292:10)
+          at renderHook (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:340:7)
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:119:34)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at onError (src/hooks/useLocalStorage.ts:97:7)
+      at readValue (src/hooks/useLocalStorage.ts:251:21)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22509:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:10758:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:10880:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:12653:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12627:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:12657:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15460:13)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15324:11
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at renderHook (node_modules/@testing-library/react/dist/pure.js:340:7)
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:119:34)
+
+    console.error
+      useLocalStorage error for key "test-key": SyntaxError: Unexpected token 'i', "invalid-json" is not valid JSON
+          at Object.parse [as read] (<anonymous>)
+          at read (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:129:25)
+          at mountStateImpl (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:6355:24)
+          at mountState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:6376:22)
+          at Object.useState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22784:18)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.useState (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1500:34)
+          at useLocalStorage (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:124:49)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:130:22
+          at TestComponent (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:331:27)
+          at Object.react-stack-bottom-frame (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+          at renderWithHooks (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+          at updateFunctionComponent (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+          at beginWork (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+          at runWithFiberInDEV (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+          at performUnitOfWork (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+          at workLoopSync (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+          at renderRootSync (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+          at performWorkOnRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:14334:13)
+          at performWorkOnRootViaSchedulerTask (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+          at flushActQueue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:862:34)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1151:10)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at renderRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:190:26)
+          at render (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:292:10)
+          at renderHook (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:340:7)
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:129:34)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at onError (src/hooks/useLocalStorage.ts:131:7)
+      at mountStateImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6355:24)
+      at mountState (node_modules/react-dom/cjs/react-dom-client.development.js:6376:22)
+      at Object.useState (node_modules/react-dom/cjs/react-dom-client.development.js:22784:18)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useState (node_modules/react/cjs/react.development.js:1500:34)
+      at useLocalStorage (src/hooks/useLocalStorage.ts:124:49)
+      at src/hooks/__tests__/useLocalStorage.test.ts:130:22
+      at TestComponent (node_modules/@testing-library/react/dist/pure.js:331:27)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22428:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:5757:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:8018:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:9683:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15052:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14870:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14850:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14334:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:15931:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at renderHook (node_modules/@testing-library/react/dist/pure.js:340:7)
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:129:34)
+
+    console.error
+      useLocalStorage error for key "test-key": SyntaxError: Unexpected token 'i', "invalid-json" is not valid JSON
+          at Object.parse [as read] (<anonymous>)
+          at read (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:95:25)
+          at readValue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:251:21)
+          at Object.react-stack-bottom-frame (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:22509:20)
+          at runWithFiberInDEV (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+          at commitHookEffectListMount (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:10758:29)
+          at commitHookPassiveMountEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:10880:11)
+          at commitPassiveMountOnFiber (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12653:13)
+          at recursivelyTraversePassiveMountEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12627:11)
+          at commitPassiveMountOnFiber (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12657:11)
+          at flushPassiveEffects (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15460:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15324:11
+          at flushActQueue (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:862:34)
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1151:10)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at renderRoot (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:190:26)
+          at render (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:292:10)
+          at renderHook (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/pure.js:340:7)
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:129:34)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at onError (src/hooks/useLocalStorage.ts:97:7)
+      at readValue (src/hooks/useLocalStorage.ts:251:21)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:22509:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:543:16)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:10758:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:10880:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:12653:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12627:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:12657:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15460:13)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15324:11
+      at flushActQueue (node_modules/react/cjs/react.development.js:862:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1151:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at renderHook (node_modules/@testing-library/react/dist/pure.js:340:7)
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:129:34)
+
+    console.error
+      useLocalStorage error for key "test-key": Error: Storage quota exceeded
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:139:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as setItem] (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:148:19)
+          at Array.setItem (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:159:31)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:148:24
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:48:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1081:22)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:147:8)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at Array.onError (src/hooks/useLocalStorage.ts:182:9)
+      at src/hooks/__tests__/useLocalStorage.test.ts:148:24
+      at node_modules/@testing-library/react/dist/act-compat.js:48:24
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1081:22)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:147:8)
+
+    console.error
+      useLocalStorage error for key "test-key": Error: Storage quota exceeded
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:139:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as setItem] (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:148:19)
+          at Array.setItem (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:159:31)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:163:24
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:48:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1081:22)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:162:8)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at Array.onError (src/hooks/useLocalStorage.ts:182:9)
+      at src/hooks/__tests__/useLocalStorage.test.ts:163:24
+      at node_modules/@testing-library/react/dist/act-compat.js:48:24
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1081:22)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:162:8)
+
+    console.error
+      useLocalStorage error for key "test-key": Error: Storage quota exceeded
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:139:13)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as setItem] (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-environment-jsdom/node_modules/jest-mock/build/index.js:148:19)
+          at Array.setItem (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/useLocalStorage.ts:159:31)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:177:24
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:48:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/react/cjs/react.development.js:1081:22)
+          at /Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/@testing-library/react/dist/act-compat.js:47:25
+          at Object.<anonymous> (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/src/hooks/__tests__/useLocalStorage.test.ts:176:8)
+          at Promise.then.completed (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:121:9)
+          at run (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/Users/gim-yeongjin/Downloads/Personal/Study/Project/AI-CHATBOT/chatbot-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+
+      83 |       return;
+      84 |     }
+    > 85 |     originalError.call(console, ...args);
+         |                   ^
+      86 |   };
+      87 | });
+      88 |
+
+      at console.call [as error] (jest.setup.js:85:19)
+      at error (src/hooks/useLocalStorage.ts:73:15)
+      at Array.onError (src/hooks/useLocalStorage.ts:182:9)
+      at src/hooks/__tests__/useLocalStorage.test.ts:177:24
+      at node_modules/@testing-library/react/dist/act-compat.js:48:24
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:1081:22)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at Object.<anonymous> (src/hooks/__tests__/useLocalStorage.test.ts:176:8)
+
+PASS src/components/__tests__/MessageBubble.test.tsx
+
+Test Suites: 6 failed, 3 passed, 9 total
+Tests:       67 failed, 58 passed, 125 total
+Snapshots:   0 total
+Time:        1.214 s
+Ran all test suites.
